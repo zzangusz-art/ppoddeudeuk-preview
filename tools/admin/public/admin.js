@@ -12,6 +12,8 @@
   const today = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
   const clone = o => JSON.parse(JSON.stringify(o));
   let ME = null, dirty = false, lastId = 0, newCount = 0;
+  // 사이트 주소 앞부분(GitHub Pages 미리보기는 /ppoddeudeuk-preview/ 아래라 demo-api.js 가 PPD_ADMIN_BASE 를 정함)
+  const BASE = window.PPD_ADMIN_BASE || '/';
 
   async function api(method, url, data) {
     const res = await fetch(url, { method, credentials: 'same-origin', headers: { 'X-PPD-Admin': '1', ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined });
@@ -29,6 +31,7 @@
   function setDeploy(state, text) { deploy = { state, text }; const el = $('#deploy'); if (el) { el.className = 'deploy ' + state; el.textContent = text; el.hidden = !text; } }
   function watchDeploy(sha) {
     clearInterval(watcher);
+    if (ME.store === 'demo') { setDeploy('pending', '데모 — 실제로 저장되지 않습니다'); return; }
     if (!sha || String(sha).startsWith('local')) { setDeploy('success', '저장됨(로컬 시험)'); return; }
     setDeploy('pending', '사이트 반영 중… (약 1~2분)'); let n = 0;
     watcher = setInterval(async () => {
@@ -39,7 +42,7 @@
       if (n > 30) { clearInterval(watcher); setDeploy('', ''); }
     }, 12000);
   }
-  const saved = (r, what) => { dirty = false; toast(`${what} 저장했습니다. ${ME.store === 'local' ? '' : '약 1~2분 뒤 홈페이지에 반영됩니다.'}`); watchDeploy(r.commit); };
+  const saved = (r, what) => { dirty = false; toast(ME.store === 'demo' ? `데모 화면이라 ${what}은(는) 실제로 저장되지 않습니다` : `${what} 저장했습니다. ${ME.store === 'local' ? '' : '약 1~2분 뒤 홈페이지에 반영됩니다.'}`); watchDeploy(r.commit); };
 
   // ── 사진: 큰 사진은 줄여서(WebP, 안 되면 JPEG) 올린다
   const previews = {};   // 방금 올린 사진 경로 → 미리보기(배포 전에도 보이게)
@@ -55,7 +58,7 @@
     return { data };
   }
   const pickFile = () => new Promise(ok => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => ok(i.files[0]); i.click(); });
-  const imgSrc = v => !v ? '' : typeof v === 'object' ? v.data : previews[v] || '/assets/img/' + v;
+  const imgSrc = v => !v ? '' : typeof v === 'object' ? v.data : previews[v] || BASE + 'assets/img/' + v;
 
   // ── 아이콘
   const ICON = {
@@ -96,11 +99,11 @@
   function shell(title, o = {}) {
     const r = route()[0], isOwner = ME.user.role === 'owner';
     const link = ([k, t, i, b]) => `<a href="#/${k}" class="${r === k ? 'on' : ''}">${ico(i)}<span>${t}</span>${b ? badge() : ''}</a>`;
-    $('#app').innerHTML = `<div class="shell"><aside class="side" id="side"><a class="brand" href="#/"><img src="/assets/img/brand/logo.png" alt="뽀드득"><span>관리자</span></a>
+    $('#app').innerHTML = `<div class="shell"><aside class="side" id="side"><a class="brand" href="#/"><img src="${BASE}assets/img/brand/logo.png" alt="뽀드득"><span>관리자</span></a>
       <button class="navbtn" id="navbtn" type="button" aria-expanded="false">${ico('menu')}<span>메뉴</span>${badge()}</button>
       <nav id="side-nav">${NAV.map(([g, list]) => `<p class="grp">${g}</p>${list.map(link).join('')}`).join('')}
         ${isOwner ? `<p class="grp own">관리자 전용</p>${OWNER_NAV.map(link).join('')}` : ''}
-        <div class="bottom">${link(['me', '내 계정', 'me'])}<a href="/" target="_blank" rel="noopener">${ico('out')}<span>홈페이지 보기</span></a><a href="#" id="logout">${ico('logout')}<span>로그아웃</span></a></div></nav>
+        <div class="bottom">${link(['me', '내 계정', 'me'])}<a href="${BASE}" target="_blank" rel="noopener">${ico('out')}<span>홈페이지 보기</span></a><a href="#" id="logout">${ico('logout')}<span>로그아웃</span></a></div></nav>
       <p class="who"><b>${h(ME.user.name)}</b>${h(ME.user.roleName)} · ${h(ME.user.id)}</p></aside>
       <main class="main"><div class="top"><div class="tt">${o.back ? `<a class="back" href="${o.back[0]}">← ${h(o.back[1])}</a>` : ''}<h1>${h(title)}</h1>${o.desc ? `<p>${o.desc}</p>` : ''}</div><div class="tools">${o.tool || ''}<span id="deploy" class="deploy ${deploy.state}" ${deploy.text ? '' : 'hidden'}>${h(deploy.text)}</span></div></div>
       ${o.content && !ME.storeReady ? '<div class="box bad">저장소 연결이 안 되어 있어 사이트 내용을 저장할 수 없습니다. 관리자에게 알려 주세요(서버 변수 GITHUB_TOKEN).</div>' : ''}
@@ -114,9 +117,9 @@
 
   // ── 로그인
   function loginView() {
-    $('#app').innerHTML = `<div class="login-wrap"><div class="login-art" style="background-image:url(/assets/video/hero-poster.jpg)"><b>접수 확인부터 공지·요금 수정까지<br>한 화면에서</b><p>뽀드득 홈페이지 관리자</p></div>
-      <form class="login" id="lf"><img src="/assets/img/brand/logo.png" alt="뽀드득"><h1>관리자 로그인</h1><p class="sub">받은 아이디와 비밀번호를 입력해 주세요.</p>
-      ${ME.ready ? '' : '<div class="box warn">어드민 초기 설정 전입니다(계정·SESSION_SECRET). 관리자에게 알려 주세요.</div>'}
+    $('#app').innerHTML = `<div class="login-wrap"><div class="login-art" style="background-image:url(${BASE}assets/video/hero-poster.jpg)"><b>접수 확인부터 공지·요금 수정까지<br>한 화면에서</b><p>뽀드득 홈페이지 관리자</p></div>
+      <form class="login" id="lf"><img src="${BASE}assets/img/brand/logo.png" alt="뽀드득"><h1>관리자 로그인</h1><p class="sub">받은 아이디와 비밀번호를 입력해 주세요.</p>
+      ${ME.store === 'demo' ? '<div class="box info"><b>미리보기 데모</b> — 아이디 <b>demo</b>, 비밀번호 <b>demo</b> 로 들어가 보세요. 시험용 데이터이고 저장되지 않습니다.</div>' : ME.ready ? '' : '<div class="box warn">어드민 초기 설정 전입니다(계정·SESSION_SECRET). 관리자에게 알려 주세요.</div>'}
       <div class="form-stack"><label class="fld"><span>아이디</span><input class="in" name="id" autocomplete="username" required autocapitalize="off"></label>
       <label class="fld"><span>비밀번호</span><input class="in" name="pw" type="password" autocomplete="current-password" required></label>
       <button class="btn pri" type="submit">로그인</button></div></form></div>`;
@@ -172,7 +175,7 @@
 
   // ── 대시보드
   async function dashboard() {
-    const v = shell('대시보드', { desc: `${h(ME.user.name)}님, 오늘 들어온 접수와 홈페이지 방문을 한눈에 확인하세요.`, tool: `<a class="btn sm" href="/" target="_blank" rel="noopener">${ico('out')}홈페이지</a>` });
+    const v = shell('대시보드', { desc: `${h(ME.user.name)}님, 오늘 들어온 접수와 홈페이지 방문을 한눈에 확인하세요.`, tool: `<a class="btn sm" href="${BASE}" target="_blank" rel="noopener">${ico('out')}홈페이지</a>` });
     const d = await api('GET', '/api/admin/dashboard');
     const c = d.counts, warn = [];
     if (!ME.dbPersistent) warn.push('접수 DB가 서버 볼륨(DATA_DIR)에 연결되어 있지 않아 다시 배포하면 접수 기록이 사라질 수 있습니다. 관리자에게 알려 주세요.');
@@ -434,11 +437,11 @@
 
   // ── 블로그
   async function blog() {
-    const v = shell('블로그', { desc: '매일 09·13·18시에 1편씩 자동으로 발행됩니다(메인 키워드 대기열 순서). 공개 시각이 지난 글만 홈페이지에 보입니다.', tool: '<a class="btn sm" href="/blog/" target="_blank" rel="noopener">블로그 보기</a>' });
+    const v = shell('블로그', { desc: '매일 09·13·18시에 1편씩 자동으로 발행됩니다(메인 키워드 대기열 순서). 공개 시각이 지난 글만 홈페이지에 보입니다.', tool: `<a class="btn sm" href="${BASE}blog/" target="_blank" rel="noopener">블로그 보기</a>` });
     const d = await api('GET', '/api/admin/blog');
     const live = d.posts.filter(p => p.live), wait = d.posts.filter(p => !p.live).reverse();
     v.innerHTML = `<div class="kpis"><div class="kpi"><span>공개된 글</span><b>${num(live.length)}편</b></div><div class="kpi"><span>예약된 글</span><b>${num(wait.length)}편</b><small>${wait[0] ? h(wait[0].date + ' ' + wait[0].time) + ' 공개 예정' : '없음'}</small></div><div class="kpi"><span>남은 주제</span><b>${num(d.todo.length)}개</b><small>다 쓰면 키워드×관점 조합으로 자동</small></div><div class="kpi"><span>검증 실패 초안</span><b>${num(d.drafts.length)}편</b><small>관리자가 확인</small></div></div>
-      <div class="cols"><section class="card"><h2>글 목록</h2><p class="h-sub">최근 순</p>${d.posts.length ? `<ul class="recent">${d.posts.slice(0, 40).map(p => `<li style="cursor:default"><span class="pill ${p.live ? 'st-done' : 'st-contacted'}">${p.live ? '공개' : '예약'}</span><span>${p.live ? `<a href="/blog/${h(p.slug)}/" target="_blank" rel="noopener">${h(p.title)}</a>` : h(p.title)}<br><small class="muted">${h(p.keyword)} · ${num(p.chars)}자</small></span><span class="meta">${h(p.date.slice(5))} ${h(p.time)}</span></li>`).join('')}</ul>` : '<p class="help">아직 글이 없습니다.</p>'}</section>
+      <div class="cols"><section class="card"><h2>글 목록</h2><p class="h-sub">최근 순</p>${d.posts.length ? `<ul class="recent">${d.posts.slice(0, 40).map(p => `<li style="cursor:default"><span class="pill ${p.live ? 'st-done' : 'st-contacted'}">${p.live ? '공개' : '예약'}</span><span>${p.live ? `<a href="${BASE}blog/${h(p.slug)}/" target="_blank" rel="noopener">${h(p.title)}</a>` : h(p.title)}<br><small class="muted">${h(p.keyword)} · ${num(p.chars)}자</small></span><span class="meta">${h(p.date.slice(5))} ${h(p.time)}</span></li>`).join('')}</ul>` : '<p class="help">아직 글이 없습니다.</p>'}</section>
       <section class="card"><h2>다음에 쓸 주제</h2><p class="h-sub">위에서부터 하나씩 씁니다</p><ul class="recent">${d.todo.slice(0, 12).map((t, i) => `<li style="cursor:default"><span class="tp">${i + 1}</span><span>${h(t.title)}<br><small class="muted">${h((t.keywords || []).join(', '))}</small></span></li>`).join('') || '<li>대기열이 비었습니다(자동 조합 주제로 이어 씁니다)</li>'}</ul>
       ${ME.user.role === 'owner' ? `<form id="tf" class="form-stack" style="margin-top:16px;border-top:1px solid var(--line2);padding-top:16px"><b>주제 추가(다음 순서로)</b><label class="fld"><span>주제</span><input class="in" name="title" placeholder="예: 용평 스키장 주차와 장비 수령 동선"></label><label class="fld"><span>검색어 <small>쉼표로, 첫 번째가 1순위</small></span><input class="in" name="keywords" placeholder="용평 스키장 주차, 용평 렌탈 위치"></label><label class="fld"><span>분류</span><select class="in" name="category">${['렌탈 가이드', '리프트권·요금', '스키 강습', '스키장 이용 팁', '숙박·여행'].map(c => `<option>${c}</option>`).join('')}</select></label><button class="btn dark">추가</button></form>` : ''}</section></div>`;
     const tf = $('#tf'); if (tf) tf.onsubmit = async e => { e.preventDefault(); try { const r = await api('POST', '/api/admin/blog/topics', { title: tf.title.value, keywords: tf.keywords.value, category: tf.category.value }); saved(r, '블로그 주제'); } catch (err) { fail(err); } };

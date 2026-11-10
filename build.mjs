@@ -201,10 +201,25 @@ const xe = s => String(s).replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', 
 write('rss.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${xe(D.BLOG.name)}</title><link>${SITE.url}blog/</link><description>${xe(D.BLOG.lead)}</description><language>ko</language>\n${POSTS.slice(0, 50).map(p => `<item><title>${xe(p.title)}</title><link>${SITE.url}blog/${p.slug}/</link><guid>${SITE.url}blog/${p.slug}/</guid><description>${xe(p.description)}</description><category>${xe(p.category)}</category><pubDate>${new Date(`${p.date}T${p.time || '09:00'}:00+09:00`).toUTCString()}</pubDate></item>`).join('\n')}\n</channel></rss>\n`);
 if (!PREVIEW && opt('--cname')) write('CNAME', opt('--cname') + '\n');
 
+// ── 미리보기(GitHub Pages)용 데모 어드민: 서버가 없으니 화면만 시험용 데이터로 둘러보게(demo / demo). 실제 서버(Railway)의 /admin 은 tools/admin 이 직접 내줌 ──
+if (PREVIEW) {
+  const A = path.join(ROOT, 'tools/admin/public'), AD = path.join(OUT, 'admin');
+  fs.mkdirSync(AD, { recursive: true });
+  for (const f of ['admin.css', 'admin.js', 'demo-api.js']) fs.copyFileSync(path.join(A, f), path.join(AD, f));
+  write('admin/index.html', fs.readFileSync(path.join(A, 'index.html'), 'utf8').replace('href="/favicon.ico"', 'href="../favicon.ico"').replace('href="/admin/admin.css"', 'href="admin.css"')
+    .replace('<script src="/admin/admin.js"></script>', '<script src="demo-api.js"></script>\n<script src="admin.js"></script>').replace('<title>뽀드득 관리자</title>', '<title>뽀드득 관리자 (미리보기 데모)</title>'));
+  const all = loadPosts(path.join(ROOT, 'content/blog'), { R: '../../' });
+  let topics = []; try { topics = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/blog/_topics.json'), 'utf8')); } catch { /* 없음 */ }
+  write('admin/demo-data.json', JSON.stringify({ defaults: D.DEFAULTS, galleryCats: D.GALLERY_CATS, faqPages: D.FAQ_PAGES,
+    posts: all.map(p => ({ slug: p.slug, title: p.title, date: p.date, time: p.time || '', category: p.category, keyword: p.keyword, chars: p.chars })),
+    todo: topics.filter(t => t.status === 'todo').map(t => ({ id: t.id, title: t.title, keywords: t.keywords, category: t.category })),
+    commits: [{ sha: 'demo', message: '어드민: 요금 수정', author: 'Kevin(세느루)', date: new Date(Date.now() - 864e5).toISOString() }, { sha: 'demo', message: '블로그: AI 글 자동 발행', author: 'ppoddeudeuk-blog-bot', date: new Date().toISOString() }] }));
+}
+
 // ── 검증: 내부 링크·자원, JSON-LD, 페이지당 H1 1개 ──
 let broken = 0, ld = 0, h1bad = 0;
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
-for (const f of walk(OUT).filter(f => f.endsWith('.html'))) {
+for (const f of walk(OUT).filter(f => f.endsWith('.html') && !path.relative(OUT, f).startsWith('admin'))) {
   const html = fs.readFileSync(f, 'utf8');
   const rel = path.relative(OUT, f);
   if (!f.endsWith('404.html')) {
