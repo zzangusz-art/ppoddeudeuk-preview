@@ -1,0 +1,53 @@
+# 뽀드득: 빌드 → GitHub Pages 배포
+# 기본은 미리보기(모든 페이지 noindex, robots Disallow, canonical = Pages 주소).
+# 운영 전환 시 저장소 Variables: SITE_MODE=production, SITE_URL=https://도메인/ (+ GA4_ID, NAVER_WA, LEAD_ENDPOINT 선택)
+name: site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: 빌드(깨진 링크·JSON-LD·H1 검사 포함)
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          GA4_ID: ${{ vars.GA4_ID }}
+          NAVER_WA: ${{ vars.NAVER_WA }}
+          LEAD_ENDPOINT: ${{ vars.LEAD_ENDPOINT }}
+        run: |
+          if [ "${{ vars.SITE_MODE }}" = "production" ]; then
+            node build.mjs
+          else
+            node build.mjs --preview "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+          touch dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
