@@ -189,6 +189,50 @@
     });
   }
 
+  /* 방문 집계(접수 서버가 있을 때만): 쿠키·개인정보 없이 페이지·유입 경로 숫자만 — 어드민 '접속 통계' */
+  const API = CFG.api;
+  const beacon = data => { if (API == null) return; try { const b = JSON.stringify(data); if (!(navigator.sendBeacon && navigator.sendBeacon(API + '/api/t', new Blob([b], { type: 'text/plain' })))) fetch(API + '/api/t', { method: 'POST', body: b, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {}); } catch { /* 무시 */ } };
+  if (API != null && !/[?&]nostat/.test(location.search)) {
+    const qs = new URLSearchParams(location.search);
+    beacon({ e: 'pv', p: location.pathname, r: document.referrer, u: qs.get('utm_source') || '' });
+  }
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="tel:"], a[href^="sms:"], [data-drawer-open="quick"], a[href*="map.kakao"], a[href*="map.naver"]'); if (!a) return;
+    const h = a.getAttribute('href') || '';
+    beacon({ e: h.startsWith('tel:') ? 'call_click' : h.startsWith('sms:') ? 'sms_click' : /map\./.test(h) ? 'map_click' : 'quick_open' });
+  });
+
+  /* 팝업(어드민 '팝업 관리'): 기간 안에서만, '오늘 하루 보지 않기'는 이 브라우저에만 저장 */
+  const pop = $('#site-pop');
+  if (pop) {
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    const key = 'ppd-pop-' + pop.dataset.pop;
+    let hide = false; try { hide = localStorage.getItem(key) === today; } catch { /* 저장소 막힘 */ }
+    const inRange = (!pop.dataset.from || pop.dataset.from <= today) && (!pop.dataset.to || today <= pop.dataset.to);
+    if (inRange && !hide) setTimeout(() => { pop.hidden = false; requestAnimationFrame(() => pop.classList.add('is-on')); }, 900);
+    const close = () => { pop.classList.remove('is-on'); setTimeout(() => { pop.hidden = true; }, 250); };
+    $('[data-pop-close]', pop).addEventListener('click', close);
+    $('[data-pop-today]', pop).addEventListener('click', () => { try { localStorage.setItem(key, today); } catch { /* 무시 */ } close(); });
+  }
+
+  /* 예약·견적 확인: 이름 + 연락처가 모두 맞는 접수만 날짜·상태를 보여 준다 */
+  $$('form[data-check]').forEach(f => {
+    const out = $('.check-out', f), tel = f.elements.phone;
+    tel.addEventListener('input', () => { const d = tel.value.replace(/\D/g, '').slice(0, 11); tel.value = d.length < 4 ? d : d.length < 8 ? `${d.slice(0, 3)}-${d.slice(3)}` : `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`; });
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!f.elements.name.value.trim() || !/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(tel.value)) return toast('이름과 연락처를 확인해 주세요');
+      const btn = f.querySelector('[type=submit]'); btn.disabled = true; out.textContent = '확인 중…';
+      try {
+        const r = await fetch(API + '/api/lead/check', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ name: f.elements.name.value.trim(), phone: tel.value }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || '확인하지 못했습니다');
+        out.innerHTML = j.items.length ? `<ul>${j.items.map(it => `<li><b>${it.type}</b> ${it.useDate ? it.useDate + ' 이용 · ' : ''}${it.created} 접수 <span class="st st-${it.status}">${it.statusName}</span></li>`).join('')}</ul>` : '<p>일치하는 접수 내역이 없습니다. 접수하신 이름·연락처를 다시 확인해 주세요.</p>';
+      } catch (err) { out.textContent = err.message || '확인하지 못했습니다. 전화로 문의해 주세요.'; }
+      finally { btn.disabled = false; }
+    });
+  });
+
   /* 3단계 견적·예약 접수 */
   $$('form[data-book]').forEach(form => {
     const type = form.dataset.book, label = type === 'quote' ? '견적문의' : '예약';

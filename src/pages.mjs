@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, BRANCHES, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, BRANCHES, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -79,15 +79,23 @@ function galleryItems(u, items, group) {
 const tabsBar = (id, tabs) => `<div class="tabs" role="tablist" data-tabs="${id}">${tabs.map(([k, t], i) => `<button type="button" role="tab" id="tab-${id}-${i}" aria-controls="pane-${id}-${i}" aria-selected="${i === 0}" data-tab="${esc(k)}">${esc(t)}</button>`).join('')}</div>`;
 
 // 강사진 카드(KSIA 자격증 이미지, 누르면 크게)
-export const instCards = u => `<div class="inst-cards">${INSTRUCTORS.map((it, i) => `<figure class="inst"><button type="button" class="inst-img" data-lb="${u('assets/img/' + it.img)}" data-lb-group="inst" data-lb-cap="${esc(it.cred)}">${img(u, 'assets/img/' + it.img, `뽀드득 강사 ${it.cred} 자격증`, { sizes: '(max-width: 760px) 80vw, 440px' })}</button><figcaption>${esc(it.cred)}</figcaption></figure>`).join('')}</div>`;
+export const instCards = u => `<div class="inst-cards">${INSTRUCTORS.map(it => { const cap = [it.name, it.cred].filter(Boolean).join(' · '); return `<figure class="inst"><button type="button" class="inst-img" data-lb="${u('assets/img/' + it.img)}" data-lb-group="inst" data-lb-cap="${esc(cap)}">${img(u, 'assets/img/' + it.img, `뽀드득 강사 ${cap}`, { sizes: '(max-width: 760px) 80vw, 440px' })}</button><figcaption>${it.name ? `<b class="inst-name">${esc(it.name)}</b>` : ''}${esc(it.cred)}${it.career ? `<span class="inst-career">${esc(it.career)}</span>` : ''}</figcaption></figure>`; }).join('')}</div>`;
 
 // ── 홈 ──
-export function home(u) {
+const popupHtml = u => {
+  const p = POPUP; if (!p || !p.on || !(p.title || p.img)) return '';
+  const link = p.link ? (/^https?:/.test(p.link) ? p.link : u(p.link.replace(/^\//, ''))) : '';
+  return `<div class="pop" id="site-pop" data-pop="${esc([p.title, p.from, p.to].join('|'))}" data-from="${esc(p.from || '')}" data-to="${esc(p.to || '')}" hidden role="dialog" aria-modal="false" aria-label="${esc(p.title || '알림')}">
+  <div class="pop-card">${p.img ? (link ? `<a href="${link}">` : '') + img(u, 'assets/img/' + p.img, p.title || '뽀드득 알림', { lazy: false, cls: 'pop-img' }) + (link ? '</a>' : '') : ''}
+  ${p.title || p.body ? `<div class="pop-b">${p.title ? `<h2 class="pop-t">${esc(p.title)}</h2>` : ''}${p.body ? `<p>${esc(p.body).replace(/\n/g, '<br>')}</p>` : ''}${link && p.linkText ? `<a class="btn btn-red btn-sm" href="${link}">${esc(p.linkText)}</a>` : ''}</div>` : ''}
+  <div class="pop-f"><button type="button" data-pop-today>오늘 하루 보지 않기</button><button type="button" data-pop-close>닫기</button></div></div></div>`;
+};
+export function home(u, posts = []) {
   // 기존 홈페이지 메인 바로가기 6칸(원본 아이콘 main-nav1~6) · 요금표 카드 5장(원본 이미지 sec6-bg1~5) 그대로
   const quick = [['요금안내', 'rates/lift/'], ['강습안내', 'lesson/'], ['견적문의', 'quote/'], ['예약하기', 'reserve/'], ['갤러리', 'gallery/'], ['오시는 길', 'location/']];
   const rateCards = [['용평리프트 요금표', 'rates/lift/#yongpyong'], ['알펜시아리프트 요금표', 'rates/lift/#alpensia'], ['장비 요금표', 'rates/rental/#gear'], ['의류 요금표', 'rates/rental/#wear'], ['보호장비 요금표', 'rates/rental/#safety']];
   const steps = [['날짜·스키장 선택', '이용 날짜와 용평·알펜시아 중 스키장, 이용타임(1·2·3타임)을 고릅니다.'], ['렌탈·강습 선택', '스키·보드 장비, 의류, 강습 종목·인원·시간을 함께 고릅니다.'], ['확인 연락', '접수 내용을 확인해 전화나 문자로 안내드립니다. 리프트권은 이용 1일 전까지 예약해야 할인됩니다.']];
-  return `
+  return popupHtml(u) + `
 <section class="hero" data-hero>
   <video class="hero-v" muted playsinline loop autoplay preload="auto" poster="${u('assets/video/hero-poster.jpg')}" data-src-slow="${u('assets/video/hero-1280.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"><source media="(max-width: 760px)" src="${u('assets/video/hero-m.mp4')}" type="video/mp4"><source src="${u('assets/video/hero-1920.mp4')}" type="video/mp4"></video>
   <h1 class="sr">용평렌탈샵 뽀드득 — 용평리조트·용평스키장·알펜시아 스키 렌탈샵</h1>
@@ -146,6 +154,7 @@ export function home(u) {
   <p class="center"><a class="btn btn-red btn-lg" href="${u('reserve/')}">${ICON.cal}지금 예약하기</a></p>
 </div></section>
 
+${homeBlog(u, posts)}
 <section class="sec sec-notice-faq"><div class="wrap nf-grid">
   <div class="reveal"><div class="nf-hd"><h2 class="h3">공지사항</h2><a class="plus" href="${u('notice/')}" aria-label="공지사항 더 보기">+</a></div>
     <ul class="notice-list">${NOTICES.map(n => `<li><a href="${u('notice/#' + n.id)}"><span>${esc(n.title)}</span><time datetime="${n.date}">${kdate(n.date)}</time></a></li>`).join('')}</ul></div>
@@ -224,7 +233,7 @@ export function secondhand(u) {
   return subHead(u, { eyebrow: 'USED GEAR', title: '중고장비 직거래장터', lead: '뽀드득에서 사용한 장비를 직거래로 판매합니다.', bg: 'scene/carve.webp', crumbs: [['중고장비 직거래장터']] })
     + `<section class="sec"><div class="wrap">
   <p class="count">전체 <b>${USED.length}</b>건 · 판매 여부와 상태는 전화로 확인해 주세요.</p>
-  <div class="used-grid">${USED.map(it => `<article class="used reveal"><button type="button" class="gi-btn" data-lb="${u('assets/img/' + it.img)}" data-lb-group="used" data-lb-cap="${esc(it.title)}">${phImg(u, 'assets/img/' + it.img, it.title, { sizes: '(max-width: 760px) 100vw, 33vw' })}</button><div class="used-b"><h2>${esc(it.title)}</h2><p>${esc(it.body)}</p><p class="used-meta"><strong>${won(it.price)}</strong><span>수량 ${it.qty}대</span><time datetime="${it.date}">${kdate(it.date)} 등록</time></p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}구매 문의</a></div></article>`).join('')}</div>
+  <div class="used-grid">${USED.map(it => `<article class="used reveal${it.sold ? ' is-sold' : ''}"><button type="button" class="gi-btn" data-lb="${u('assets/img/' + it.img)}" data-lb-group="used" data-lb-cap="${esc(it.title)}">${phImg(u, 'assets/img/' + it.img, it.title, { sizes: '(max-width: 760px) 100vw, 33vw' })}</button><div class="used-b"><h2>${esc(it.title)}</h2><p>${esc(it.body)}</p><p class="used-meta">${it.sold ? '<b class="sold">판매완료</b>' : ''}<strong>${won(it.price)}</strong><span>수량 ${it.qty}대</span><time datetime="${it.date}">${kdate(it.date)} 등록</time></p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}구매 문의</a></div></article>`).join('')}</div>
 </div></section>`;
 }
 
@@ -369,7 +378,7 @@ export function book(u, type) {
     + `<section class="sec"><div class="wrap book-grid">
   <div>${bookForm(u, type)}</div>
   <aside class="book-aside">
-    <div class="aside-card" id="check"><h2 class="h4">${isQ ? '견적확인' : '예약확인'}</h2><p>접수하신 ${isQ ? '견적' : '예약'}은 남겨 주신 연락처로 <b>문자 또는 전화</b>로 확인해 드립니다. 개인정보 보호를 위해 접수 목록은 공개하지 않습니다. 확인이 늦어지면 전화 주세요.</p><p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
+    <div class="aside-card" id="check"><h2 class="h4">${isQ ? '견적확인' : '예약확인'}</h2><p>접수하신 ${isQ ? '견적' : '예약'}은 남겨 주신 연락처로 <b>문자 또는 전화</b>로 확인해 드립니다.</p>${SITE.api != null ? `<form class="check-form" data-check novalidate><label><span>이름</span><input name="name" autocomplete="name" required maxlength="20"></label><label><span>연락처</span><input name="phone" inputmode="tel" autocomplete="tel" required maxlength="13" placeholder="010-0000-0000"></label><button class="btn btn-red btn-sm" type="submit">접수 내역 확인</button><div class="check-out" aria-live="polite"></div></form>` : ''}<p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
     <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>리프트권 할인은 <b>이용 1일 전까지 유선 예약</b>이 필수입니다.</p></div>
     <div class="aside-card"><h2 class="h4">스키장별 정설시간</h2><ul>${RESORTS.map(r => `<li><b>${r.short}</b> ${r.grooming} (${r.groomingNote})</li>`).join('')}</ul></div>
     <div class="aside-card"><h2 class="h4">개인정보 안내</h2><p>${esc(PRIVACY.short)}</p></div>
@@ -391,4 +400,37 @@ export function privacy(u) {
 }
 export function notFound(u) {
   return `<section class="sec nf"><div class="wrap narrow center"><p class="eyebrow">404</p><h1 class="h2">페이지를 찾을 수 없습니다</h1><p>주소가 바뀌었거나 없는 페이지입니다.</p><p><a class="btn btn-red" href="${u('')}">홈으로</a> <a class="btn btn-line" href="${u('reserve/')}">예약하기</a></p></div></section>`;
+}
+
+// ── 블로그 ──
+const coverOf = p => p.image || BLOG.covers[[...p.slug].reduce((a, c) => a + c.charCodeAt(0), 0) % BLOG.covers.length];
+export const postCard = (u, p, cls = '') => `<article class="pcard reveal ${cls}"><a href="${u('blog/' + p.slug + '/')}">
+  <div class="pcard-img">${img(u, 'assets/img/' + coverOf(p), '', { sizes: '(max-width: 760px) 100vw, 33vw' })}<span class="pcard-cover">${esc(p.cover || p.title)}</span></div>
+  <div class="pcard-b"><span class="chip">${esc(p.category)}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><time datetime="${p.date}">${kdate(p.date)}</time></div></a></article>`;
+export function homeBlog(u, posts) {
+  if (!posts.length) return '';
+  return `<section class="sec sec-blog"><div class="wrap">
+  <div class="sec-hd reveal"><p class="eyebrow">SKI GUIDE</p><h2 class="h2">뽀드득 블로그</h2><p>${esc(BLOG.lead)}</p></div>
+  <div class="pgrid">${posts.slice(0, 3).map(p => postCard(u, p)).join('')}</div>
+  <p class="center"><a class="btn btn-line" href="${u('blog/')}">블로그 전체 보기</a></p></div></section>`;
+}
+export function blogIndex(u, posts) {
+  const cats = BLOG.categories.filter(c => posts.some(p => p.category === c));
+  return subHead(u, { eyebrow: 'BLOG', title: BLOG.name, lead: BLOG.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['블로그']] })
+  + `<section class="sec"><div class="wrap">
+  ${posts.length ? `${cats.length > 1 ? tabsBar('blog', [['all', '전체'], ...cats.map(c => [c, c])]) : ''}
+  <div class="pgrid" data-filter-grid="blog">${posts.map(p => postCard(u, p, 'gi').replace('<article class="pcard', `<article data-cat="${esc(p.category)}" class="pcard`)).join('')}</div>` : '<div class="empty-card"><h2 class="h3">첫 글을 준비하고 있습니다</h2></div>'}
+  </div></section>` + ctaBand(u);
+}
+export function blogPost(u, p, related) {
+  return `<article class="post-wrap">` + subHead(u, { eyebrow: p.category, title: p.title, lead: p.description, bg: coverOf(p), crumbs: [['블로그', 'blog/'], [p.title]] }).replace(/<h1/, '<h1 itemprop="headline"')
+  + `<div class="wrap post-grid"><div class="post-main">
+    <p class="post-meta"><time datetime="${p.date}">${kdate(p.date)}</time> · ${esc(p.author || BLOG.author)} · ${p.minutes}분 읽기</p>
+    ${p.toc.length > 2 ? `<nav class="toc" aria-label="목차"><b>목차</b><ol>${p.toc.map(t => `<li><a href="#${t.id}">${esc(t.t)}</a></li>`).join('')}</ol></nav>` : ''}
+    <div class="prose">${p.html}</div>
+    ${p.faq.length ? `<section class="post-faq"><h2 class="h3">자주 묻는 질문</h2>${faqList(p.faq, true)}</section>` : ''}
+    ${(p.tags || []).length ? `<p class="post-tags">${p.tags.map(t => `<span>#${esc(t)}</span>`).join('')}</p>` : ''}
+  </div><aside class="post-aside"><div class="aside-card"><h2 class="h4">예약·문의</h2><p>날짜와 스키장, 필요한 장비만 알려 주시면 견적을 안내해 드립니다.</p><p class="btn-row"><a class="btn btn-red btn-sm" href="${u('reserve/')}">${ICON.cal}예약하기</a><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
+    <div class="aside-card"><h2 class="h4">요금 바로 보기</h2><ul class="aside-links"><li><a href="${u('rates/rental/')}">렌탈 요금</a></li><li><a href="${u('rates/lift/')}">리프트권 할인</a></li><li><a href="${u('lesson/')}">강습 요금</a></li></ul></div></aside></div></article>
+  ${related.length ? `<section class="sec sec-tint"><div class="wrap"><h2 class="h3" style="margin-bottom:20px">함께 읽으면 좋은 글</h2><div class="pgrid">${related.map(r => postCard(u, r)).join('')}</div></div></section>` : ''}` + ctaBand(u);
 }

@@ -1,6 +1,11 @@
 // 뽀드득 사이트의 사실 정보 — 여기 한 곳만 고치면 페이지·JSON-LD·llms.txt가 같이 바뀐다.
 // 출처: 기존 홈페이지 ppoddeudeuk.phpweb.co.kr (2026-11-10 미러링), 관리자 백업본, 6월 18일 수정요청 엑셀(스키장별 타임표·강습 규칙).
 // "확인 필요" 표시 값은 고객 확인 전 — project.md 참고.
+// 어드민(/admin)에서 고친 값은 content/site.json 에 저장되고, 빌드할 때 아래 기본값 위에 덮어쓴다(키: site·tags·popup·notices·gallery·used·faq·instructors·lift·rental·lesson).
+import fs from 'node:fs';
+export const OVERRIDES = (() => { try { return JSON.parse(fs.readFileSync(new URL('../content/site.json', import.meta.url), 'utf8')); } catch { return {}; } })();
+const D = {};   // 기본값(어드민 '기본값으로 되돌리기')
+const ov = (k, def) => { D[k] = def; return OVERRIDES[k] ?? def; };
 
 export const SITE = {
   name: '뽀드득',
@@ -28,6 +33,8 @@ export const SITE = {
     roughmap: { timestamp: '1774262744025', key: 'jtuqah69r4n' }, // 기존 사이트 카카오 지도 퍼가기 값
   },
   // 접수 API 주소(정해지면 입력). 비어 있으면 접수 내용을 정리해 문자·전화로 보내는 방식으로 동작
+  // 접수·방문 집계 서버: API_BASE=self(사이트와 같은 서버, Railway) | https://…(다른 서버) | 비움 = 서버 없이 문자·전화로 보내기
+  api: process.env.API_BASE === 'self' ? '' : (process.env.API_BASE || '').replace(/\/$/, '') || null,
   leadEndpoint: process.env.LEAD_ENDPOINT || '',
   analytics: { ga4: process.env.GA4_ID || '', naver: process.env.NAVER_WA || '', naverVerify: '', googleVerify: '' },
   season: '25/26 시즌',
@@ -69,7 +76,7 @@ export const RESORTS = [
 
 // ── 리프트권(기존 리프트 요금 페이지 그대로, 25-26시즌) ──
 // 기존 표: 용평 비수기·성수기 열의 금액이 같음, 알펜시아 "대·소 구분 없이 균일가" 문구와 대인·소인 금액이 다름 → 원문대로 두고 확인 필요
-export const LIFT = [
+export const LIFT = ov('lift', [
   { id: 'yongpyong', title: '25-26시즌 용평리조트 리프트권', resort: '용평리조트', note: '이용 1일 전까지 유선 예약 필수! 뽀드득을 통해 사전 예약 시 약 40% 할인되며, 당일 예약 시 약 35% 할인가가 적용됩니다.',
     seasons: ['비수기 요금 약 50% 할인', '성수기 요금 약 40% 할인'],
     rows: [
@@ -82,11 +89,11 @@ export const LIFT = [
       { time: '1타임', detail: ['오전권 09시 ~ 13시', '오후권 13시 ~ 17시', '야간권 18시30분 ~ 21시'], adult: [[68000, 34000]], child: [[56000, 28000]] },
       { time: '2타임', detail: ['주간권 09시 ~ 17시', '오야권 13시 ~ 21시'], adult: [[96000, 48000]], child: [[78000, 39000]] },
     ] },
-];
+]);
 
 // ── 렌탈(기존 렌탈 요금 페이지 그대로, 용평리조트 25-26시즌) ── 값 0 = 기존 표에 금액 미기재 → "문의"
 export const RENTAL_COLS = ['오전/오후/야간 택1', '주간/오후야간 중 택1', '주간+야간'];
-export const RENTAL = [
+export const RENTAL = ov('rental', [
   { group: '장비', key: 'gear', items: [
     { name: '프리미엄 초급자 스키 or 보드', p: [[20000, 15000], [30000, 20000], [0, 0]] },
     { name: '프리미엄 중급자 스키 or 보드', p: [[30000, 25000], [40000, 30000], [0, 0]] },
@@ -102,7 +109,7 @@ export const RENTAL = [
     { name: '헬멧 · 고글 · 보호대', p: [5000, 10000, 0] },
     { name: '바이저헬멧', p: [15000, 20000, 0] },
   ] },
-];
+]);
 
 // 예약 폼 렌탈 항목(기존 관리자 렌탈 관리 = 폼 선택지)
 export const RENTAL_ITEMS = {
@@ -112,12 +119,12 @@ export const RENTAL_ITEMS = {
 };
 
 // ── 강습 ──
-export const LESSON_FEE = {
+export const LESSON_FEE = ov('lesson', {
   note: '저희 강습은 1:1 개인 강습과 2:1 소수 강습으로만 운영되며, 스키와 보드 강습 비용은 동일하게 적용됩니다.',
   hours: [2, 3, 4],
   rows: [{ name: '1:1 강습', p: [200000, 250000, 300000] }, { name: '2:1 강습', p: [250000, 300000, 350000] }],
   rules: ['강습 인원은 1명 또는 2명까지입니다. 3명 이상은 강습 효율이 떨어져 진행하지 않습니다.', '강습 시간은 2시간·3시간·4시간입니다. 1시간 강습은 진도에 진척이 없어 진행하지 않습니다.', '스키와 보드 강습 비용은 같습니다.'],
-};
+});
 export const PROGRAM = [
   { id: 'start', name: '처음단계', lead: '스키가 처음이신 분을 위한 기본 자세와 안전 중심의 입문 과정입니다.', rows: [
     { step: '처음', skill: '스키를 처음 접함', learn: ['스키장 안전수칙 설명', '장비기능/탈부착 방법/보행/추진활주', '안전하게 넘어지고 일어나는 방법', '방향전환, 제자리 정지방법', '동행(경사면 이동방법)', '푸르그 화렌'], goal: ['눈과 친해지기', '안전하게 스키 타는 방법', '스키장비 몸에 익히기', '안전한 스키장 이용/매너'] },
@@ -138,10 +145,10 @@ export const PROGRAM = [
 ];
 
 // 강사진(기존 관리자 '강사진 관리' 등록 이미지 = 대한스키지도자연맹 강사 자격증). 기존 이름은 '테스트 2·3'이라 이름 대신 자격으로 표기 — 확인 필요: 강사 실명·경력
-export const INSTRUCTORS = [
+export const INSTRUCTORS = ov('instructors', [
   { img: 'instructor/ksia-1.webp', cred: '대한스키지도자연맹(KSIA) 자격 강사' },
   { img: 'instructor/ksia-2.webp', cred: '대한스키지도자연맹(KSIA) 자격 강사' },
-];
+]);
 export const INSTRUCTOR_LEAD = '공식 자격을 보유한 강사진이 수준별 맞춤 강습으로 안전하고 즐거운 스키를 도와드립니다.';
 
 // ── 숙박(기존 숙박 안내 그대로) ── 용평리조트 콘도. 알펜시아 콘도는 기존 사이트도 "준비중"
@@ -171,7 +178,7 @@ export const STAY = [
 
 // ── 갤러리·중고장터(기존 게시판 실제 글만. "갤러리 테스트"·강사 "테스트" 제외) ──
 export const GALLERY_CATS = ['의류', '장비', '장비관리', '강습'];
-export const GALLERY = [
+export const GALLERY = ov('gallery', [
   { cat: '의류', img: 'gallery/wear-urbangray.webp', title: '어반그레이 의류', date: '2026-03-18' },
   { cat: '장비', img: 'gallery/gear-volkl.webp', title: '뵐클 중급자 스키 입고', date: '2026-03-18' },
   { cat: '장비', img: 'store/interior-1.webp', title: '스키 장비 진열대', date: '2026-02-19' },
@@ -179,13 +186,13 @@ export const GALLERY = [
   { cat: '장비', img: 'store/interior-6.webp', title: '스노보드 바인딩', date: '2026-02-19' },
   { cat: '의류', img: 'store/interior-3.webp', title: '스키복 의류 코너', date: '2026-02-19' },
   { cat: '의류', img: 'store/interior-2.webp', title: '헬멧과 고글 진열', date: '2026-02-19' },
-];
-export const USED = [
+]);
+export const USED = ov('used', [
   { img: 'gallery/used-head.webp', title: '중고 스키 15만원', body: '해당 상품 15만원입니다. 현재 2대 있습니다.', price: 150000, qty: 2, date: '2026-03-25' },
-];
-export const NOTICES = [
+]);
+export const NOTICES = ov('notices', [
   { id: 'open', date: '2026-02-19', title: '홈페이지가 새롭게 오픈되었습니다.', body: ['안녕하세요.', '홈페이지가 새롭게 오픈되었습니다.', '많은 관심부탁드립니다.', '감사합니다.'] },
-];
+]);
 
 export const PRIVACY = {
   short: '뽀드득은 견적/예약 이외의 어떠한 용도로도 전화번호를 수집하지 않습니다.',
@@ -194,7 +201,7 @@ export const PRIVACY = {
 
 // ── 자주 묻는 질문(기존 사이트에 있는 사실로만 작성) ──
 const won = n => n.toLocaleString('ko-KR') + '원';
-export const FAQ = [
+export const FAQ = ov('faq', [
   { q: '뽀드득은 어디에 있나요?', a: `${SITE.address.full}(지번 ${SITE.address.old})에 있습니다. ${SITE.near} 거리입니다. 대표전화는 ${SITE.phone}입니다.`, pages: ['home', 'location'] },
   { q: '겨울바라기와 같은 곳인가요?', a: '네. 뽀드득은 겨울바라기 AC가 운영하는 스키 렌탈·강습 브랜드로, 25/26 시즌 새 이름으로 단장했습니다.', pages: ['home', 'about'] },
   { q: '리프트권은 얼마나 할인되나요?', a: `용평리조트 리프트권은 1타임 대인 정상가 ${won(68000)}이 뽀드득 예약가 ${won(34000)}, 2타임 대인 ${won(96000)}이 ${won(48000)}입니다. 이용 1일 전까지 전화 예약이 필수이며, 사전 예약 시 약 40%, 당일 예약 시 약 35% 할인가가 적용됩니다. 알펜시아리조트는 사전 예약 시 약 45%, 당일 예약 시 약 40% 할인됩니다.`, pages: ['home', 'lift'] },
@@ -207,10 +214,35 @@ export const FAQ = [
   { q: '스키복도 빌릴 수 있나요?', a: `네. 프리미엄 고급의류(푸조·F2·셀시우스·펠리체·STL 등)는 1타임 예약가 ${won(20000)}, 하이엔드 최고급의류(어반그레이·픽고 점프슈트·온요네 데쌍트 등)는 ${won(30000)}입니다. 헬멧·고글·보호대는 1타임 ${won(5000)}입니다.`, pages: ['rental'] },
   { q: '예약은 어떻게 하나요?', a: `홈페이지 예약하기·견적문의에서 날짜, 스키장, 이용타임, 렌탈 품목, 강습을 고른 뒤 접수하거나 ${SITE.phone}로 전화해 주세요. 리프트권 할인은 이용 1일 전까지 전화 예약이 필요합니다.`, pages: ['home', 'reserve'] },
   { q: '다른 지점도 있나요?', a: `기존 홈페이지 기준 렌탈샵은 ${BRANCHES.rental.join(', ')}, 강습센터는 ${BRANCHES.lesson.join(', ')}입니다.`, pages: ['about'] },
-];
+]);
 
 // 검색어 → 답하는 페이지(llms.txt)
 export const KEYWORDS = [
   ['용평렌탈샵·용평리조트렌탈샵', 'rates/rental/'], ['용평스키장 렌탈 요금', 'rates/rental/'], ['알펜시아렌탈샵', 'rates/rental/'], ['용평 리프트권 할인', 'rates/lift/'], ['알펜시아 리프트권 할인', 'rates/lift/'],
   ['용평 스키 강습 요금', 'lesson/'], ['스키 강습 단계(처음·초급·중급·상급)', 'lesson/program/'], ['용평 콘도(타워·빌라·그린피아)', 'stay/tower/'], ['뽀드득 위치·오시는 길', 'location/'],
 ];
+
+// 팝업(어드민 '팝업 관리'). 기간은 화면에서 확인(지난 팝업은 자동으로 안 보임)
+export const POPUP = ov('popup', { on: false, title: '', body: '', img: '', link: '', linkText: '', from: '', to: '' });
+export const FAQ_PAGES = [['home', '홈'], ['about', '소개'], ['location', '오시는 길'], ['lift', '리프트 요금'], ['rental', '렌탈 요금'], ['lesson', '강습'], ['reserve', '예약']];
+
+// 기본정보·추적 코드(어드민 '기본정보'·'추적 코드')
+D.site = { phone: SITE.phone, sms: SITE.sms, hours: SITE.hours };
+D.tags = { ga4: SITE.analytics.ga4, naverWa: SITE.analytics.naver, naverVerify: SITE.analytics.naverVerify, googleVerify: SITE.analytics.googleVerify };
+if (OVERRIDES.site) {
+  for (const k of ['phone', 'sms', 'hours']) if (OVERRIDES.site[k] != null) SITE[k] = OVERRIDES.site[k];
+  SITE.phoneHref = 'tel:' + SITE.phone.replace(/\D/g, '');
+}
+if (OVERRIDES.tags) {
+  const t = OVERRIDES.tags;
+  SITE.analytics = { ga4: process.env.GA4_ID || t.ga4 || '', naver: process.env.NAVER_WA || t.naverWa || '', naverVerify: t.naverVerify || '', googleVerify: t.googleVerify || '' };
+}
+export const DEFAULTS = D;
+
+// 블로그(content/blog/*.md, 매일 09·13·18시 1편씩 — tools/blog-ai/generate.mjs + GitHub Actions)
+export const BLOG = {
+  name: '뽀드득 블로그', lead: '용평·알펜시아 스키 렌탈, 리프트권, 강습을 처음 준비하는 분이 묻는 질문에 현장에서 답합니다.',
+  categories: ['렌탈 가이드', '리프트권·요금', '스키 강습', '스키장 이용 팁', '숙박·여행'],
+  author: '뽀드득 렌탈팀',
+  covers: ['scene/lineup.webp', 'scene/carve.webp', 'scene/crew.webp', 'scene/duo.webp', 'scene/group.webp', 'scene/spray.webp'],
+};

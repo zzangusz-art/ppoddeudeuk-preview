@@ -1,15 +1,29 @@
-# 뽀드득: 빌드 → GitHub Pages 배포
-# 기본은 미리보기(모든 페이지 noindex, robots Disallow, canonical = Pages 주소).
-# 운영 전환 시 저장소 Variables: SITE_MODE=production, SITE_URL=https://도메인/ (+ GA4_ID, NAVER_WA, LEAD_ENDPOINT 선택)
+# 뽀드득: 빌드 → GitHub Pages 배포 + 블로그 AI 글 매일 3편(09·13·18시 KST, 1편씩)
+# 처음 한 번 설정(저장소 Settings):
+#   1) Pages → Source: GitHub Actions
+#   2) Secrets and variables → Actions → Secrets: ANTHROPIC_API_KEY (없으면 글 작성만 건너뛰고, 미리 써 둔 예약 글 공개·배포는 진행)
+#   3) Variables(선택): API_BASE=https://<Railway 주소> (접수·방문 집계 서버), SITE_MODE=production·SITE_URL=https://도메인/ (운영 전환 시)
+# 예약 공개: content/blog/*.md 의 date·time 이 지난 글만 빌드에 들어간다 → 매 회차 다시 빌드하면 그 시각 글이 공개된다.
 name: site
 
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '5 0,4,9 * * *'   # 매일 09:05 · 13:05 · 18:05 KST (GitHub 예약은 몇 분~수십 분 늦을 수 있음)
   workflow_dispatch:
+    inputs:
+      generate:
+        description: '블로그 글 AI 작성'
+        type: boolean
+        default: true
+      count:
+        description: '작성할 편수(1~5)'
+        type: string
+        default: '1'
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -24,12 +38,28 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
+
+      - name: 블로그 AI 글 작성(하루 3편 상한, 예약 글 포함)
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.generate)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COUNT: ${{ inputs.count || '1' }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "::warning::ANTHROPIC_API_KEY 미설정 — 글 작성을 건너뜁니다(예약 글 공개·배포는 진행)"; exit 0; fi
+          npm i --no-save --no-audit --no-fund @anthropic-ai/sdk@0.135.0
+          node tools/blog-ai/generate.mjs --cap 3 --count "$COUNT" || echo "::warning::이번 회차에 발행된 글이 없습니다(content/drafts 확인)"
+          git config user.name "ppoddeudeuk-blog-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content
+          if git diff --cached --quiet; then echo "새 글 없음"; else git commit -m "블로그: AI 글 자동 발행" && git pull --rebase && git push; fi
+
       - name: 빌드(깨진 링크·JSON-LD·H1 검사 포함)
         env:
           SITE_URL: ${{ vars.SITE_URL }}
           GA4_ID: ${{ vars.GA4_ID }}
           NAVER_WA: ${{ vars.NAVER_WA }}
+          API_BASE: ${{ vars.API_BASE }}
           LEAD_ENDPOINT: ${{ vars.LEAD_ENDPOINT }}
         run: |
           if [ "${{ vars.SITE_MODE }}" = "production" ]; then
@@ -38,6 +68,10 @@ jobs:
             node build.mjs --preview "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
           fi
           touch dist/.nojekyll
+
+      - name: 글 검증
+        run: node tools/blog-ai/generate.mjs --check
+
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

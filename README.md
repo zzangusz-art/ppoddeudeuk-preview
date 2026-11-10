@@ -22,6 +22,14 @@
 1. 요금·문구 `src/data.mjs`, 화면 `src/pages.mjs`, 디자인 `assets/css/style.css`
 2. `build.bat` — 모든 페이지·JSON-LD·sitemap·robots·llms.txt가 같이 바뀌고 깨진 링크·JSON-LD 오류·페이지당 H1 개수를 검사합니다(오류면 실패).
 
+## 관리자 어드민 · 접수 DB · 블로그 자동 발행 (2026-11-10)
+- **어드민** `/admin` — 대시보드 · 접수 관리(빠른 문의·견적·예약, SQLite DB) · 접속 통계 · 블로그 · 공지 · 갤러리 · 중고장비 · FAQ · 강사진 · 요금(리프트·렌탈·강습) · 팝업 · 기본정보 / 관리자 전용: 추적 코드 · 작업 기록 · 계정 관리. 코드 `tools/admin/`.
+- **저장 위치**: 접수(이름·연락처) = 서버 볼륨 `DATA_DIR/ppoddeudeuk.db` (git에 절대 안 들어감, 완료·취소 6개월 뒤 자동 삭제) / 사이트 내용 = `content/site.json` + `assets/img/up/` 커밋 → 자동 재배포 / 계정 = `DATA_DIR/admin-users.json`(비밀번호 scrypt 해시).
+- **계정 만들기**: `node tools/admin/make-users.mjs` → 저장소 **밖** `../관리자/관리자_계정.txt`(첫 비밀번호 + Railway 변수 값). 저장소가 공개라 계정 파일을 이 폴더에 두지 말 것.
+- **로컬 시험**: `toolsdmin-local.bat` → http://localhost:5540/admin (접수 DB는 `.data/`, 저장하면 이 폴더 파일을 바로 고치고 빌드).
+- **Railway 배포**: 이 저장소 연결 → `railway.json`(빌드 `node build.mjs`, 시작 `node tools/serve.mjs`) → Volumes 에 `/data` → Variables: `DATA_DIR=/data`, `SESSION_SECRET`, `ADMIN_USERS`, `GITHUB_TOKEN`(이 저장소 Contents 읽기·쓰기 fine-grained), `API_BASE=self`, `SITE_PREVIEW_URL=https://<railway 주소>/`·`SITE_NOINDEX=1`(도메인 전), `ALLOW_ORIGINS=https://zzangusz-art.github.io`. GitHub Pages 미리보기에서도 접수가 되게 하려면 저장소 Variables 에 `API_BASE=https://<railway 주소>`.
+- **블로그**: `content/blog/*.md` (머리말 date·time 이 지난 글만 공개 = 예약 발행). `tools/blog-ai/generate.mjs` 가 `content/blog/_topics.json`(메인 키워드 우선) 순서로 글을 쓰고 검증(사실 목록 밖 수치·과장·금지 표현·내부 링크·키워드 중복)을 통과해야 발행, 실패하면 `content/drafts/`. GitHub Actions 가 매일 09:05·13:05·18:05(KST)에 1편씩(하루 3편 상한, 예약 글 포함) — **저장소 Secrets 에 `ANTHROPIC_API_KEY` 필요**(없으면 글 작성만 건너뛰고 예약 글 공개·배포는 진행).
+
 ## 운영 전환 때 할 일
 - 도메인 확정 후 `set SITE_URL=https://도메인/` → `node build.mjs --cname 도메인` (미리보기 아님 = 검색 노출 허용, robots에 AI 봇 허용, canonical·sitemap이 그 주소)
 - 방문 분석: `set GA4_ID=G-...` `set NAVER_WA=...` 후 빌드(운영 빌드에만 태그가 들어갑니다). 서치어드바이저·서치콘솔 인증값은 `src/data.mjs`의 `analytics.naverVerify`·`googleVerify`

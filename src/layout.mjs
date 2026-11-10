@@ -5,7 +5,7 @@ import { esc, jsonld } from './lib.mjs';
 // 기존 홈페이지 주메뉴 8개를 그대로 옮김(+자주 묻는 질문)
 export const NAV = [
   // 기존 홈페이지 전체 메뉴 그대로(soon = 기존에도 '준비중'이던 항목: 누르면 안내)
-  { name: '뽀드득 안내', href: 'about/', sec: ['about', 'location', 'notice', 'faq'], sub: [['공지사항', 'notice/'], ['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['자주 묻는 질문', 'faq/']] },
+  { name: '뽀드득 안내', href: 'about/', sec: ['about', 'location', 'notice', 'faq', 'blog'], sub: [['공지사항', 'notice/'], ['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['자주 묻는 질문', 'faq/'], ['블로그', 'blog/']] },
   { name: '갤러리', href: 'gallery/', sec: ['gallery'], sub: [['의류 갤러리', 'gallery/#의류'], ['장비 갤러리', 'gallery/#장비'], ['장비관리 갤러리', 'gallery/#장비관리'], ['강습 갤러리', 'gallery/#강습'], ['중고장비 직거래 갤러리', 'secondhand/']] },
   { name: '요금안내', href: 'rates/lift/', sec: ['rates'], sub: [['리프트 요금', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']] },
   { name: '숙박안내', href: 'stay/tower/', sec: ['stay'], sub: [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/'], ['알펜시아 콘도', 'soon']] },
@@ -167,7 +167,7 @@ ${body}
     <button type="button" class="lb-nav lb-prev" aria-label="이전 사진">‹</button><button type="button" class="lb-nav lb-next" aria-label="다음 사진">›</button></figure>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>window.PPD=${JSON.stringify({ endpoint: SITE.leadEndpoint, sms: SITE.sms, phone: SITE.phone, resorts: Object.fromEntries(RESORTS.map(r => [r.id, { name: r.name, g: `${r.grooming} (${r.groomingNote})`, t: r.times.map(t => [t.name, t.opts]) }])) }).replace(/</g, '\\u003c')};</script>
+<script>window.PPD=${JSON.stringify({ api: SITE.api, endpoint: SITE.leadEndpoint || (SITE.api != null ? SITE.api + '/api/lead' : ''), sms: SITE.sms, phone: SITE.phone, resorts: Object.fromEntries(RESORTS.map(r => [r.id, { name: r.name, g: `${r.grooming} (${r.groomingNote})`, t: r.times.map(t => [t.name, t.opts]) }])) }).replace(/</g, '\\u003c')};</script>
 <script src="${u('assets/js/app.js')}?v=${v}" defer></script>
 </body>
 </html>

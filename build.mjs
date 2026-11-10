@@ -9,11 +9,13 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const opt = n => { const i = args.indexOf(n); return i > -1 ? args[i + 1] : null; };
-const PREVIEW = opt('--preview');
+// 미리보기(noindex): --preview <주소> 또는 환경변수 SITE_PREVIEW_URL(Railway 에서 도메인 연결 전)
+const PREVIEW = opt('--preview') || process.env.SITE_PREVIEW_URL || null;
 if (PREVIEW) process.env.SITE_URL = PREVIEW.endsWith('/') ? PREVIEW : PREVIEW + '/';
 const OUT = path.resolve(ROOT, opt('--out') || 'dist');
 
 const D = await import('./src/data.mjs');
+const { loadPosts } = await import('./tools/blog/lib.mjs');
 const { SITE, FAQ, STAY, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, BRANCHES, KEYWORDS, NOTICES, USED } = D;
 const { makeUrl, pageUrl, won } = await import('./src/lib.mjs');
 const S = await import('./src/schema.mjs');
@@ -34,17 +36,19 @@ const V = crypto.createHash('md5').update(fs.readFileSync(path.join(ROOT, 'asset
 
 const write = (rel, html) => { const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); };
 const pages = [];
+const nowKST = (() => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value])); return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour === '24' ? '00' : p.hour}:${p.minute}` }; })();
+const POSTS = loadPosts(path.join(ROOT, 'content/blog'), { R: '../../', now: process.env.BLOG_ALL === '1' ? null : nowKST });
 // 메인 키워드(2026-11-10 지정): 용평렌탈샵 · 용평리조트렌탈샵 · 용평스키장렌탈샵 · 알펜시아렌탈샵 · 용평스키장 렌탈
 const MAIN_KW = ['용평렌탈샵', '용평리조트렌탈샵', '용평스키장렌탈샵', '알펜시아렌탈샵', '용평스키장 렌탈'];
 const CORE = [...MAIN_KW, '뽀드득', '용평 리프트권 할인', '용평 스키 강습'];
 const bc = items => S.breadcrumb(items.map(([name, rel]) => ({ name, url: SITE.url + rel })));
 const faqOf = key => FAQ.filter(f => f.pages.includes(key));
 
-function emit({ out, title, description, body, section = '', pri = '0.7', type, crumbs, faq = [], extra = [], keywords = [], bodyClass = '' }) {
+function emit({ out, title, description, body, section = '', pri = '0.7', type, crumbs, faq = [], extra = [], keywords = [], bodyClass = '', lastmod = '' }) {
   const url = pageUrl(out);
   const schema = S.graph(S.business(), S.website(), S.webpage({ url, title, description, type }), crumbs ? bc(crumbs) : null, S.faqPage(faq, url), ...extra);
   write(out, page({ title, description, url, schema, section, noindex: !!PREVIEW, v: V, bodyClass, track: !PREVIEW, keywords: [...new Set([...keywords, ...CORE])] }, makeUrl(out), body(makeUrl(out))));
-  pages.push({ out, pri });
+  pages.push({ out, pri, lastmod });
 }
 
 // ── 홈 ──
@@ -52,7 +56,22 @@ emit({ out: 'index.html', pri: '1.0', bodyClass: 'home',
   title: '용평렌탈샵 뽀드득 | 용평리조트·용평스키장 렌탈샵, 알펜시아렌탈샵',
   description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 리프트권 할인 예약(용평 1타임 대인 ${won(34000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
   keywords: [...MAIN_KW, '모나 용평 렌탈', '용평 스키복 렌탈'], faq: faqOf('home'),
-  body: u => P.home(u) });
+  body: u => P.home(u, POSTS) });
+
+// ── 블로그(예약 공개: date·time 이 지금(KST)보다 늦은 글은 아직 빌드하지 않는다) ──
+for (const p of POSTS) {
+  const rel = POSTS.filter(x => x !== p && x.category === p.category).slice(0, 3);
+  const url = SITE.url + `blog/${p.slug}/`, img = SITE.url + 'assets/img/og-logo.jpg';
+  emit({ out: `blog/${p.slug}/index.html`, section: 'blog', pri: '0.6', type: 'WebPage', crumbs: [['홈', ''], ['블로그', 'blog/'], [p.title, `blog/${p.slug}/`]], faq: p.faq,
+    title: `${p.title} | 뽀드득`, description: p.description, keywords: [p.keyword, ...(p.tags || [])].filter(Boolean), lastmod: p.date,
+    extra: [{ '@type': 'BlogPosting', '@id': url + '#post', headline: p.title, description: p.description, datePublished: `${p.date}T${p.time || '09:00'}:00+09:00`, dateModified: `${p.updated || p.date}T${p.time || '09:00'}:00+09:00`,
+      author: { '@type': 'Organization', name: p.author || D.BLOG.author, url: SITE.url }, publisher: { '@id': SITE.url + '#business' }, mainEntityOfPage: url, image: img, keywords: [p.keyword, ...(p.tags || [])].filter(Boolean).join(', '), articleSection: p.category, inLanguage: 'ko-KR', wordCount: p.chars }],
+    body: u => P.blogPost(u, p, rel.length ? rel : POSTS.filter(x => x !== p).slice(0, 3)) });
+}
+emit({ out: 'blog/index.html', section: 'blog', pri: '0.7', type: 'CollectionPage', crumbs: [['홈', ''], ['블로그', 'blog/']],
+  title: '뽀드득 블로그 — 용평 스키 렌탈·리프트권·강습 가이드', description: D.BLOG.lead,
+  extra: [{ '@type': 'Blog', '@id': SITE.url + 'blog/#blog', name: D.BLOG.name, url: SITE.url + 'blog/', publisher: { '@id': SITE.url + '#business' }, blogPost: POSTS.slice(0, 20).map(p => ({ '@id': SITE.url + `blog/${p.slug}/#post` })) }],
+  body: u => P.blogIndex(u, POSTS) });
 
 // ── 뽀드득 안내 ──
 emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['홈', ''], ['소개 및 내부전경', 'about/']], faq: faqOf('about'),
@@ -127,7 +146,7 @@ emit({ out: 'privacy/index.html', pri: '0.1', crumbs: [['홈', ''], ['개인정�
 }
 
 // ── sitemap · robots · llms ──
-write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(p => `<url><loc>${pageUrl(p.out)}</loc><lastmod>${SITE.asof}</lastmod><priority>${p.pri}</priority></url>`).join('\n')}\n</urlset>\n`);
+write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(p => `<url><loc>${pageUrl(p.out)}</loc><lastmod>${p.lastmod || SITE.asof}</lastmod><priority>${p.pri}</priority></url>`).join('\n')}\n</urlset>\n`);
 write('robots.txt', PREVIEW ? 'User-agent: *\nDisallow: /\n'
   : ['# 검색엔진과 AI 검색·답변 엔진의 수집을 모두 허용합니다', 'User-agent: *', 'Allow: /', '',
     ...['Googlebot', 'Bingbot', 'Yeti', 'Daumoa', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot', 'Applebot-Extended'].flatMap(b => [`User-agent: ${b}`, 'Allow: /', '']),
@@ -176,7 +195,10 @@ ${KEYWORDS.map(([k, h]) => `- ${k}: ${SITE.url}${h}`).join('\n')}
 ## 자주 묻는 질문
 ${FAQ.map(f => `### ${f.q}\n${f.a}`).join('\n\n')}
 `;
-write('llms.txt', llms);
+write('llms.txt', llms + (POSTS.length ? `\n## 블로그(최근 글)\n${POSTS.slice(0, 30).map(p => `- [${p.title}](${SITE.url}blog/${p.slug}/): ${p.description}`).join('\n')}\n` : ''));
+// RSS(네이버 서치어드바이저 제출용)
+const xe = s => String(s).replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+write('rss.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${xe(D.BLOG.name)}</title><link>${SITE.url}blog/</link><description>${xe(D.BLOG.lead)}</description><language>ko</language>\n${POSTS.slice(0, 50).map(p => `<item><title>${xe(p.title)}</title><link>${SITE.url}blog/${p.slug}/</link><guid>${SITE.url}blog/${p.slug}/</guid><description>${xe(p.description)}</description><category>${xe(p.category)}</category><pubDate>${new Date(`${p.date}T${p.time || '09:00'}:00+09:00`).toUTCString()}</pubDate></item>`).join('\n')}\n</channel></rss>\n`);
 if (!PREVIEW && opt('--cname')) write('CNAME', opt('--cname') + '\n');
 
 // ── 검증: 내부 링크·자원, JSON-LD, 페이지당 H1 1개 ──

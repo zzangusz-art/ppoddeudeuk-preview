@@ -1,11 +1,12 @@
 {
   "name": "ppoddeudeuk-site",
   "private": true,
-  "description": "뽀드득 공식 홈페이지(기존 홈페이지 미러링 + AEO·GEO·SEO) — 정적 빌더, 의존성 없음",
+  "description": "뽀드득 공식 홈페이지(정적 빌더) + 관리자 어드민·접수 DB 서버 — 외부 패키지 없음",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "preview": "node build.mjs --preview http://localhost:5540/ && python -m http.server 5540 --directory dist"
+    "start": "node tools/serve.mjs",
+    "preview": "node build.mjs --preview http://localhost:5540/ && node tools/serve.mjs 5540"
   },
-  "engines": { "node": ">=22" }
+  "engines": { "node": "24" }
 }
