@@ -137,6 +137,13 @@ export const PROGRAM = [
   ] },
 ];
 
+// 강사진(기존 관리자 '강사진 관리' 등록 이미지 = 대한스키지도자연맹 강사 자격증). 기존 이름은 '테스트 2·3'이라 이름 대신 자격으로 표기 — 확인 필요: 강사 실명·경력
+export const INSTRUCTORS = [
+  { img: 'instructor/ksia-1.webp', cred: '대한스키지도자연맹(KSIA) 자격 강사' },
+  { img: 'instructor/ksia-2.webp', cred: '대한스키지도자연맹(KSIA) 자격 강사' },
+];
+export const INSTRUCTOR_LEAD = '공식 자격을 보유한 강사진이 수준별 맞춤 강습으로 안전하고 즐거운 스키를 도와드립니다.';
+
 // ── 숙박(기존 숙박 안내 그대로) ── 용평리조트 콘도. 알펜시아 콘도는 기존 사이트도 "준비중"
 const AMENITY = { appliance: 'TV / 전화기 / 냉장고 / 에어컨 / 전자렌지 / 드라이기', kitchen: '기본취사도구 일체', bath: '타월 / 비누' };
 export const STAY = [

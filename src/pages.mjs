@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { SITE, ABOUT, BRANCHES, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, BRANCHES, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -78,6 +78,9 @@ function galleryItems(u, items, group) {
 }
 const tabsBar = (id, tabs) => `<div class="tabs" role="tablist" data-tabs="${id}">${tabs.map(([k, t], i) => `<button type="button" role="tab" id="tab-${id}-${i}" aria-controls="pane-${id}-${i}" aria-selected="${i === 0}" data-tab="${esc(k)}">${esc(t)}</button>`).join('')}</div>`;
 
+// 강사진 카드(KSIA 자격증 이미지, 누르면 크게)
+export const instCards = u => `<div class="inst-cards">${INSTRUCTORS.map((it, i) => `<figure class="inst"><button type="button" class="inst-img" data-lb="${u('assets/img/' + it.img)}" data-lb-group="inst" data-lb-cap="${esc(it.cred)}">${img(u, 'assets/img/' + it.img, `뽀드득 강사 ${it.cred} 자격증`, { sizes: '(max-width: 760px) 80vw, 440px' })}</button><figcaption>${esc(it.cred)}</figcaption></figure>`).join('')}</div>`;
+
 // ── 홈 ──
 export function home(u) {
   // 기존 홈페이지 메인 바로가기 6칸(원본 아이콘 main-nav1~6) · 요금표 카드 5장(원본 이미지 sec6-bg1~5) 그대로
@@ -87,7 +90,7 @@ export function home(u) {
   return `
 <section class="hero" data-hero>
   <video class="hero-v" muted playsinline loop preload="metadata" poster="${u('assets/video/hero-poster.jpg')}" data-poster-m="${u('assets/video/hero-poster-m.jpg')}" data-src-xl="${u('assets/video/hero-1920.mp4')}" data-src="${u('assets/video/hero-1280.mp4')}" data-src-m="${u('assets/video/hero-m.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"></video>
-  <h1 class="sr">용평·알펜시아 스키 렌탈·강습 뽀드득 — 눈밭 위 ‘뽀드득’ 소리와 함께, 당신의 겨울이 시작됩니다</h1>
+  <div class="hero-cap"><h1><span class="sr">용평·알펜시아 스키 렌탈·강습 뽀드득 — </span><span class="t1">눈밭 위 ‘뽀드득’ 소리와 함께,</span><span class="t2">당신의 겨울이 시작됩니다</span></h1></div>
   <div class="hero-ctl"><button type="button" class="icon-btn glass" data-hero-sound aria-pressed="false" aria-label="소리 켜기">${ICON.mute}</button><button type="button" class="icon-btn glass" data-hero-replay aria-label="처음부터 다시 보기">${ICON.replay}</button></div>
 </section>
 
@@ -123,6 +126,12 @@ export function home(u) {
   </div>
   <ol class="lv-cards reveal">${PROGRAM.map((lv, i) => `<li><a href="${u('lesson/program/#' + lv.id)}"><span class="lv-no">0${i + 1}</span><strong>${esc(lv.name)}</strong><span>${esc(lv.lead)}</span></a></li>`).join('')}</ol>
 </div></section>
+
+<section class="main-inst" id="instructors">
+  <div class="inst-bg">${img(u, 'assets/img/common/instructor-bg.webp', '', { sizes: '100vw' })}</div>
+  <div class="wrap m-tit white reveal"><h2>강사진 소개</h2><p>${esc(INSTRUCTOR_LEAD)}</p></div>
+  <div class="wrap reveal">${instCards(u)}<p class="center inst-more"><a class="btn btn-glass" href="${u('lesson/instructors/')}">강사진 자세히 보기</a></p></div>
+</section>
 
 <section class="sec sec-gallery"><div class="wrap">
   <div class="sec-hd reveal"><p class="eyebrow">GALLERY</p><h2 class="h2">뽀드득 갤러리</h2><p>매장 장비와 의류, 새로 들어온 장비를 사진으로 확인하세요.</p></div>
@@ -298,7 +307,10 @@ export function instructors(u) {
   return subHead(u, { eyebrow: 'INSTRUCTORS', title: '강사진 소개', lead: '공식 자격을 보유한 강사진이 수준별 맞춤 강습으로 안전하고 즐거운 스키를 도와드립니다.', bg: 'scene/duo.webp', crumbs: [['강습안내', 'lesson/'], ['강사진 소개']] })
     + subTabs(u, lessonTabs, 'lesson/instructors/')
     + `<section class="sec"><div class="wrap narrow">
-  <div class="empty-card reveal">${ICON.user}<h2 class="h3">강사 프로필을 준비하고 있습니다</h2><p>뽀드득 소속 강사진은 공식 자격을 갖추고, 초급부터 상급까지 수준별·목표별 맞춤 강습을 진행합니다. 강사별 자격과 경력은 곧 이곳에 소개합니다. 강습 상담은 전화로 문의해 주세요.</p><p><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a> <a class="btn btn-line" href="${u('lesson/program/')}">강습 프로그램 보기</a></p></div>
+  ${answer('뽀드득 강사는 어떤 자격을 가지고 있나요?', `<strong>뽀드득 소속 강사는 대한스키지도자연맹(KSIA) 강사 자격을 보유하고 있습니다.</strong> 초급부터 상급까지 수준별·목표별 맞춤 강습을 1:1 또는 2:1로 진행합니다.`)}
+  <div class="inst-page reveal">${instCards(u)}</div>
+  <p class="note center-note">강사별 자격증 이미지는 개인정보 보호를 위해 자격 번호를 가린 상태입니다. 강사 배정과 강습 상담은 전화로 문의해 주세요.</p>
+  <p class="btn-row"><a class="btn btn-red" href="${u('reserve/')}">${ICON.cal}강습 예약하기</a><a class="btn btn-line" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a><a class="btn btn-line" href="${u('lesson/program/')}">강습 프로그램 보기</a></p>
 </div></section>`;
 }
 
@@ -357,6 +369,7 @@ export function book(u, type) {
     + `<section class="sec"><div class="wrap book-grid">
   <div>${bookForm(u, type)}</div>
   <aside class="book-aside">
+    <div class="aside-card" id="check"><h2 class="h4">${isQ ? '견적확인' : '예약확인'}</h2><p>접수하신 ${isQ ? '견적' : '예약'}은 남겨 주신 연락처로 <b>문자 또는 전화</b>로 확인해 드립니다. 개인정보 보호를 위해 접수 목록은 공개하지 않습니다. 확인이 늦어지면 전화 주세요.</p><p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
     <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>리프트권 할인은 <b>이용 1일 전까지 유선 예약</b>이 필수입니다.</p></div>
     <div class="aside-card"><h2 class="h4">스키장별 정설시간</h2><ul>${RESORTS.map(r => `<li><b>${r.short}</b> ${r.grooming} (${r.groomingNote})</li>`).join('')}</ul></div>
     <div class="aside-card"><h2 class="h4">개인정보 안내</h2><p>${esc(PRIVACY.short)}</p></div>
@@ -371,6 +384,8 @@ export function privacy(u) {
   <p>${SITE.name}(${esc(SITE.operator)})은 견적·예약 상담에 필요한 최소한의 정보만 수집하며, 관계법령에 따라 다음과 같이 안내합니다.</p>
   <p>${esc(PRIVACY.short)}</p>
   <table class="tbl tbl-kv"><caption class="sr">개인정보 수집 및 이용</caption><tbody>${PRIVACY.items.map(([k, v]) => `<tr><th scope="row">${k}</th><td>${esc(v)}</td></tr>`).join('')}<tr><th scope="row">동의 거부 권리</th><td>개인정보 수집에 동의하지 않을 수 있으며, 이 경우 홈페이지 접수 대신 전화로 상담받을 수 있습니다.</td></tr><tr><th scope="row">제3자 제공</th><td>수집한 정보는 상담과 예약 진행 외의 목적으로 이용하거나 제3자에게 제공하지 않습니다.</td></tr></tbody></table>
+  <h2 class="h3" id="email">이메일무단수집거부</h2>
+  <p>본 웹사이트에 게시된 이메일 주소가 전자우편 수집 프로그램이나 그 밖의 기술적 장치를 이용하여 무단으로 수집되는 것을 거부하며 이를 위반시 정보통신망법에 의해 형사처벌됨을 유념하시기 바랍니다.</p>
   <p class="note">시행일: ${kdate(SITE.asof)}</p>
 </div></section>`;
 }

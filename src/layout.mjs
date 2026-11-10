@@ -4,15 +4,17 @@ import { esc, jsonld } from './lib.mjs';
 
 // 기존 홈페이지 주메뉴 8개를 그대로 옮김(+자주 묻는 질문)
 export const NAV = [
-  { name: '뽀드득 안내', href: 'about/', sec: ['about', 'location', 'notice', 'faq'], sub: [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']] },
-  { name: '갤러리', href: 'gallery/', sec: ['gallery'], sub: [['의류 갤러리', 'gallery/#의류'], ['장비 갤러리', 'gallery/#장비'], ['장비관리 갤러리', 'gallery/#장비관리'], ['강습 갤러리', 'gallery/#강습']] },
+  // 기존 홈페이지 전체 메뉴 그대로(soon = 기존에도 '준비중'이던 항목: 누르면 안내)
+  { name: '뽀드득 안내', href: 'about/', sec: ['about', 'location', 'notice', 'faq'], sub: [['공지사항', 'notice/'], ['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['자주 묻는 질문', 'faq/']] },
+  { name: '갤러리', href: 'gallery/', sec: ['gallery'], sub: [['의류 갤러리', 'gallery/#의류'], ['장비 갤러리', 'gallery/#장비'], ['장비관리 갤러리', 'gallery/#장비관리'], ['강습 갤러리', 'gallery/#강습'], ['중고장비 직거래 갤러리', 'secondhand/']] },
   { name: '요금안내', href: 'rates/lift/', sec: ['rates'], sub: [['리프트 요금', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']] },
-  { name: '숙박안내', href: 'stay/tower/', sec: ['stay'], sub: [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/']] },
+  { name: '숙박안내', href: 'stay/tower/', sec: ['stay'], sub: [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/'], ['알펜시아 콘도', 'soon']] },
   { name: '강습안내', href: 'lesson/', sec: ['lesson'], sub: [['강습 요금', 'lesson/'], ['강사진 소개', 'lesson/instructors/'], ['강습 프로그램', 'lesson/program/']] },
-  { name: '견적문의', href: 'quote/', sec: ['quote'], sub: [['견적문의', 'quote/']] },
-  { name: '예약하기', href: 'reserve/', sec: ['reserve'], sub: [['예약하기', 'reserve/']] },
+  { name: '견적문의', href: 'quote/', sec: ['quote'], sub: [['견적문의', 'quote/'], ['견적확인', 'quote/#check']] },
+  { name: '예약하기', href: 'reserve/', sec: ['reserve'], sub: [['예약하기', 'reserve/'], ['예약확인', 'reserve/#check'], ['네이버 예약', 'soon']] },
   { name: '중고장비 직거래장터', href: 'secondhand/', sec: ['secondhand'], sub: [['중고장비 직거래장터', 'secondhand/']] },
 ];
+const subLink = (u, t, h) => h === 'soon' ? `<a href="#" data-soon>${esc(t)}</a>` : `<a href="${u(h)}">${esc(t)}</a>`;
 
 export const ICON = {
   phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
@@ -54,9 +56,9 @@ function tracking(on) {
 export function page(meta, u, body) {
   const { title, description, url, schema, section = '', ogImage = 'assets/img/og.jpg', noindex, v, bodyClass = '', keywords = [], track = false, h1 } = meta;
   const og = ogImage.startsWith('http') ? ogImage : SITE.url + ogImage;
-  const navHtml = NAV.map(n => `<li class="gnb-item${n.sec.includes(section) ? ' is-on' : ''}"><a href="${u(n.href)}" class="gnb-link"${n.sec.includes(section) ? ' aria-current="page"' : ''}>${esc(n.name)}</a>${n.sub.length > 1 ? `<div class="gnb-sub"><ul>${n.sub.map(([t, h]) => `<li><a href="${u(h)}">${esc(t)}</a></li>`).join('')}</ul></div>` : ''}</li>`).join('');
+  const navHtml = NAV.map(n => `<li class="gnb-item${n.sec.includes(section) ? ' is-on' : ''}"><a href="${u(n.href)}" class="gnb-link"${n.sec.includes(section) ? ' aria-current="page"' : ''}>${esc(n.name)}</a><div class="gnb-sub"><ul>${n.sub.map(([t, h]) => `<li>${subLink(u, t, h)}</li>`).join('')}</ul></div></li>`).join('');
   const drawer = NAV.map(n => n.sub.length > 1
-    ? `<details class="dr-grp"${n.sec.includes(section) ? ' open' : ''}><summary>${esc(n.name)}${ICON.chev}</summary><ul>${n.sub.map(([t, h]) => `<li><a href="${u(h)}">${esc(t)}</a></li>`).join('')}</ul></details>`
+    ? `<details class="dr-grp"${n.sec.includes(section) ? ' open' : ''}><summary>${esc(n.name)}${ICON.chev}</summary><ul>${n.sub.map(([t, h]) => `<li>${subLink(u, t, h)}</li>`).join('')}</ul></details>`
     : `<a class="dr-one" href="${u(n.href)}">${esc(n.name)}</a>`).join('');
   return `<!doctype html>
 <html lang="ko">
@@ -95,6 +97,7 @@ ${tracking(track)}
   <div class="hd-in">
     <a class="logo" href="${u('')}" aria-label="${SITE.name} 홈"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="480" height="128"></a>
     <nav class="gnb" aria-label="주메뉴"><ul>${navHtml}</ul></nav>
+    <div class="mega-bg" aria-hidden="true"></div>
     <div class="hd-act">
       <a class="hd-tel" href="${SITE.phoneHref}">${ICON.phone}<span>${SITE.phone}</span></a>
       <a class="btn btn-red btn-sm hd-cta" href="${u('reserve/')}">예약하기</a>
@@ -114,14 +117,12 @@ ${tracking(track)}
 ${body}
 </main>
 <footer class="ft">
+  <div class="ft-bg">${'<img src="' + u('assets/img/common/footer-bg.webp') + '" alt="" width="1920" height="380" loading="lazy">'}</div>
   <div class="wrap ft-in">
-    <div class="ft-brand"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="180" height="48" loading="lazy"><p>${esc(SITE.tagline)}</p></div>
-    <div class="ft-info">
-      <p><strong>${SITE.name}</strong> (${SITE.operator}) · 대표 ${SITE.ceo} · 사업자등록번호 ${SITE.bizNo}</p>
-      <p>주소 ${SITE.address.full} · 고객센터 <a href="${SITE.phoneHref}">${SITE.phone}</a></p>
-      <p class="ft-links"><a href="${u('privacy/')}">개인정보처리방침</a><a href="${u('faq/')}">자주 묻는 질문</a><a href="${u('location/')}">오시는 길</a></p>
-      <p class="ft-copy">© ${SITE.name}. All rights reserved.</p>
-    </div>
+    <a class="ft-logo" href="${u('')}"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="240" height="64" loading="lazy"></a>
+    <address class="ft-info"><span>대표 : ${SITE.ceo}</span><span>사업자등록번호 : ${SITE.bizNo}</span><br><span>주소 : ${SITE.address.full}</span><span>고객센터 : <a href="${SITE.phoneHref}">${SITE.phone}</a></span></address>
+    <ul class="ft-links"><li><a href="${u('privacy/')}">개인정보처리방침</a></li><li><a href="${u('privacy/#email')}">이메일무단수집거부</a></li></ul>
+    <p class="ft-copy">Copyright by ${SITE.name}. All Right Reserved.</p>
   </div>
 </footer>
 <nav class="mbar" aria-label="빠른 연락">

@@ -21,6 +21,20 @@
   const onScroll = () => hd && hd.classList.toggle('is-solid', !hasCover || scrollY > 24);
   onScroll(); addEventListener('scroll', onScroll, { passive: true });
 
+  /* 전체 드롭다운(메가 메뉴): 메뉴에 마우스를 올리거나 키보드로 들어오면 모든 하위 메뉴가 한 번에 펼쳐진다 */
+  const gnb = $('.gnb'), megaBg = $('.mega-bg');
+  if (gnb && hd) {
+    let t;
+    const open = () => { clearTimeout(t); const h = Math.max(...$$('.gnb-sub', gnb).map(x => x.scrollHeight)); megaBg.style.height = h + 'px'; hd.classList.add('is-mega'); };
+    const close = () => { t = setTimeout(() => hd.classList.remove('is-mega'), 120); };
+    gnb.addEventListener('mouseenter', open); gnb.addEventListener('focusin', open);
+    hd.addEventListener('mouseleave', close);
+    gnb.addEventListener('focusout', e => { if (!gnb.contains(e.relatedTarget)) close(); });
+    megaBg.addEventListener('mouseenter', () => clearTimeout(t));
+  }
+  // 기존에도 '준비중'이던 메뉴(알펜시아 콘도·네이버 예약)
+  document.addEventListener('click', e => { const a = e.target.closest('[data-soon]'); if (!a) return; e.preventDefault(); toast('준비 중입니다. 전화로 문의해 주세요.'); });
+
   /* 드로어(전체 메뉴) */
   let lastFocus;
   // 열기·닫기는 프레임 타이밍에 기대지 않는다(강제 리플로 후 클래스) — 빠르게 열고 닫아도 순서가 꼬이지 않게 닫힘 타이머를 취소
@@ -66,8 +80,12 @@
       // 첫 화면 그림이 먼저 뜨게, 페이지 로드가 끝난 뒤 영상을 받는다
       if (document.readyState === 'complete') start(); else addEventListener('load', start, { once: true });
     }
-    // 끝 4.4초(흰 화면 + 로고): 문구를 감추고, 흰 바탕 위에서 메뉴 글자가 보이게 헤더를 어두운 글자로
-    v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); });
+    // 문구: 영상 시작 0.3~2.8초(약 2초 반)만 보이고 사라짐 — 반복될 때마다 다시. 영상을 못 틀면 계속 보임
+    const capOn = () => !v.src || v.readyState < 2 || (v.currentTime > 0.3 && v.currentTime < 2.8);
+    hero.classList.add('cap-on');
+    // 끝 4.4초(흰 화면 + 로고): 흰 바탕 위에서 메뉴 글자가 보이게 헤더를 어두운 글자로
+    v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); hero.classList.toggle('cap-on', capOn()); });
+    v.addEventListener('playing', () => hero.classList.toggle('cap-on', capOn()));
     soundBtn.addEventListener('click', () => {
       if (!v.src) start();
       v.muted = !v.muted; soundBtn.setAttribute('aria-pressed', String(!v.muted)); soundBtn.setAttribute('aria-label', v.muted ? '소리 켜기' : '소리 끄기');
