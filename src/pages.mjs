@@ -89,8 +89,8 @@ export function home(u) {
   const steps = [['날짜·스키장 선택', '이용 날짜와 용평·알펜시아 중 스키장, 이용타임(1·2·3타임)을 고릅니다.'], ['렌탈·강습 선택', '스키·보드 장비, 의류, 강습 종목·인원·시간을 함께 고릅니다.'], ['확인 연락', '접수 내용을 확인해 전화나 문자로 안내드립니다. 리프트권은 이용 1일 전까지 예약해야 할인됩니다.']];
   return `
 <section class="hero" data-hero>
-  <video class="hero-v" muted playsinline loop preload="metadata" poster="${u('assets/video/hero-poster.jpg')}" data-poster-m="${u('assets/video/hero-poster-m.jpg')}" data-src-xl="${u('assets/video/hero-1920.mp4')}" data-src="${u('assets/video/hero-1280.mp4')}" data-src-m="${u('assets/video/hero-m.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"></video>
-  <div class="hero-cap"><h1><span class="sr">용평·알펜시아 스키 렌탈·강습 뽀드득 — </span><span class="t1">눈밭 위 ‘뽀드득’ 소리와 함께,</span><span class="t2">당신의 겨울이 시작됩니다</span></h1></div>
+  <video class="hero-v" muted playsinline loop autoplay preload="auto" poster="${u('assets/video/hero-poster.jpg')}" data-poster-m="${u('assets/video/hero-poster-m.jpg')}" data-src-xl="${u('assets/video/hero-1920.mp4')}" data-src="${u('assets/video/hero-1280.mp4')}" data-src-m="${u('assets/video/hero-m.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"></video>
+  <h1 class="sr">용평렌탈샵 뽀드득 — 용평리조트·용평스키장·알펜시아 스키 렌탈샵</h1>
   <div class="hero-ctl"><button type="button" class="icon-btn glass" data-hero-sound aria-pressed="false" aria-label="소리 켜기">${ICON.mute}</button><button type="button" class="icon-btn glass" data-hero-replay aria-label="처음부터 다시 보기">${ICON.replay}</button></div>
 </section>
 

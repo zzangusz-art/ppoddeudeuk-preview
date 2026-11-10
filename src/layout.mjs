@@ -54,7 +54,7 @@ function tracking(on) {
 }
 
 export function page(meta, u, body) {
-  const { title, description, url, schema, section = '', ogImage = 'assets/img/og.jpg', noindex, v, bodyClass = '', keywords = [], track = false, h1 } = meta;
+  const { title, description, url, schema, section = '', ogImage = 'assets/img/og-logo.jpg', noindex, v, bodyClass = '', keywords = [], track = false, h1 } = meta;
   const og = ogImage.startsWith('http') ? ogImage : SITE.url + ogImage;
   const navHtml = NAV.map(n => `<li class="gnb-item${n.sec.includes(section) ? ' is-on' : ''}"><a href="${u(n.href)}" class="gnb-link"${n.sec.includes(section) ? ' aria-current="page"' : ''}>${esc(n.name)}</a><div class="gnb-sub"><ul>${n.sub.map(([t, h]) => `<li>${subLink(u, t, h)}</li>`).join('')}</ul></div></li>`).join('');
   const drawer = NAV.map(n => n.sub.length > 1
@@ -77,7 +77,7 @@ ${keywords.length ? `<meta name="keywords" content="${esc(keywords.join(', '))}"
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${og}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="뽀드득 로고 — 용평렌탈샵"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0e1a2b">
 <meta name="format-detection" content="telephone=no">

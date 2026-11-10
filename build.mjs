@@ -34,7 +34,9 @@ const V = crypto.createHash('md5').update(fs.readFileSync(path.join(ROOT, 'asset
 
 const write = (rel, html) => { const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); };
 const pages = [];
-const CORE = ['뽀드득', '용평 렌탈샵', '용평 스키 렌탈', '알펜시아 렌탈샵', '용평 리프트권 할인', '스키 강습'];
+// 메인 키워드(2026-11-10 지정): 용평렌탈샵 · 용평리조트렌탈샵 · 용평스키장렌탈샵 · 알펜시아렌탈샵 · 용평스키장 렌탈
+const MAIN_KW = ['용평렌탈샵', '용평리조트렌탈샵', '용평스키장렌탈샵', '알펜시아렌탈샵', '용평스키장 렌탈'];
+const CORE = [...MAIN_KW, '뽀드득', '용평 리프트권 할인', '용평 스키 강습'];
 const bc = items => S.breadcrumb(items.map(([name, rel]) => ({ name, url: SITE.url + rel })));
 const faqOf = key => FAQ.filter(f => f.pages.includes(key));
 
@@ -47,17 +49,17 @@ function emit({ out, title, description, body, section = '', pri = '0.7', type, 
 
 // ── 홈 ──
 emit({ out: 'index.html', pri: '1.0', bodyClass: 'home',
-  title: '뽀드득 | 용평·알펜시아 스키 렌탈샵, 리프트권 할인·스키 강습',
-  description: `용평리조트·알펜시아 5분, 평창 대관령면 스키 렌탈샵 뽀드득. 리프트권 예약 시 용평 1타임 대인 ${won(34000)}, 초급자 스키·보드 렌탈 ${won(15000)}부터, 1:1·2:1 스키·보드 강습.`,
-  keywords: ['용평 스키 렌탈샵', '알펜시아 스키 렌탈', '용평리조트 렌탈샵', '모나 용평 렌탈'], faq: faqOf('home'),
+  title: '용평렌탈샵 뽀드득 | 용평리조트·용평스키장 렌탈샵, 알펜시아렌탈샵',
+  description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 리프트권 할인 예약(용평 1타임 대인 ${won(34000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
+  keywords: [...MAIN_KW, '모나 용평 렌탈', '용평 스키복 렌탈'], faq: faqOf('home'),
   body: u => P.home(u) });
 
 // ── 뽀드득 안내 ──
 emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['홈', ''], ['소개 및 내부전경', 'about/']], faq: faqOf('about'),
-  title: '뽀드득 소개 및 내부전경 — 용평 스키 렌탈·강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. 렌탈샵 ${BRANCHES.rental.join('·')}, 강습센터 ${BRANCHES.lesson[0]}. 매장 내부 사진.`,
+  title: '뽀드득 소개 및 내부전경 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. 렌탈샵 ${BRANCHES.rental.join('·')}, 강습센터 ${BRANCHES.lesson[0]}. 매장 내부 사진.`,
   body: u => P.about(u) });
 emit({ out: 'location/index.html', section: 'location', crumbs: [['홈', ''], ['오시는 길', 'location/']], faq: faqOf('location'),
-  title: '뽀드득 오시는 길 — 평창 대관령면 올림픽로 238 (용평·알펜시아 5분)', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
+  title: '용평렌탈샵 뽀드득 오시는 길 — 평창 대관령면 올림픽로 238 (용평·알펜시아 5분)', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
   body: u => P.location(u) });
 emit({ out: 'notice/index.html', section: 'notice', pri: '0.4', crumbs: [['홈', ''], ['공지사항', 'notice/']],
   title: '공지사항 | 뽀드득', description: '뽀드득 스키 렌탈·강습 공지사항입니다.',
@@ -82,8 +84,8 @@ emit({ out: 'rates/lift/index.html', section: 'rates', pri: '0.9', crumbs: [['�
   keywords: ['용평 리프트권 할인', '알펜시아 리프트권 할인', '용평 리프트권 가격', '모나 용평 리프트권'],
   body: u => P.lift(u) });
 emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']], faq: faqOf('rental'),
-  title: `용평 스키 렌탈 요금 — 장비·스키복·보호장비 ${SITE.season} | 뽀드득`, description: `프리미엄 초급자 스키·보드 1타임 예약가 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드 ${won(40000)}~. 스키복 ${won(20000)}~(어반그레이 등 하이엔드 ${won(30000)}), 헬멧·고글·보호대 ${won(5000)}.`,
-  keywords: ['용평 스키 렌탈 가격', '용평 스키복 렌탈', '어반그레이 렌탈', '용평 보드 렌탈'],
+  title: `용평스키장 렌탈 요금 ${SITE.season} — 장비·스키복·보호장비 | 용평렌탈샵 뽀드득`, description: `프리미엄 초급자 스키·보드 1타임 예약가 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드 ${won(40000)}~. 스키복 ${won(20000)}~(어반그레이 등 하이엔드 ${won(30000)}), 헬멧·고글·보호대 ${won(5000)}.`,
+  keywords: ['용평스키장 렌탈 가격', '용평리조트 렌탈 요금', '알펜시아 렌탈 요금', '용평 스키복 렌탈', '어반그레이 렌탈', '용평 보드 렌탈'],
   body: u => P.rental(u) });
 
 // ── 숙박 ──

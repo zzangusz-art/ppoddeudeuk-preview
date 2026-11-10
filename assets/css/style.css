@@ -527,3 +527,30 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .inst-page .inst figcaption{color:var(--ink)}
 .inst-page{margin:10px 0 24px}
 .center-note{text-align:center}
+
+/* ── 헤더 전화번호 한 줄 + 넓은 화면에서 헤더 폭 넓게(기존처럼 가로 꽉) ── */
+.hd-tel,.hd-cta{white-space:nowrap;flex-shrink:0}
+.hd-tel span{white-space:nowrap}
+@media (min-width:1240px){.hd-in{width:min(100% - 48px,1760px)}}
+@media (min-width:1500px){.hd-tel{display:none}}
+@media (min-width:1600px){.hd-tel{display:inline-flex}}
+
+/* ── 모바일 최적화(11-10) ── */
+.facts li{display:block;line-height:1.6}
+.facts b{display:inline-block;margin-right:14px}
+.link-more{padding:10px 0;margin-top:8px}
+@media (max-width:760px){
+  .facts li{padding:12px 16px;font-size:15px}
+  .facts b{display:block;margin:0 0 2px;font-size:13px}
+  .facts em{white-space:nowrap}
+}
+@media (max-width:760px){
+  .tabs{flex-wrap:wrap;overflow:visible;gap:6px}
+  .tabs [role=tab]{min-height:40px;padding:0 14px;font-size:14px}
+  .inst-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .inst{width:auto}
+  .inst-img{border-radius:6px}
+  .inst figcaption{margin-top:10px;font-size:12.5px;line-height:1.45;word-break:keep-all}
+  .main-inst{padding:56px 0}
+  .mc-map .map,.main-contact .map{min-height:0}
+}

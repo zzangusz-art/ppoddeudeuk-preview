@@ -63,29 +63,22 @@
   else $$('.reveal').forEach(el => onEnter(el, () => el.classList.add('is-in')));
   setTimeout(check, 600);
 
-  /* 히어로 영상: 화면 크기별 파일, 끝부분(로고 엔드카드)에서는 문구를 감춘다 */
+  /* 히어로 영상: 화면 크기별 파일, 문구 없이 바로 재생 */
   const hero = $('[data-hero]');
   if (hero) {
     const v = $('.hero-v', hero);
     const mobile = matchMedia('(max-width: 760px)').matches;
-    const saveData = navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || ''));
     if (mobile) v.poster = v.dataset.posterM;
     // PC는 원본 최고 화질(1920), 회선이 느리다고 알려 온 경우만 1280. 휴대폰은 원본 화소 세로 영상
     const slow = navigator.connection && /(^|-)3g|2g/.test(navigator.connection.effectiveType || '');
     const src = mobile ? v.dataset.srcM : (slow ? v.dataset.src : v.dataset.srcXl);
     const soundBtn = $('[data-hero-sound]', hero), replayBtn = $('[data-hero-replay]', hero);
     const icons = { on: soundBtn.innerHTML, off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6"/></svg>' };
-    const start = () => { if (!v.src) { v.src = src; } const p = v.play(); p && p.catch(() => {}); };
-    if (!reduce && !saveData) {
-      // 첫 화면 그림이 먼저 뜨게, 페이지 로드가 끝난 뒤 영상을 받는다
-      if (document.readyState === 'complete') start(); else addEventListener('load', start, { once: true });
-    }
-    // 문구: 영상 시작 0.3~2.8초(약 2초 반)만 보이고 사라짐 — 반복될 때마다 다시. 영상을 못 틀면 계속 보임
-    const capOn = () => !v.src || v.readyState < 2 || (v.currentTime > 0.3 && v.currentTime < 2.8);
-    hero.classList.add('cap-on');
+    const start = () => { if (!v.src) { v.src = src; v.addEventListener('loadedmetadata', () => { if (v.currentTime < 0.6) v.currentTime = 0.6; }, { once: true }); } const p = v.play(); p && p.catch(() => {}); };  // 첫 재생은 흰 화면(0.6초) 건너뛰고 바로 영상
+    // 페이지가 열리자마자 바로 재생(로드 완료를 기다리지 않음)
+    if (!reduce) start();
     // 끝 4.4초(흰 화면 + 로고): 흰 바탕 위에서 메뉴 글자가 보이게 헤더를 어두운 글자로
-    v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); hero.classList.toggle('cap-on', capOn()); });
-    v.addEventListener('playing', () => hero.classList.toggle('cap-on', capOn()));
+    v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); });
     soundBtn.addEventListener('click', () => {
       if (!v.src) start();
       v.muted = !v.muted; soundBtn.setAttribute('aria-pressed', String(!v.muted)); soundBtn.setAttribute('aria-label', v.muted ? '소리 켜기' : '소리 끄기');
@@ -148,7 +141,7 @@
   const map = $('[data-roughmap]');
   if (map) {
     onEnter(map, () => {
-      const render = () => { try { new window.daum.roughmap.Lander({ timestamp: map.dataset.roughmap, key: map.dataset.roughmapKey, mapWidth: String(Math.round(map.clientWidth)), mapHeight: map.dataset.mapH || '420' }).render(); map.classList.add('is-loaded'); } catch { $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다. 아래 지도 버튼을 이용해 주세요.'; } };
+      const render = () => { try { new window.daum.roughmap.Lander({ timestamp: map.dataset.roughmap, key: map.dataset.roughmapKey, mapWidth: String(Math.round(map.clientWidth)), mapHeight: String(innerWidth <= 760 ? Math.min(+(map.dataset.mapH || 420), 340) : +(map.dataset.mapH || 420)) }).render(); map.classList.add('is-loaded'); } catch { $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다. 아래 지도 버튼을 이용해 주세요.'; } };
       const dw = document.write.bind(document);
       document.write = html => { const m = /src="([^"]+)"/.exec(html); if (!m) return dw(html); const s = document.createElement('script'); s.src = m[1]; s.charset = 'UTF-8'; s.onload = () => { document.write = dw; render(); }; document.head.appendChild(s); };
       const l = document.createElement('script'); l.src = 'https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js'; l.charset = 'UTF-8'; l.onerror = () => { document.write = dw; $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다.'; }; document.head.appendChild(l);

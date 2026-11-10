@@ -211,6 +211,6 @@ export const FAQ = [
 
 // 검색어 → 답하는 페이지(llms.txt)
 export const KEYWORDS = [
-  ['용평 스키 렌탈·용평 렌탈샵', 'rates/rental/'], ['알펜시아 렌탈샵', 'rates/rental/'], ['용평 리프트권 할인', 'rates/lift/'], ['알펜시아 리프트권 할인', 'rates/lift/'],
+  ['용평렌탈샵·용평리조트렌탈샵', 'rates/rental/'], ['용평스키장 렌탈 요금', 'rates/rental/'], ['알펜시아렌탈샵', 'rates/rental/'], ['용평 리프트권 할인', 'rates/lift/'], ['알펜시아 리프트권 할인', 'rates/lift/'],
   ['용평 스키 강습 요금', 'lesson/'], ['스키 강습 단계(처음·초급·중급·상급)', 'lesson/program/'], ['용평 콘도(타워·빌라·그린피아)', 'stay/tower/'], ['뽀드득 위치·오시는 길', 'location/'],
 ];
