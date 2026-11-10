@@ -49,7 +49,7 @@ export function rentalTable() {
   const body = RENTAL.map(g => g.items.map((it, i) => {
     const name = `<td class="nm"><strong>${esc(it.name)}</strong>${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</td>`;
     const cells = g.flat ? it.p.map(p => `<td colspan="2" class="hl">${price(p)}</td>`).join('') : it.p.map(([a, b]) => `<td>${price(a)}</td><td class="hl">${b ? `<strong>${won(b)}</strong>` : price(0)}</td>`).join('');
-    return `<tr>${i === 0 ? `<th scope="rowgroup" rowspan="${g.items.length}" class="t">${g.group}</th>` : ''}${name}${cells}</tr>`;
+    return `<tr${i === 0 ? ` data-anchor="${g.key}"` : ''}>${i === 0 ? `<th scope="rowgroup" rowspan="${g.items.length}" class="t">${g.group}</th>` : ''}${name}${cells}</tr>`;
   }).join('')).join('');
   return `<div class="tbl-wrap"><table class="tbl tbl-rental"><caption>25-26시즌 용평리조트 렌탈 요금표</caption>${head}<tbody>${body}</tbody></table></div>`;
 }
@@ -80,24 +80,18 @@ const tabsBar = (id, tabs) => `<div class="tabs" role="tablist" data-tabs="${id}
 
 // ── 홈 ──
 export function home(u) {
-  const quick = [['요금안내', 'rates/lift/', ICON.ticket], ['강습안내', 'lesson/', ICON.ski], ['견적문의', 'quote/', ICON.doc], ['예약하기', 'reserve/', ICON.cal], ['갤러리', 'gallery/', ICON.pic], ['오시는 길', 'location/', ICON.pin]];
-  const rateTabs = [['ylift', '용평리프트'], ['alift', '알펜시아리프트'], ['gear', '장비'], ['wear', '의류'], ['safety', '보호장비']];
-  const ratePanes = [liftCards(LIFT[0]), liftCards(LIFT[1]), rentalCards('gear'), rentalCards('wear'), rentalCards('safety')];
+  // 기존 홈페이지 메인 바로가기 6칸(원본 아이콘 main-nav1~6) · 요금표 카드 5장(원본 이미지 sec6-bg1~5) 그대로
+  const quick = [['요금안내', 'rates/lift/'], ['강습안내', 'lesson/'], ['견적문의', 'quote/'], ['예약하기', 'reserve/'], ['갤러리', 'gallery/'], ['오시는 길', 'location/']];
+  const rateCards = [['용평리프트 요금표', 'rates/lift/#yongpyong'], ['알펜시아리프트 요금표', 'rates/lift/#alpensia'], ['장비 요금표', 'rates/rental/#gear'], ['의류 요금표', 'rates/rental/#wear'], ['보호장비 요금표', 'rates/rental/#safety']];
   const steps = [['날짜·스키장 선택', '이용 날짜와 용평·알펜시아 중 스키장, 이용타임(1·2·3타임)을 고릅니다.'], ['렌탈·강습 선택', '스키·보드 장비, 의류, 강습 종목·인원·시간을 함께 고릅니다.'], ['확인 연락', '접수 내용을 확인해 전화나 문자로 안내드립니다. 리프트권은 이용 1일 전까지 예약해야 할인됩니다.']];
   return `
 <section class="hero" data-hero>
   <video class="hero-v" muted playsinline loop preload="metadata" poster="${u('assets/video/hero-poster.jpg')}" data-poster-m="${u('assets/video/hero-poster-m.jpg')}" data-src-xl="${u('assets/video/hero-1920.mp4')}" data-src="${u('assets/video/hero-1280.mp4')}" data-src-m="${u('assets/video/hero-m.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"></video>
-  <div class="hero-shade"></div>
-  <div class="wrap hero-copy">
-    <h1><span class="hero-eyebrow">용평 · 알펜시아 스키 렌탈 &amp; 강습 뽀드득</span><span class="hero-title">눈밭 위 ‘뽀드득’<br class="br-m"> 소리와 함께,<br>당신의 겨울이 시작됩니다</span></h1>
-    <p class="hero-sub">리프트권 할인 예약부터 장비·의류 렌탈, 1:1·2:1 강습까지 한 곳에서.</p>
-    <div class="hero-btns"><a class="btn btn-red btn-lg" href="${u('reserve/')}">${ICON.cal}예약하기</a><a class="btn btn-glass btn-lg" href="${u('rates/lift/')}">${ICON.ticket}요금안내</a></div>
-  </div>
+  <h1 class="sr">용평·알펜시아 스키 렌탈·강습 뽀드득 — 눈밭 위 ‘뽀드득’ 소리와 함께, 당신의 겨울이 시작됩니다</h1>
   <div class="hero-ctl"><button type="button" class="icon-btn glass" data-hero-sound aria-pressed="false" aria-label="소리 켜기">${ICON.mute}</button><button type="button" class="icon-btn glass" data-hero-replay aria-label="처음부터 다시 보기">${ICON.replay}</button></div>
-  <a class="hero-cue" href="#quick" aria-label="아래로">SCROLL</a>
 </section>
 
-<section class="quick" id="quick"><div class="wrap"><ul class="quick-list">${quick.map(([t, h, ic]) => `<li><a href="${u(h)}"><span class="qi">${ic}</span><span>${t}</span></a></li>`).join('')}</ul></div></section>
+<section class="main-nav" id="quick" aria-label="바로가기"><div class="mn-wrap"><ul class="mn-list">${quick.map(([t, h], i) => `<li><a href="${u(h)}"><img src="${u(`assets/img/main/main-nav${i + 1}.png`)}" alt="" width="64" height="64"><span class="mn-txt">${t}</span></a></li>`).join('')}</ul></div></section>
 
 <section class="sec sec-about"><div class="wrap about-grid">
   <div class="reveal">
@@ -115,11 +109,10 @@ export function home(u) {
   <div class="about-photos reveal">${['interior-5', 'interior-1', 'interior-3'].map((k, i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/store/${k}.webp`)}" data-lb-group="home-store" data-lb-cap="${esc(ABOUT.interior.find(x => x[0] === k)[1])}">${phImg(u, `assets/img/store/${k}.webp`, ABOUT.interior.find(x => x[0] === k)[1], { sizes: '(max-width: 760px) 50vw, 25vw' })}</button>`).join('')}</div>
 </div></section>
 
-<section class="sec sec-rates" id="rates"><div class="wrap">
-  <div class="sec-hd reveal"><p class="eyebrow">PRICE</p><h2 class="h2">뽀드득 요금표</h2><p>뽀드득에서만 만나볼 수 있는 전용 할인가로 더욱 부담 없이 스키를 즐겨보세요. <span class="muted">(${SITE.season} 기준)</span></p></div>
-  ${tabsBar('rates', rateTabs)}
-  ${ratePanes.map((p, i) => `<div class="tab-pane" role="tabpanel" id="pane-rates-${i}" aria-labelledby="tab-rates-${i}"${i ? ' hidden' : ''}>${p}<p class="pane-more"><a class="link-more" href="${u(i < 2 ? 'rates/lift/' : 'rates/rental/')}">${i < 2 ? '리프트 요금 전체 보기' : '렌탈 요금 전체 보기'} ${ICON.arrow}</a></p></div>`).join('')}
-</div></section>
+<section class="sec main-rates" id="rates">
+  <div class="wrap m-tit reveal"><h2>뽀드득 요금표</h2><p>뽀드득에서만 만나볼 수 있는 <span class="t-red">전용 할인가</span>로 더욱 부담 없이 스키를 즐겨보세요.</p></div>
+  <div class="rate-cards reveal">${rateCards.map(([t, h], i) => `<div class="item"><a href="${u(h)}" style="background-image:url('${u(`assets/img/main/rate-${i + 1}.webp`)}')"><p>${t}</p></a></div>`).join('')}</div>
+</section>
 
 <section class="sec sec-lesson"><div class="wrap lesson-grid">
   <div class="reveal">
@@ -151,12 +144,18 @@ export function home(u) {
     ${faqList(FAQ.filter(f => f.pages.includes('home')).slice(0, 6))}</div>
 </div></section>
 
-<section class="sec sec-contact"><div class="contact-bg">${img(u, 'assets/img/scene/crew.webp', '', { sizes: '100vw' })}</div><div class="wrap contact-in reveal">
-  <p class="eyebrow">CONTACT US</p><h2 class="h2">${esc(SITE.address.full)}</h2>
-  <p class="contact-tel"><a href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p>
-  <p>예약, 문의, 강습 관련 궁금하신 사항은 언제든지 연락주시기 바랍니다.<br>초보 강습부터 가족·단체 이용까지, 문의 주시면 친절하고 상세하게 상담해드립니다.</p>
-  <div class="contact-btns"><a class="btn btn-red" href="${u('location/')}">${ICON.pin}오시는 길</a><a class="btn btn-glass" href="${SITE.maps.kakao}" target="_blank" rel="noopener">카카오맵</a><a class="btn btn-glass" href="${SITE.maps.naver}" target="_blank" rel="noopener">네이버 지도</a></div>
-</div></section>`;
+<section class="main-contact" id="contact">
+  <div class="mc-map map reveal" data-roughmap="${SITE.maps.roughmap.timestamp}" data-roughmap-key="${SITE.maps.roughmap.key}" data-map-h="520"><div id="daumRoughmapContainer${SITE.maps.roughmap.timestamp}" class="root_daum_roughmap root_daum_roughmap_landing"></div><div class="map-ph ph"><span>${ICON.pin}지도를 불러오는 중입니다</span></div></div>
+  <div class="mc-info reveal">
+    <div class="m-tit"><h2>Contact Us</h2><p>${esc(SITE.address.full)}</p></div>
+    <div class="row">
+      <p class="tel"><img src="${u('assets/img/main/icon-phone.png')}" alt="" width="34" height="34"><a href="${SITE.phoneHref}">${SITE.phone}</a></p>
+      <p class="txt"><strong>예약, 문의, 강습 관련 궁금하신 사항은 언제든지 연락주시기 바랍니다.</strong></p>
+      <p class="txt">초보 강습부터 가족·단체 이용까지, 문의 주시면 친절하고 상세하게 상담해드립니다.</p>
+      <div class="mc-btns"><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}전화하기</a><a class="btn btn-line" href="${SITE.maps.kakao}" target="_blank" rel="noopener">카카오맵</a><a class="btn btn-line" href="${SITE.maps.naver}" target="_blank" rel="noopener">네이버 지도</a><button type="button" class="btn btn-line" data-copy="${esc(SITE.address.full)}">${ICON.copy}주소 복사</button></div>
+    </div>
+  </div>
+</section>`;
 }
 
 // ── 뽀드득 안내 ──
@@ -184,7 +183,7 @@ export function location(u) {
     <table class="tbl tbl-kv"><caption class="sr">주소와 연락처</caption><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${k}</th><td>${v}</td></tr>`).join('')}</tbody></table>
     <div class="loc-btns"><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}전화하기</a><button type="button" class="btn btn-line" data-copy="${esc(SITE.address.full)}">${ICON.copy}주소 복사</button><a class="btn btn-line" href="${SITE.maps.kakao}" target="_blank" rel="noopener">카카오 지도 크게 보기</a><a class="btn btn-line" href="${SITE.maps.naver}" target="_blank" rel="noopener">네이버 지도 크게 보기</a></div>
   </div>
-  <div class="map reveal" data-roughmap="${SITE.maps.roughmap.timestamp}" data-roughmap-key="${SITE.maps.roughmap.key}"><div id="daumRoughmapContainer${SITE.maps.roughmap.timestamp}" class="root_daum_roughmap root_daum_roughmap_landing"></div><div class="map-ph ph"><span>${ICON.pin}지도를 불러오는 중입니다</span></div></div>
+  <div class="map reveal" data-roughmap="${SITE.maps.roughmap.timestamp}" data-roughmap-key="${SITE.maps.roughmap.key}" data-map-h="460"><div id="daumRoughmapContainer${SITE.maps.roughmap.timestamp}" class="root_daum_roughmap root_daum_roughmap_landing"></div><div class="map-ph ph"><span>${ICON.pin}지도를 불러오는 중입니다</span></div></div>
 </div></section>` + `<section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('location')), true)}</div></section>`;
 }
 
@@ -243,7 +242,7 @@ export function rental(u) {
     + `<section class="sec"><div class="wrap">
   ${answer('용평 스키 장비·스키복 렌탈은 얼마인가요?', `<strong>프리미엄 초급자 스키·보드는 1타임(오전·오후·야간 중 택1) 예약가 ${won(15000)}, 2타임(주간·오후야간 중 택1) ${won(20000)}입니다.</strong> 중급자·숏스키·블레이드는 1타임 ${won(25000)}, 하이엔드 상급자 ${won(40000)}, 최상급자 ${won(70000)}입니다. 스키복은 프리미엄 고급의류 ${won(20000)}, 하이엔드 최고급의류 ${won(30000)}(1타임 예약가)이고 헬멧·고글·보호대는 ${won(5000)}입니다.`)}
   <div class="only-pc reveal">${rentalTable()}</div>
-  <div class="only-m">${RENTAL.map(g => `<h2 class="h3">${g.group}</h2>${rentalCards(g.key)}`).join('')}</div>
+  <div class="only-m">${RENTAL.map(g => `<h2 class="h3" data-anchor="${g.key}">${g.group}</h2>${rentalCards(g.key)}`).join('')}</div>
   <p class="note">‘문의’는 기존 요금표에 금액이 정해지지 않은 항목입니다. 전화로 안내드립니다. 보유 브랜드와 모델은 시즌마다 바뀔 수 있습니다.</p>
   <figure class="wide-photo reveal">${img(u, 'assets/img/gallery/gear-volkl.webp', '매장에 진열된 뵐클 중급자 스키', { sizes: '(max-width: 760px) 100vw, 1100px' })}<figcaption>새로 입고된 뵐클 중급자 스키</figcaption></figure>
 </div></section>

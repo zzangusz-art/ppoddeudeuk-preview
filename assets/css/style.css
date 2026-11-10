@@ -97,7 +97,7 @@ table{border-collapse:collapse;width:100%}
 .hero-title{display:block;font-size:clamp(32px,5.2vw,68px);line-height:1.22;font-weight:900;letter-spacing:-.03em;text-shadow:0 2px 24px rgba(0,0,0,.25)}
 .hero-sub{margin-top:18px;font-size:clamp(15px,1.5vw,19px);opacity:.95;max-width:36em}
 .hero-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
-.hero-ctl{position:absolute;right:max(20px,calc((100vw - var(--wrap))/2));bottom:clamp(110px,16vh,170px);display:flex;gap:10px;transition:opacity .6s}
+.hero-ctl{position:absolute;right:max(20px,calc((100vw - 1400px)/2));bottom:100px;display:flex;gap:10px;transition:opacity .6s;z-index:2}
 .hero-cue{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);font-size:11px;letter-spacing:.3em;font-weight:700;padding-bottom:34px;opacity:.85}
 .hero-cue::after{content:"";position:absolute;left:50%;bottom:0;width:1px;height:26px;background:#fff;animation:cue 1.8s infinite}
 @keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
@@ -106,15 +106,6 @@ table{border-collapse:collapse;width:100%}
 .hero .hero-copy>*{opacity:0;transform:translateY(18px);animation:up .9s var(--ease) forwards}
 .hero .hero-copy h1{animation-delay:.25s}.hero .hero-sub{animation-delay:.45s}.hero .hero-btns{animation-delay:.6s}
 @keyframes up{to{opacity:1;transform:none}}
-
-/* 빠른 메뉴(기존 메인 6칸) */
-.quick{position:relative;z-index:3;margin-top:-64px}
-.quick-list{display:grid;grid-template-columns:repeat(6,1fr);background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-lg);padding:10px}
-.quick-list a{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 8px;border-radius:var(--r);font-weight:700;transition:background .2s,color .2s}
-.quick-list li+li a{position:relative}
-.quick-list a:hover{background:var(--red-t);color:var(--red)}
-.qi{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:var(--snow);color:var(--red);transition:transform .25s var(--ease)}
-.qi svg{width:28px;height:28px}.quick-list a:hover .qi{transform:translateY(-4px) rotate(-4deg);background:#fff}
 
 /* 섹션 */
 .sec{padding:clamp(72px,9vw,120px) 0}
@@ -278,7 +269,7 @@ table{border-collapse:collapse;width:100%}
 .loc-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .map{position:relative;min-height:420px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);background:var(--snow)}
 .map .root_daum_roughmap{width:100%!important}
-.map .root_daum_roughmap .wrap_map{height:420px!important}
+
 .map-ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-weight:700}.map-ph span{display:flex;gap:8px;align-items:center}
 .map.is-loaded .map-ph{display:none}
 
@@ -376,7 +367,6 @@ table{border-collapse:collapse;width:100%}
   .about-grid,.lesson-grid,.loc-grid,.nf-grid,.book-grid{grid-template-columns:1fr}
   .book-aside{position:static}
   .gal-grid{grid-template-columns:repeat(3,1fr)}
-  .quick-list{grid-template-columns:repeat(3,1fr)}
 }
 @media (max-width:760px){
   :root{--hd:62px}
@@ -386,10 +376,6 @@ table{border-collapse:collapse;width:100%}
   .hero-copy{bottom:120px}
   .hero-ctl{right:16px;bottom:auto;top:calc(var(--hd) + 12px)}
   .hero-btns .btn{flex:1}
-  .quick{margin-top:-48px}
-  .quick-list{grid-template-columns:repeat(3,1fr);padding:6px}
-  .quick-list a{padding:14px 4px;font-size:14px;gap:6px}
-  .qi{width:46px;height:46px;border-radius:14px}
   .gal-grid,.gal-grid.g3{grid-template-columns:1fr 1fr;gap:10px}
   .gi figcaption{flex-direction:column;gap:0;padding:10px 12px;font-size:14px}
   .steps-row{grid-template-columns:1fr}
@@ -411,3 +397,55 @@ table{border-collapse:collapse;width:100%}
   .tbl th,.tbl td{padding:11px 10px;font-size:14.5px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}.hero .hero-copy>*{opacity:1;transform:none}}
+
+/* ── 기존 홈페이지와 같은 영역(2026-11-10 요청): 값은 기존 layout.css·responsive.css 그대로 ── */
+.main-nav{margin-top:-75px;position:relative;z-index:5}
+.mn-wrap{width:min(100% - 40px,1400px);margin-inline:auto}
+.mn-list{border-radius:16px;background:#fff;display:flex;flex-wrap:wrap;justify-content:space-between;gap:clamp(10px,1.25vw,20px);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.mn-list li{flex:1;min-width:0;text-align:center}
+.mn-list a{height:150px;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:clamp(10px,.94vw,15px);color:#121212;font-weight:600}
+.mn-list a img{height:clamp(34px,4vw,64px);width:auto}
+.mn-txt{display:block;line-height:1.2em}
+.mn-list a::after{position:absolute;content:'';right:0;width:1px;height:50%;background-color:#ddd}
+.mn-list li:last-child a::after{display:none}
+
+.m-tit{margin-bottom:clamp(40px,5vw,80px);color:#121212;text-align:center}
+.m-tit h2{font-size:clamp(30px,3.5vw,56px);font-weight:700;line-height:1.2em;letter-spacing:-.03em}
+.m-tit p{font-size:clamp(15px,1.13vw,18px);margin-top:clamp(15px,1.56vw,25px);font-weight:600;line-height:1.4em;letter-spacing:-.03em}
+.t-red{color:#ed1c24}
+.rate-cards{max-width:1920px;padding:0 20px;margin:0 auto;display:flex;gap:clamp(10px,1.25vw,20px);justify-content:center}
+.rate-cards .item{width:20%}
+.rate-cards .item a{overflow:hidden;aspect-ratio:1/1;position:relative;border-radius:24px;font-size:clamp(19px,1.75vw,28px);color:#fff;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;background-position:50% 50%;background-repeat:no-repeat;background-size:cover;transition:transform .3s,box-shadow .3s;padding:0 10px}
+.rate-cards .item a:hover,.rate-cards .item a:focus-visible{transform:translateY(-20px);box-shadow:0 10px 20px 0 rgba(0,0,0,.3)}
+.rate-cards .item a::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(237,28,36,.5) 100%);opacity:0;transition:opacity .3s}
+.rate-cards .item a:hover::before,.rate-cards .item a:focus-visible::before{opacity:1}
+.rate-cards .item p{position:relative;z-index:1;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+
+.main-contact{max-width:1920px;margin:0 auto;padding:0 0 clamp(72px,9vw,120px);gap:clamp(40px,5vw,80px);display:flex;align-items:center}
+.mc-map{width:57.292%;border-radius:0 24px 24px 0;overflow:hidden;min-height:520px;border:0}
+.mc-info{flex:1;padding-right:20px}
+.mc-info .m-tit{text-align:left;margin-bottom:clamp(20px,1.9vw,30px)}
+.mc-info .row{padding-top:clamp(20px,1.9vw,30px);border-top:1px solid #ddd}
+.mc-info .tel{font-size:clamp(20px,1.5vw,24px);margin-bottom:clamp(15px,1.56vw,25px);font-weight:700;color:#121212}
+.mc-info .tel img{display:inline-block;margin:-4px 10px 0 0;height:clamp(20px,2.1vw,34px);width:auto;vertical-align:middle}
+.mc-info .txt{color:#505050}.mc-info .txt strong{font-weight:600;color:#121212}
+.mc-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+@media (max-width:1024px){
+  .mn-list a{height:120px}
+  .main-contact{padding:0 20px 100px;align-items:flex-start;flex-direction:column}
+  .mc-map{width:100%;border-radius:24px;min-height:420px}
+  .mc-info{width:100%;padding-right:0}
+}
+@media (max-width:760px){
+  .main-nav{margin-top:-40px}
+  .mn-list{gap:0}
+  .mn-list li{flex:auto;width:33.333%}
+  .mn-list li:nth-child(3) a::after{display:none}
+  .mn-list a{height:100px;font-size:14.5px}
+  .rate-cards{flex-wrap:wrap}
+  .rate-cards .item{width:100%}
+  .rate-cards .item a{border-radius:10px;aspect-ratio:auto;height:100px;font-size:19px}
+  .rate-cards .item a::before{opacity:.35}
+  .hero-ctl{bottom:60px}
+  .mc-btns .btn{flex:1 1 calc(50% - 5px)}
+}

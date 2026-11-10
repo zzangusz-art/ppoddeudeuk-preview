@@ -56,7 +56,9 @@
     const mobile = matchMedia('(max-width: 760px)').matches;
     const saveData = navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || ''));
     if (mobile) v.poster = v.dataset.posterM;
-    const src = mobile ? v.dataset.srcM : (innerWidth * (devicePixelRatio || 1) >= 2400 ? v.dataset.srcXl : v.dataset.src);
+    // PC는 원본 최고 화질(1920), 회선이 느리다고 알려 온 경우만 1280. 휴대폰은 원본 화소 세로 영상
+    const slow = navigator.connection && /(^|-)3g|2g/.test(navigator.connection.effectiveType || '');
+    const src = mobile ? v.dataset.srcM : (slow ? v.dataset.src : v.dataset.srcXl);
     const soundBtn = $('[data-hero-sound]', hero), replayBtn = $('[data-hero-replay]', hero);
     const icons = { on: soundBtn.innerHTML, off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6"/></svg>' };
     const start = () => { if (!v.src) { v.src = src; } const p = v.play(); p && p.catch(() => {}); };
@@ -72,8 +74,9 @@
       soundBtn.innerHTML = v.muted ? icons.on : icons.off; if (!v.muted) v.play(); toast(v.muted ? '소리를 껐습니다' : '소리를 켰습니다');
     });
     replayBtn.addEventListener('click', () => { if (!v.src) start(); v.currentTime = 0; v.play(); hero.classList.remove('is-end'); });
-    // 화면 밖이면 멈춰 배터리·데이터를 아낀다
-    if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { if (!v.src) return; e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }, { threshold: .15 }).observe(hero);
+    // 무한 반복: loop 속성 + 끝나면 처음으로(일부 브라우저 대비) + 탭으로 돌아오면 다시 재생
+    v.addEventListener('ended', () => { v.currentTime = 0; v.play().catch(() => {}); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && v.src && v.paused) v.play().catch(() => {}); });
   }
 
   /* 탭: 같은 부모 안의 .tab-pane 을 바꾸거나, data-filter-grid 사진을 거른다 */
@@ -111,6 +114,10 @@
   }
   document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; [modal, drawer].forEach(l => l && !l.hidden && closeLayer(l)); });
 
+  /* 요금 카드 링크(#gear·#wear·#safety): PC 표 행 또는 휴대폰 제목 중 보이는 쪽으로 이동 */
+  const jump = () => { const k = decodeURIComponent(location.hash.slice(1)); if (!k) return; const t = $$(`[data-anchor="${k}"]`).find(e => e.offsetParent); if (t) setTimeout(() => window.scrollTo({ top: t.getBoundingClientRect().top + scrollY - 140, behavior: 'auto' }), 60); };
+  addEventListener('load', jump); addEventListener('hashchange', jump);
+
   /* 객실 사진 슬라이더 */
   $$('[data-slider]').forEach(sl => {
     const track = $('.slides', sl), cnt = $('.sl-count span', sl);
@@ -123,7 +130,7 @@
   const map = $('[data-roughmap]');
   if (map) {
     onEnter(map, () => {
-      const render = () => { try { new window.daum.roughmap.Lander({ timestamp: map.dataset.roughmap, key: map.dataset.roughmapKey, mapWidth: String(Math.round(map.clientWidth)), mapHeight: '420' }).render(); map.classList.add('is-loaded'); } catch { $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다. 아래 지도 버튼을 이용해 주세요.'; } };
+      const render = () => { try { new window.daum.roughmap.Lander({ timestamp: map.dataset.roughmap, key: map.dataset.roughmapKey, mapWidth: String(Math.round(map.clientWidth)), mapHeight: map.dataset.mapH || '420' }).render(); map.classList.add('is-loaded'); } catch { $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다. 아래 지도 버튼을 이용해 주세요.'; } };
       const dw = document.write.bind(document);
       document.write = html => { const m = /src="([^"]+)"/.exec(html); if (!m) return dw(html); const s = document.createElement('script'); s.src = m[1]; s.charset = 'UTF-8'; s.onload = () => { document.write = dw; render(); }; document.head.appendChild(s); };
       const l = document.createElement('script'); l.src = 'https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js'; l.charset = 'UTF-8'; l.onerror = () => { document.write = dw; $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다.'; }; document.head.appendChild(l);
