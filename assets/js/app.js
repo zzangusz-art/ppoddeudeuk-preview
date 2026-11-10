@@ -67,27 +67,25 @@
   const hero = $('[data-hero]');
   if (hero) {
     const v = $('.hero-v', hero);
+    // 영상 파일은 HTML <source>(휴대폰 hero-m / PC hero-1920)에 있어 페이지를 읽는 즉시 받기 시작하고 autoplay 로 바로 재생.
+    // 포스터 = 영상 첫 프레임이라 영상으로 넘어갈 때 화면이 튀지 않는다.
     const mobile = matchMedia('(max-width: 760px)').matches;
-    if (mobile) v.poster = v.dataset.posterM;
-    // PC는 원본 최고 화질(1920), 회선이 느리다고 알려 온 경우만 1280. 휴대폰은 원본 화소 세로 영상
     const slow = navigator.connection && /(^|-)3g|2g/.test(navigator.connection.effectiveType || '');
-    const src = mobile ? v.dataset.srcM : (slow ? v.dataset.src : v.dataset.srcXl);
+    if (!mobile && slow && v.dataset.srcSlow) { v.src = v.dataset.srcSlow; v.load(); }  // 느린 회선만 1280
     const soundBtn = $('[data-hero-sound]', hero), replayBtn = $('[data-hero-replay]', hero);
     const icons = { on: soundBtn.innerHTML, off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6"/></svg>' };
-    const start = () => { if (!v.src) { v.src = src; v.addEventListener('loadedmetadata', () => { if (v.currentTime < 0.6) v.currentTime = 0.6; }, { once: true }); } const p = v.play(); p && p.catch(() => {}); };  // 첫 재생은 흰 화면(0.6초) 건너뛰고 바로 영상
-    // 페이지가 열리자마자 바로 재생(로드 완료를 기다리지 않음)
-    if (!reduce) start();
+    const start = () => { const p = v.play(); p && p.catch(() => {}); };
+    if (reduce) v.pause(); else if (v.paused) start();
     // 끝 4.4초(흰 화면 + 로고): 흰 바탕 위에서 메뉴 글자가 보이게 헤더를 어두운 글자로
     v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); });
     soundBtn.addEventListener('click', () => {
-      if (!v.src) start();
       v.muted = !v.muted; soundBtn.setAttribute('aria-pressed', String(!v.muted)); soundBtn.setAttribute('aria-label', v.muted ? '소리 켜기' : '소리 끄기');
       soundBtn.innerHTML = v.muted ? icons.on : icons.off; if (!v.muted) v.play(); toast(v.muted ? '소리를 껐습니다' : '소리를 켰습니다');
     });
-    replayBtn.addEventListener('click', () => { if (!v.src) start(); v.currentTime = 0; v.play(); hero.classList.remove('is-end'); });
+    replayBtn.addEventListener('click', () => { v.currentTime = 0; v.play(); hero.classList.remove('is-end'); });
     // 무한 반복: loop 속성 + 끝나면 처음으로(일부 브라우저 대비) + 탭으로 돌아오면 다시 재생
     v.addEventListener('ended', () => { v.currentTime = 0; v.play().catch(() => {}); });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && v.src && v.paused) v.play().catch(() => {}); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !reduce && v.paused) v.play().catch(() => {}); });
   }
 
   /* 탭: 같은 부모 안의 .tab-pane 을 바꾸거나, data-filter-grid 사진을 거른다 */
