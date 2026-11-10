@@ -127,9 +127,39 @@ ${body}
 <nav class="mbar" aria-label="빠른 연락">
   <a href="${SITE.phoneHref}">${ICON.phone}<span>전화</span></a>
   <a href="${u('rates/lift/')}">${ICON.ticket}<span>요금</span></a>
-  <a href="${u('quote/')}">${ICON.doc}<span>견적</span></a>
+  <button type="button" data-drawer-open="quick">${ICON.doc}<span>문의·접수</span></button>
   <a class="is-main" href="${u('reserve/')}">${ICON.cal}<span>예약하기</span></a>
 </nav>
+<div class="fab" role="complementary" aria-label="빠른 문의">
+  <a class="fab-call" href="${SITE.phoneHref}">${ICON.phone}<b>전화상담</b><span>${SITE.phone}</span></a>
+  <button type="button" class="fab-quick" data-drawer-open="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><b>바로</b><span>문의·접수</span></button>
+</div>
+<div class="drawer" id="drawer-quick" role="dialog" aria-modal="true" aria-labelledby="quick-tit" hidden>
+  <div class="drawer-dim" data-drawer-close></div>
+  <div class="drawer-panel quick-panel">
+    <div class="drawer-hd"><h2 id="quick-tit" class="quick-tit">바로 문의·접수</h2><button type="button" class="icon-btn" data-drawer-close aria-label="닫기">${ICON.close}</button></div>
+    <form class="quick-form" data-quick novalidate>
+      <p class="hint">이름과 연락처만 남겨 주시면 확인 후 바로 연락드립니다. 급한 문의는 <a href="${SITE.phoneHref}">${SITE.phone}</a></p>
+      <div class="fld"><label for="q-name">이름 <i>*</i></label><input id="q-name" name="name" autocomplete="name" maxlength="30" required></div>
+      <div class="fld"><label for="q-phone">연락처 <i>*</i></label><input id="q-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="13" required></div>
+      <div class="fld"><label for="q-date">이용날짜</label><input id="q-date" name="date" type="date"></div>
+      <div class="fld"><span class="lbl">스키장</span><div class="seg seg-sm">${['용평', '알펜시아', '미정'].map((t, i) => `<label class="seg-it"><input type="radio" name="resort" value="${t}"${i === 2 ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div></div>
+      <div class="fld"><span class="lbl">문의 항목</span><div class="chips">${['리프트권', '장비 렌탈', '의류 렌탈', '강습', '숙박', '단체·기업', '기타'].map(t => `<label class="chip"><input type="checkbox" name="topic" value="${t}"><span>${t}</span></label>`).join('')}</div></div>
+      <div class="fld"><label for="q-memo">문의 내용</label><textarea id="q-memo" name="memo" rows="3" maxlength="800" placeholder="인원, 장비 사이즈, 강습 희망 시간 등"></textarea></div>
+      <label class="agree"><input type="checkbox" name="agree" required><span>개인정보 수집 및 이용에 동의합니다. <i>*</i></span></label>
+      <p class="hint">수집 항목: 이름·연락처·이용날짜·문의 내용 / 목적: 상담 / 보관: 상담 종료 후 6개월 · <a href="${u('privacy/')}">자세히</a></p>
+      <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button type="submit" class="btn btn-red btn-lg quick-submit">문의 접수하기</button>
+    </form>
+    <div class="quick-done" hidden tabindex="-1">
+      <h3 class="h4" data-done-title>접수 내용을 확인해 주세요</h3>
+      <p data-done-lead></p>
+      <pre class="summary" data-summary></pre>
+      <div class="done-btns"><a class="btn btn-red" data-sms href="#">${ICON.sms}문자로 보내기</a><button type="button" class="btn btn-line" data-copy-summary>${ICON.copy}내용 복사</button><a class="btn btn-line" href="${SITE.phoneHref}">${ICON.phone}전화하기</a></div>
+      <button type="button" class="link-more" data-quick-reset>새로 작성 ${ICON.arrow}</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="lightbox" role="dialog" aria-modal="true" aria-label="사진 크게 보기" hidden>
   <div class="modal-dim" data-modal-close></div>
   <figure class="lb"><button type="button" class="icon-btn lb-close" data-modal-close aria-label="닫기">${ICON.close}</button><div class="lb-img ph"><img alt=""></div><figcaption></figcaption>

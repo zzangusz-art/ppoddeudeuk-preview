@@ -26,9 +26,9 @@
   // 열기·닫기는 프레임 타이밍에 기대지 않는다(강제 리플로 후 클래스) — 빠르게 열고 닫아도 순서가 꼬이지 않게 닫힘 타이머를 취소
   const openLayer = el => { clearTimeout(el._t); lastFocus = document.activeElement; el.hidden = false; void el.offsetWidth; el.classList.add('is-open'); document.documentElement.style.overflow = 'hidden'; const f = el.querySelector('button, a, [tabindex]'); f && setTimeout(() => f.focus(), 60); };
   const closeLayer = el => { el.classList.remove('is-open'); document.documentElement.style.overflow = ''; clearTimeout(el._t); el._t = setTimeout(() => { el.hidden = true; }, 320); lastFocus && lastFocus.focus && lastFocus.focus(); };
-  const drawer = $('#drawer-menu');
-  $$('[data-drawer-open]').forEach(b => b.addEventListener('click', () => openLayer(drawer)));
-  drawer && $$('[data-drawer-close]', drawer).forEach(b => b.addEventListener('click', () => closeLayer(drawer)));
+  const drawer = $('#drawer-menu'), quick = $('#drawer-quick');
+  $$('[data-drawer-open]').forEach(b => b.addEventListener('click', () => { const d = $('#drawer-' + b.dataset.drawerOpen); d && openLayer(d); }));
+  $$('.drawer').forEach(d => $$('[data-drawer-close]', d).forEach(b => b.addEventListener('click', () => closeLayer(d))));
   drawer && $$('a', drawer).forEach(a => a.addEventListener('click', () => closeLayer(drawer)));
 
   /* 스켈레톤: 사진이 다 받아지면 반짝임을 끈다 */
@@ -112,7 +112,7 @@
     box.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1)); });
     document.addEventListener('keydown', e => { if (modal.hidden) return; if (e.key === 'ArrowRight') show(idx + 1); if (e.key === 'ArrowLeft') show(idx - 1); });
   }
-  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; [modal, drawer].forEach(l => l && !l.hidden && closeLayer(l)); });
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; [modal, drawer, quick].forEach(l => l && !l.hidden && closeLayer(l)); });
 
   /* 요금 카드 링크(#gear·#wear·#safety): PC 표 행 또는 휴대폰 제목 중 보이는 쪽으로 이동 */
   const jump = () => { const k = decodeURIComponent(location.hash.slice(1)); if (!k) return; const t = $$(`[data-anchor="${k}"]`).find(e => e.offsetParent); if (t) setTimeout(() => window.scrollTo({ top: t.getBoundingClientRect().top + scrollY - 140, behavior: 'auto' }), 60); };
@@ -135,6 +135,49 @@
       document.write = html => { const m = /src="([^"]+)"/.exec(html); if (!m) return dw(html); const s = document.createElement('script'); s.src = m[1]; s.charset = 'UTF-8'; s.onload = () => { document.write = dw; render(); }; document.head.appendChild(s); };
       const l = document.createElement('script'); l.src = 'https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js'; l.charset = 'UTF-8'; l.onerror = () => { document.write = dw; $('.map-ph span', map).textContent = '지도를 불러오지 못했습니다.'; }; document.head.appendChild(l);
     }, 200);
+  }
+
+  /* 바로 문의·접수(오른쪽 떠 있는 버튼 / 모바일 하단 바) */
+  const qf = $('form[data-quick]');
+  if (qf) {
+    const qd = $('.quick-done', quick), qtel = qf.elements.phone;
+    qtel.addEventListener('input', () => { const d = qtel.value.replace(/\D/g, '').slice(0, 11); qtel.value = d.length < 4 ? d : d.length < 8 ? `${d.slice(0, 3)}-${d.slice(3)}` : `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`; });
+    qf.elements.date.min = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    qf.addEventListener('input', e => e.target.classList && e.target.classList.remove('is-invalid'));
+    const show = (text, sent) => {
+      qf.hidden = true; qd.hidden = false; $('[data-summary]', qd).textContent = text;
+      $('[data-done-title]', qd).textContent = sent ? '문의가 접수되었습니다' : '접수 내용을 확인해 주세요';
+      $('[data-done-lead]', qd).textContent = sent ? '확인 후 남겨 주신 연락처로 바로 연락드립니다.' : `아래 버튼으로 문자를 보내 주시면 확인 후 연락드립니다. 문자가 어려우면 ${CFG.phone}로 전화 주세요.`;
+      const sms = $('[data-sms]', qd); sms.hidden = sent || !CFG.sms;
+      sms.href = `sms:${(CFG.sms || '').replace(/-/g, '')}${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(text)}`;
+      qd.focus();
+    };
+    $('[data-copy-summary]', qd).addEventListener('click', () => copy($('[data-summary]', qd).textContent, '접수 내용을 복사했습니다'));
+    $('[data-quick-reset]', qd).addEventListener('click', () => { qf.reset(); qf.hidden = false; qd.hidden = true; qf.elements.name.focus(); });
+    qf.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (qf.elements.company.value) return;
+      if (!qf.elements.name.value.trim()) { qf.elements.name.classList.add('is-invalid'); return toast('이름을 입력해 주세요'); }
+      if (!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(qtel.value)) { qtel.classList.add('is-invalid'); return toast('연락처를 확인해 주세요'); }
+      if (!qf.elements.agree.checked) return toast('개인정보 수집 및 이용에 동의해 주세요');
+      const topics = $$('[name=topic]:checked', qf).map(x => x.value);
+      const L = ['[뽀드득 바로 문의]', `이름: ${qf.elements.name.value.trim()}`, `연락처: ${qtel.value}`];
+      if (qf.elements.date.value) L.push(`이용날짜: ${qf.elements.date.value}`);
+      L.push(`스키장: ${qf.elements.resort.value}`);
+      if (topics.length) L.push(`문의 항목: ${topics.join(', ')}`);
+      if (qf.elements.memo.value.trim()) L.push(`내용: ${qf.elements.memo.value.trim()}`);
+      L.push(`보낸 페이지: ${document.title.split('|')[0].trim()}`);
+      const text = L.join('\n');
+      if (!CFG.endpoint) return show(text, false);
+      const btn = qf.querySelector('[type=submit]'); btn.disabled = true; btn.textContent = '접수 중…';
+      try {
+        const body = Object.fromEntries(new FormData(qf)); body.type = 'quick'; body.topic = topics; body.summary = text; body.page = location.href;
+        const r = await fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+        if (!r.ok) throw new Error(r.status);
+        show(text, true);
+      } catch { toast('접수 서버에 연결하지 못했습니다. 문자나 전화로 보내 주세요.'); show(text, false); }
+      finally { btn.disabled = false; btn.textContent = '문의 접수하기'; }
+    });
   }
 
   /* 3단계 견적·예약 접수 */
