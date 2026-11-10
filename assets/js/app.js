@@ -286,6 +286,8 @@
       const ski = vals('ski'), board = vals('board'), wear = vals('wear');
       if (ski.length) L.push(`스키장비: ${ski.join(', ')}`); if (board.length) L.push(`보드장비: ${board.join(', ')}`); if (wear.length) L.push(`의류: ${wear.join(', ')}`);
       if (form.elements.lesson.value) L.push(`강습: ${form.elements.lesson.value} ${form.elements.lessonPeople.value} ${form.elements.lessonHours.value}`);
+      const fit = [['qty', '장비 수량'], ['height', '키'], ['foot', '발 사이즈']].filter(([n]) => form.elements[n] && form.elements[n].value).map(([n, t]) => `${t} ${form.elements[n].value}`);
+      if (fit.length) L.push(`사이즈: ${fit.join(', ')}`);
       L.push(`이름: ${form.elements.name.value.trim()}`, `연락처: ${tel.value}`);
       if (form.elements.memo.value.trim()) L.push(`요청사항: ${form.elements.memo.value.trim()}`);
       return L.join('\n');

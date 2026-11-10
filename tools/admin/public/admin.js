@@ -225,7 +225,7 @@
     v.addEventListener('click', e => { const r = e.target.closest('[data-lead]'); if (r) openLead(r.dataset.lead); });
     const open = q.get('open'); if (open) openLead(open);
   }
-  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간' };
+  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈' };
   const leadBrief = l => [l.time, ...Object.entries(l.detail || {}).map(([k, x]) => Array.isArray(x) ? x.join(', ') : x), l.memo].filter(Boolean).join(' · ');
   async function openLead(id) {
     let l; try { l = (await api('GET', `/api/admin/leads/${id}`)).lead; } catch (e) { return fail(e); }

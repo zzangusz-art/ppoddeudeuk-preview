@@ -14,7 +14,7 @@
   let user = null, nextId = 9;
   const L = (id, ago, type, status, name, phone, use, resort, time, people, detail, memo, admin) => ({ id, created: kst(Date.now() - ago * 3600e3), type, status, name, phone, use_date: use, resort, time, people, detail, memo, admin_memo: admin || '', updated: kst(Date.now() - ago * 3600e3), handled_by: status === 'new' ? '' : '뽀드득 대표', page: '', summary: '' });
   const leads = [
-    L(8, 1, 'reserve', 'new', '김민준(시험)', '010-1111-2222', day(-39), '용평스키장', '2타임 주간 09:00~17:00', '4', { ski: ['초급자 스키'], wear: ['프리미엄 의류세트 상의', '프리미엄 의류세트 하의'], lesson: '스키', lessonPeople: '2:1', lessonHours: '2시간' }, '아이 둘 처음 탑니다'),
+    L(8, 1, 'reserve', 'new', '김민준(시험)', '010-1111-2222', day(-39), '용평스키장', '2타임 주간 09:00~17:00', '4', { ski: ['초급자 스키'], wear: ['프리미엄 의류세트 상의', '프리미엄 의류세트 하의'], lesson: '스키', lessonPeople: '2:1', lessonHours: '2시간', qty: '4세트', height: '171~180cm', foot: '265mm' }, '아이 둘 처음 탑니다'),
     L(7, 3, 'quick', 'new', '이서연(시험)', '010-3333-4444', day(-44), '알펜시아스키장', '', '', { topic: ['렌탈', '리프트권'] }, '8살·10살 장비 문의'),
     L(6, 20, 'quote', 'contacted', '박지훈(시험)', '010-5555-6666', day(-60), '용평스키장', '1타임 오전 09:00~13:00', '12', { board: ['중급자 보드'] }, '회사 단체 12명 견적', '11/9 통화, 견적 문자 보냄'),
     L(5, 30, 'reserve', 'done', '최유나(시험)', '010-7777-8888', day(-20), '용평스키장', '1타임 야간 19:00~23:00', '2', { wear: ['하이엔드 의류세트 상의'] }, '', '예약 확정'),

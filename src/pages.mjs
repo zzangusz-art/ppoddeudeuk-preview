@@ -356,7 +356,13 @@ export function bookForm(u, type) {
       <div class="fld"><label for="${type}-name">작성자명 <i>*</i></label><input id="${type}-name" name="name" autocomplete="name" required maxlength="30"></div>
       <div class="fld"><label for="${type}-phone">전화번호 <i>*</i></label><input id="${type}-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="010-0000-0000" maxlength="13"></div>
     </div>
-    <div class="fld"><label for="${type}-memo">특이사항 및 요청사항</label><textarea id="${type}-memo" name="memo" rows="4" maxlength="1000" placeholder="장비 수량, 키·발 사이즈, 단체 여부 등"></textarea></div>
+    <div class="fld-row fld-size">
+      <div class="fld"><label for="${type}-qty">장비 수량</label><select id="${type}-qty" name="qty"><option value="">선택</option>${Array.from({ length: 10 }, (_, i) => `<option>${i + 1}세트</option>`).join('')}<option value="11세트 이상">11~</option></select></div>
+      <div class="fld"><label for="${type}-height">키(cm)</label><select id="${type}-height" name="height"><option value="">선택</option><option value="110cm 이하">~110</option>${Array.from({ length: 8 }, (_, i) => `<option value="${111 + i * 10}~${120 + i * 10}cm">${111 + i * 10}~${120 + i * 10}</option>`).join('')}<option value="191cm 이상">191~</option></select></div>
+      <div class="fld"><label for="${type}-foot">발 사이즈(mm)</label><select id="${type}-foot" name="foot"><option value="">선택</option><option value="200mm 이하">~200</option>${Array.from({ length: 19 }, (_, i) => `<option value="${205 + i * 5}mm">${205 + i * 5}</option>`).join('')}<option value="300mm 이상">300~</option></select></div>
+    </div>
+    <p class="hint">여러 명이면 대표 한 분 기준으로 고르고, 나머지 분들의 키·발 사이즈는 아래 요청사항에 적어 주세요.</p>
+    <div class="fld"><label for="${type}-memo">특이사항 및 요청사항</label><textarea id="${type}-memo" name="memo" rows="4" maxlength="1000" placeholder="예: 동반 2명 — 165cm·240mm / 178cm·270mm, 단체 여부, 원하는 장비 등"></textarea></div>
     <details class="agree-box"><summary>개인정보 수집 및 이용에 대한 안내 ${ICON.chev}</summary><p>${esc(PRIVACY.short)}</p><dl>${PRIVACY.items.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
     <label class="agree"><input type="checkbox" name="agree" required><span>개인정보 수집 및 이용에 동의합니다. <i>*</i></span></label>
     <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
