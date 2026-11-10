@@ -110,6 +110,9 @@ table{border-collapse:collapse;width:100%}
 
 /* 섹션 */
 .sec{padding:clamp(72px,9vw,120px) 0}
+/* 흰 바탕 섹션이 이어질 때 위아래 여백이 두 번 겹치지 않게(2026-11-10 요청: 간격 줄이기) */
+.sec:not(.sec-tint)+.sec:not(.sec-tint){padding-top:0}
+.home .sec{padding-bottom:clamp(64px,7vw,100px)}
 .sec-tint{background:var(--snow)}
 .sec-hd{max-width:720px;margin-bottom:34px}
 .sec-hd p:not(.eyebrow){color:var(--ink2);margin-top:12px}
