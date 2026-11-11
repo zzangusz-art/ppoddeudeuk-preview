@@ -165,6 +165,10 @@ route('GET', '/api/admin/poll', 'client', async () => { const c = DB.counts(); r
 
 // 접수 관리
 route('GET', '/api/admin/leads', 'client', async ({ query }) => ({ ...DB.listLeads({ status: query.get('status') || '', type: query.get('type') || '', q: query.get('q') || '', page: query.get('page') || 1, size: query.get('size') || 30 }), counts: DB.counts() }));
+route('GET', '/api/admin/leads/day', 'client', async ({ query }) => {
+  const date = query.get('date') || '', types = (query.get('types') || 'reserve').split(',');
+  return { date, items: DB.leadsByDate(date, { types, cancel: query.get('cancel') === '1' }), dates: DB.useDates(new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)) };
+});
 route('GET', '/api/admin/leads/:id', 'client', async ({ params }) => { const l = DB.getLead(params.id); need(l, 404, '접수를 찾지 못했습니다'); return { lead: l }; });
 route('POST', '/api/admin/leads/:id', 'client', async ({ params, data, user }) => { const l = DB.updateLead(params.id, { status: data.status, adminMemo: data.adminMemo }, user.name); need(l, 404, '접수를 찾지 못했습니다'); return { lead: l }; });
 route('DELETE', '/api/admin/leads/:id', 'client', async ({ params, user }) => { need(DB.deleteLead(params.id, user.name), 404, '접수를 찾지 못했습니다'); return { ok: true }; });
@@ -191,7 +195,7 @@ route('POST', '/api/admin/content/:key', 'client', async ({ params, data, user }
 route('GET', '/api/admin/status/:sha', 'client', async ({ params }) => store.status(params.sha));
 
 // 블로그(매일 09·13·18시 자동 발행) — 글은 저장소 content/blog, 이 서버에 배포된 것 기준으로 보여 준다
-route('GET', '/api/admin/blog', 'client', async () => {
+route('GET', '/api/admin/blog', 'owner', async () => {
   const { loadPosts } = await import('../blog/lib.mjs');
   const dir = path.join(ROOT, 'content/blog'), now = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
   const posts = loadPosts(dir).map(p => ({ slug: p.slug, title: p.title, date: p.date, time: p.time || '', category: p.category, keyword: p.keyword, chars: p.chars, generated: p.generated || '', live: `${p.date} ${p.time || '00:00'}` <= now }));

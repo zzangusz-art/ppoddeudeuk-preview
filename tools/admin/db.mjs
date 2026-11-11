@@ -66,6 +66,15 @@ export function listLeads({ status = '', type = '', q = '', page = 1, size = 30 
   const rows = db.prepare(`SELECT id, created, type, status, name, phone, use_date, resort, time, people, detail, memo, admin_memo, updated, handled_by FROM leads ${w} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...args, n, (p - 1) * n);
   return { total, page: p, size: n, items: rows.map(rowOut) };
 }
+// 날짜별 예약자 명단(PDF 출력): 이용날짜가 같은 접수 전부 — 스키장·이용타임 순
+export function leadsByDate(date, { types = ['reserve'], cancel = false } = {}) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return [];
+  const ts = types.filter(t => TYPES[t]); if (!ts.length) return [];
+  return db.prepare(`SELECT id, created, type, status, name, phone, use_date, resort, time, people, detail, memo, admin_memo, updated, handled_by FROM leads
+    WHERE use_date = ? AND type IN (${ts.map(() => '?').join(',')}) ${cancel ? '' : "AND status != 'cancel'"} ORDER BY resort, time, id LIMIT 300`).all(date, ...ts).map(rowOut);
+}
+// 오늘 이후 이용날짜별 건수(출력 창의 날짜 바로 고르기)
+export const useDates = from => db.prepare("SELECT use_date d, count(*) n FROM leads WHERE use_date >= ? AND type = 'reserve' AND status != 'cancel' GROUP BY d ORDER BY d LIMIT 20").all(from);
 export const getLead = id => rowOut(db.prepare('SELECT * FROM leads WHERE id = ?').get(+id));
 export function updateLead(id, { status, adminMemo }, user) {
   const cur = getLead(id); if (!cur) return null;

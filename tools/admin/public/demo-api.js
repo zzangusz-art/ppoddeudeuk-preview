@@ -11,9 +11,12 @@
   const kst = (t = Date.now()) => new Date(t + 9 * 3600e3).toISOString().slice(0, 19).replace('T', ' ');
   const day = n => kst(Date.now() - n * 864e5).slice(0, 10);
   const TYPES = { quick: '빠른 문의', quote: '견적문의', reserve: '예약' }, STATUS = { new: '신규', contacted: '연락함', done: '완료', cancel: '취소' };
-  let user = null, nextId = 9;
+  let user = null;
   const L = (id, ago, type, status, name, phone, use, resort, time, people, detail, memo, admin) => ({ id, created: kst(Date.now() - ago * 3600e3), type, status, name, phone, use_date: use, resort, time, people, detail, memo, admin_memo: admin || '', updated: kst(Date.now() - ago * 3600e3), handled_by: status === 'new' ? '' : '뽀드득 대표', page: '', summary: '' });
   const leads = [
+    L(11, 5, 'reserve', 'contacted', '윤가람(시험)', '010-1234-5678', day(-39), '용평스키장', '1타임 오전 09:00~13:00', '2', { board: ['초급자 보드'], wear: ['프리미엄 의류세트 상의', '프리미엄 의류세트 하의'], qty: '2세트', height: '161~170cm', foot: '245mm' }, '동반 1명 — 158cm·235mm', '11/10 통화, 예약 확정'),
+    L(10, 8, 'reserve', 'new', '오세훈(시험)', '010-8765-4321', day(-39), '알펜시아스키장', '1타임 주간 09:00~13:00', '3', { ski: ['중급자 스키'], lesson: '스키', lessonPeople: '1:1', lessonHours: '3시간', qty: '3세트', height: '171~180cm', foot: '270mm' }, '헬멧 3개 필요'),
+    L(9, 12, 'reserve', 'contacted', '서다은(시험)', '010-2468-1357', day(-39), '용평스키장', '1타임 야간 19:00~23:00', '1', { ski: ['초급자 스키'], qty: '1세트', height: '151~160cm', foot: '230mm' }, '', '입금 확인'),
     L(8, 1, 'reserve', 'new', '김민준(시험)', '010-1111-2222', day(-39), '용평스키장', '2타임 주간 09:00~17:00', '4', { ski: ['초급자 스키'], wear: ['프리미엄 의류세트 상의', '프리미엄 의류세트 하의'], lesson: '스키', lessonPeople: '2:1', lessonHours: '2시간', qty: '4세트', height: '171~180cm', foot: '265mm' }, '아이 둘 처음 탑니다'),
     L(7, 3, 'quick', 'new', '이서연(시험)', '010-3333-4444', day(-44), '알펜시아스키장', '', '', { topic: ['렌탈', '리프트권'] }, '8살·10살 장비 문의'),
     L(6, 20, 'quote', 'contacted', '박지훈(시험)', '010-5555-6666', day(-60), '용평스키장', '1타임 오전 09:00~13:00', '12', { board: ['중급자 보드'] }, '회사 단체 12명 견적', '11/9 통화, 견적 문자 보냄'),
@@ -49,6 +52,10 @@
       if (s) list = list.filter(l => [l.name, l.phone, l.phone.replace(/-/g, ''), l.memo, l.admin_memo].some(x => String(x).includes(s)));
       return json({ total: list.length, page: 1, size: 30, items: list.map(out), counts: counts() });
     }
+    if (p === '/leads/day') { const t = day(0), date = q.get('date') || '', types = (q.get('types') || 'reserve').split(','), cx = q.get('cancel') === '1';
+      const m = new Map(); for (const l of leads) if (l.type === 'reserve' && l.status !== 'cancel' && l.use_date >= t) m.set(l.use_date, (m.get(l.use_date) || 0) + 1);
+      const items = leads.filter(l => l.use_date === date && types.includes(l.type) && (cx || l.status !== 'cancel')).sort((a, b) => (a.resort + a.time).localeCompare(b.resort + b.time) || a.id - b.id).map(out);
+      return json({ date, items, dates: [...m].sort().map(([d, n]) => ({ d, n })) }); }
     let m = p.match(/^\/leads\/(\d+)$/);
     if (m) { const l = leads.find(x => x.id === +m[1]); if (!l) return bad('접수를 찾지 못했습니다', 404);
       if (method === 'GET') return json({ lead: out(l) });

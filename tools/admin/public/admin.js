@@ -84,7 +84,7 @@
     phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
     sms: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/>',
     plus: '<path d="M12 5v14M5 12h14"/>', up: '<path d="m6 15 6-6 6 6"/>', down: '<path d="m6 9 6 6 6-6"/>', trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-    x: '<path d="M6 6l12 12M18 6 6 18"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>', print: '<path d="M7 9V3h10v6M7 18H4v-8h16v8h-3"/><path d="M7 14h10v7H7z"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
   };
   const ico = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
   const NAV = [
@@ -92,6 +92,7 @@
     ['게시판', [['blog', '블로그', 'pen'], ['notices', '공지사항', 'notice'], ['gallery', '갤러리', 'photo'], ['used', '중고장비', 'tag'], ['faq', '자주 묻는 질문', 'faq']]],
     ['운영 정보', [['instructors', '강사진', 'coach'], ['prices', '요금 관리', 'won'], ['popup', '팝업', 'pop'], ['site', '기본정보', 'info']]],
   ];
+  const OWNER_ONLY = ['blog'];   // 게시판 안에 있지만 관리자(세느루)에게만 보이는 메뉴
   const OWNER_NAV = [['tags', '추적 코드', 'code'], ['log', '작업 기록', 'log'], ['users', '계정 관리', 'users']];
   const route = () => location.hash.replace(/^#\/?/, '').split('?')[0].split('/');
   const badge = () => newCount ? `<span class="badge" data-newbadge>${newCount > 99 ? '99+' : newCount}</span>` : '<span class="badge" data-newbadge hidden></span>';
@@ -101,7 +102,7 @@
     const link = ([k, t, i, b]) => `<a href="#/${k}" class="${r === k ? 'on' : ''}">${ico(i)}<span>${t}</span>${b ? badge() : ''}</a>`;
     $('#app').innerHTML = `<div class="shell"><aside class="side" id="side"><a class="brand" href="#/"><img src="${BASE}assets/img/brand/logo.png" alt="뽀드득"><span>관리자</span></a>
       <button class="navbtn" id="navbtn" type="button" aria-expanded="false">${ico('menu')}<span>메뉴</span>${badge()}</button>
-      <nav id="side-nav">${NAV.map(([g, list]) => `<p class="grp">${g}</p>${list.map(link).join('')}`).join('')}
+      <nav id="side-nav">${NAV.map(([g, list]) => `<p class="grp">${g}</p>${list.filter(x => isOwner || !OWNER_ONLY.includes(x[0])).map(link).join('')}`).join('')}
         ${isOwner ? `<p class="grp own">관리자 전용</p>${OWNER_NAV.map(link).join('')}` : ''}
         <div class="bottom">${link(['me', '내 계정', 'me'])}<a href="${BASE}" target="_blank" rel="noopener">${ico('out')}<span>홈페이지 보기</span></a><a href="#" id="logout">${ico('logout')}<span>로그아웃</span></a></div></nav>
       <p class="who"><b>${h(ME.user.name)}</b>${h(ME.user.roleName)} · ${h(ME.user.id)}</p></aside>
@@ -205,7 +206,8 @@
   const qs = () => new URLSearchParams(location.hash.split('?')[1] || '');
   async function leads() {
     const q = qs(), status = q.get('status') || '', type = q.get('type') || '', search = q.get('q') || '', page = +q.get('page') || 1;
-    const v = shell('접수 관리', { desc: '홈페이지에서 들어온 빠른 문의·견적문의·예약입니다. 눌러서 연락 상태와 메모를 남기세요.', tool: `<a class="btn sm" href="/api/admin/leads.csv?status=${encodeURIComponent(status)}&type=${encodeURIComponent(type)}">${ico('dl')}엑셀(CSV) 내려받기</a>` });
+    const v = shell('접수 관리', { desc: '홈페이지에서 들어온 빠른 문의·견적문의·예약입니다. 눌러서 연락 상태와 메모를 남기세요.', tool: `<a class="btn sm" href="/api/admin/leads.csv?status=${encodeURIComponent(status)}&type=${encodeURIComponent(type)}">${ico('dl')}엑셀(CSV) 내려받기</a><button class="btn sm pri" type="button" id="pdfBtn">${ico('print')}PDF 출력</button>` });
+    $('#pdfBtn').onclick = () => printDay();
     const d = await api('GET', `/api/admin/leads?status=${encodeURIComponent(status)}&type=${encodeURIComponent(type)}&q=${encodeURIComponent(search)}&page=${page}`);
     const c = d.counts, link = o => '#/leads?' + new URLSearchParams(Object.entries({ status, type, q: search, ...o }).filter(([, x]) => x)).toString();
     const pages = Math.max(1, Math.ceil(d.total / d.size));
@@ -224,6 +226,72 @@
     $('#sf').onsubmit = e => { e.preventDefault(); location.hash = link({ q: e.target.q.value.trim(), page: '' }); };
     v.addEventListener('click', e => { const r = e.target.closest('[data-lead]'); if (r) openLead(r.dataset.lead); });
     const open = q.get('open'); if (open) openLead(open);
+  }
+  // ── 날짜별 예약자 명단 PDF 출력(A4 가로 1장) — 브라우저 인쇄 창에서 「PDF로 저장」 또는 바로 인쇄
+  const WEEK = '일월화수목금토';
+  const dayName = d => `${d.replace(/-/g, '.')} (${WEEK[new Date(d + 'T00:00:00Z').getUTCDay()]})`;
+  async function printDay() {
+    const el = document.createElement('div'); el.className = 'drawer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    let dates = []; try { dates = (await api('GET', `/api/admin/leads/day?date=`)).dates; } catch (e) { return fail(e); }
+    const def = dates[0] ? dates[0].d : today();
+    el.innerHTML = `<div class="pane"><div class="pane-h"><button class="btn ghost sm x" data-x aria-label="닫기">${ico('x')}</button><h2>날짜별 예약자 명단 출력</h2>
+      <p class="help" style="margin:6px 0 0">고른 이용날짜의 예약을 A4 가로 1장으로 정리합니다. 인쇄 창이 열리면 대상(프린터)에서 <b>PDF로 저장</b>을 고르세요.</p></div>
+      <div class="pane-b"><label class="fld"><span>이용날짜</span><input class="in" type="date" data-date value="${def}"></label>
+      ${dates.length ? `<div><p class="lbl">예약이 있는 날짜</p><div class="dchips">${dates.map(x => `<button type="button" data-d="${x.d}" class="${x.d === def ? 'on' : ''}">${h(md(x.d))} <small>${num(x.n)}건</small></button>`).join('')}</div></div>` : '<p class="help">오늘 이후 예약이 아직 없습니다. 날짜를 직접 고를 수 있습니다.</p>'}
+      <div><p class="lbl">포함할 접수</p><label class="chk"><input type="checkbox" data-quote> 견적문의도 함께 넣기</label><label class="chk"><input type="checkbox" data-cancel> 취소된 예약도 넣기</label></div>
+      <button class="btn pri" data-go>${ico('print')}PDF 출력</button></div></div>`;
+    document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 200); document.removeEventListener('keydown', esc); };
+    const esc = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
+    el.addEventListener('click', async e => {
+      if (e.target === el || e.target.closest('[data-x]')) return close();
+      const chip = e.target.closest('[data-d]');
+      if (chip) { $('[data-date]', el).value = chip.dataset.d; $$('[data-d]', el).forEach(b => b.classList.toggle('on', b === chip)); return; }
+      if (!e.target.closest('[data-go]')) return;
+      const date = $('[data-date]', el).value; if (!date) return toast('이용날짜를 골라 주세요');
+      const types = ['reserve', ...($('[data-quote]', el).checked ? ['quote'] : [])].join(',');
+      try { const d = await api('GET', `/api/admin/leads/day?date=${date}&types=${types}&cancel=${$('[data-cancel]', el).checked ? 1 : 0}`);
+        if (!d.items.length) return toast(`${dayName(date)} 예약이 없습니다`);
+        close(); setTimeout(() => printSheet(date, d.items), 220); } catch (err) { fail(err); }
+    });
+    $('[data-date]', el).onchange = e => $$('[data-d]', el).forEach(b => b.classList.toggle('on', b.dataset.d === e.target.value));
+  }
+  function printSheet(date, items) {
+    const arr = x => Array.isArray(x) ? x.join(', ') : x || '';
+    const people = items.reduce((a, l) => a + (parseInt(l.people) || 0), 0);
+    const byResort = Object.entries(items.reduce((a, l) => (a[l.resort || '스키장 미정'] = (a[l.resort || '스키장 미정'] || 0) + 1, a), {})).map(([k, n]) => `${k} ${n}건`).join(' · ');
+    const now = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
+    const row = (l, i) => { const d = l.detail || {};
+      const gear = [d.ski && '스키: ' + arr(d.ski), d.board && '보드: ' + arr(d.board), d.wear && '의류: ' + arr(d.wear)].filter(Boolean).join(' / ');
+      const lesson = d.lesson ? [d.lesson, d.lessonPeople, d.lessonHours].filter(Boolean).join(' · ') : '';
+      const size = [d.qty, d.height && '키 ' + d.height, d.foot && '발 ' + d.foot].filter(Boolean).join(' · ');
+      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${i + 1}</td><td class="nm">${h(l.name)}${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="ph">${h(l.phone)}</td>
+        <td>${h((l.resort || '').replace('스키장', ''))} <small class="tm">${h(l.time || '')}</small></td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
+        <td>${h(gear)}</td><td>${h(lesson)}</td><td>${h(size)}</td>
+        <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
+    let sheet = $('#printSheet'); if (sheet) sheet.remove();
+    sheet = document.createElement('div'); sheet.id = 'printSheet';
+    sheet.innerHTML = `<div class="ps-in"><header><div><b class="ps-brand">뽀드득</b><h1>예약자 명단 — ${h(dayName(date))}</h1></div>
+      <p>총 <b>${num(items.length)}건</b>${people ? ` · 인원 <b>${num(people)}명</b>` : ''} · ${h(byResort)}<br><span>출력 ${h(now)} · ${h(ME.user.name)}</span></p></header>
+      <table><colgroup><col style="width:2.6%"><col style="width:7%"><col style="width:8.6%"><col style="width:15%"><col style="width:3.8%"><col style="width:18%"><col style="width:8%"><col style="width:12%"><col><col style="width:4.6%"><col style="width:3.4%"><col style="width:3.4%"></colgroup>
+      <thead><tr><th>No</th><th>이름</th><th>연락처</th><th>스키장·타임</th><th>인원</th><th>장비</th><th>강습</th><th>수량·키·발</th><th>요청사항 · 관리 메모</th><th>상태</th><th>수령</th><th>반납</th></tr></thead>
+      <tbody>${items.map(row).join('')}</tbody></table>
+      <footer>뽀드득 · 평창군 대관령면 올림픽로 238 · 033-336-9884 — 고객 개인정보가 담긴 문서입니다. 사용 후 파기해 주세요.</footer></div>`;
+    document.body.appendChild(sheet);
+    // 1장에 맞추기: A4 가로 인쇄 영역(277×190mm)에 들어가도록 글자 크기를 줄인다
+    // 표 폭은 A4 그대로 두고 글자 크기만 줄여 높이를 맞춘다(12px → 최소 7px, 그보다 많으면 2장)
+    const inner = $('.ps-in', sheet), H = 186 * 3.7795, tall = () => inner.getBoundingClientRect().height > H;
+    sheet.classList.add('measure');
+    let fs = 12; inner.style.fontSize = fs + 'px';
+    while (tall() && fs > 7) { fs = Math.round((fs - .25) * 4) / 4; inner.style.fontSize = fs + 'px'; }
+    const fits = !tall();
+    sheet.classList.remove('measure');
+    if (!fits) toast(`${items.length}건이라 1장에 다 들어가지 않아 2장 이상으로 나뉩니다`, 6000);
+    const prevTitle = document.title; document.title = `뽀드득_예약자명단_${date}`;
+    const done = () => { document.title = prevTitle; window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    setTimeout(() => window.print(), 60);
   }
   const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈' };
   const leadBrief = l => [l.time, ...Object.entries(l.detail || {}).map(([k, x]) => Array.isArray(x) ? x.join(', ') : x), l.memo].filter(Boolean).join(' · ');
@@ -482,7 +550,7 @@
   async function render() {
     if (!ME.user) return loginView();
     const r = route()[0].split('?')[0];
-    const own = ['tags', 'log', 'users'];
+    const own = ['tags', 'log', 'users', 'blog'];
     if (own.includes(r) && ME.user.role !== 'owner') { location.hash = '#/'; return; }
     const views = {
       '': dashboard, leads, stats, prices, popup, me, log, users, blog,
