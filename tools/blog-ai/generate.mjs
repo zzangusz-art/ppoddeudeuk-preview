@@ -29,10 +29,10 @@ const man = n => n % 10000 === 0 ? `${(n / 10000).toLocaleString('ko-KR')}만원
 
 // ── 사실 목록: 사이트 데이터(src/data.mjs, 어드민에서 고친 요금 포함)에서만 만든다. 순서를 고정해 프롬프트 캐시가 유지되게 한다
 function factSheet() {
-  const { SITE: S, BRANCHES, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, STAY, INSTRUCTORS } = D;
+  const { SITE: S, SCALE, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, STAY, INSTRUCTORS } = D;
   const L = [];
   L.push(`[업체] ${S.name}(${S.nameEn}, 이전 이름 겨울바라기·겨울바라기 AC). 대표 ${S.ceo}. 스키·스노보드 렌탈과 강습 전문점. 주소 ${S.address.full}(지번 ${S.address.old}). ${S.near}. 대표전화 ${S.phone}. 영업시간 ${S.hours}.`);
-  L.push(`[지점] 렌탈샵 ${BRANCHES.rental.join(', ')} / 강습센터 ${BRANCHES.lesson.join(', ')}(기존 홈페이지 안내 기준).`);
+  L.push(`[매장 규모] ${SCALE.gear}, ${SCALE.wear}, ${SCALE.staff}(업체 제공). 다른 지점은 안내하지 않는다.`);
   L.push('[서비스] 리프트권 할인 예약 대행, 스키·보드 장비 렌탈, 스키복(의류) 렌탈, 헬멧·고글·보호대 렌탈, 1:1·2:1 스키·보드 강습, 용평리조트 콘도(타워·빌라·그린피아) 숙박 안내. 고객의 목적과 실력에 맞춰 장비를 추천하고, 매 시즌 장비 컨디션을 점검한다.');
   for (const l of LIFT) L.push(`[리프트권 ${l.resort}, ${S.season}] ${l.note} ${l.rows.map(r => `${r.time}(${r.detail.join(', ')}): 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join(' / ')}${l.extra ? ` (${l.extra})` : ''}.`);
   for (const r of RESORTS) L.push(`[이용타임 ${r.name}] ${r.times.map(t => `${t.name}: ${t.opts.map(([n, h]) => `${n} ${h}`).join(' 또는 ')}`).join(' / ')}. 정설시간 ${r.grooming}(${r.groomingNote}).`);

@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, BRANCHES, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -81,6 +81,9 @@ const tabsBar = (id, tabs) => `<div class="tabs" role="tablist" data-tabs="${id}
 // 강사진 카드(KSIA 자격증 이미지, 누르면 크게)
 export const instCards = u => `<div class="inst-cards">${INSTRUCTORS.map(it => { const cap = [it.name, it.cred].filter(Boolean).join(' · '); return `<figure class="inst"><button type="button" class="inst-img" data-lb="${u('assets/img/' + it.img)}" data-lb-group="inst" data-lb-cap="${esc(cap)}">${img(u, 'assets/img/' + it.img, `뽀드득 강사 ${cap}`, { sizes: '(max-width: 760px) 80vw, 440px' })}</button><figcaption>${it.name ? `<b class="inst-name">${esc(it.name)}</b>` : ''}${esc(it.cred)}${it.career ? `<span class="inst-career">${esc(it.career)}</span>` : ''}</figcaption></figure>`; }).join('')}</div>`;
 
+// 메인 갤러리: 분류별로 한 줄씩(각 최대 4장) — 업체 요청 순서
+const HOME_GAL_CATS = ['장비', '의류', '장비관리', '강습'];
+
 // ── 홈 ──
 const popupHtml = u => {
   const p = POPUP; if (!p || !p.on || !(p.title || p.img)) return '';
@@ -108,7 +111,7 @@ export function home(u, posts = []) {
   <div class="reveal">
     <p class="eyebrow">ABOUT PPODDEUDEUK</p>
     <h2 class="h2">뽀드득은 어떤 곳인가요?</h2>
-    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238에 있는 스키·스노보드 렌탈과 강습 전문점입니다.</strong> 용평리조트(모나 용평)와 알펜시아 스키장까지 차로 약 5분 거리이고, 리프트권 할인 예약, 장비·의류 렌탈, 1:1·2:1 강습을 함께 안내합니다.</p>
+    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
     <ul class="facts">
       <li><b>리프트권</b>용평 1타임 대인 ${won(68000)} → <em>${won(34000)}</em></li>
       <li><b>장비 렌탈</b>초급자 스키·보드 1타임 <em>${won(15000)}</em>부터</li>
@@ -125,6 +128,14 @@ export function home(u, posts = []) {
   <div class="rate-cards reveal">${rateCards.map(([t, h], i) => `<div class="item"><a href="${u(h)}" style="background-image:url('${u(`assets/img/main/rate-${i + 1}.webp`)}')"><p>${t}</p></a></div>`).join('')}</div>
 </section>
 
+<section class="sec sec-gallery"><div class="wrap">
+  <div class="sec-hd reveal"><p class="eyebrow">GALLERY</p><h2 class="h2">뽀드득 갤러리</h2><p>매장 장비와 의류, 장비 관리와 강습 현장을 사진으로 확인하세요.</p></div>
+  ${HOME_GAL_CATS.map(cat => { const list = GALLERY.filter(g => g.cat === cat).slice(0, 4); return `<div class="gal-row reveal">
+    <div class="gal-row-hd"><h3>${esc(cat)}</h3><a href="${u('gallery/')}#${encodeURIComponent(cat)}">더보기 ${ICON.arrow}</a></div>
+    ${list.length ? `<div class="gal-grid gal-strip">${galleryItems(u, list, 'home-gal-' + cat)}</div>` : '<p class="gal-empty">사진을 준비하고 있습니다.</p>'}</div>`; }).join('')}
+  <p class="center"><a class="btn btn-line" href="${u('gallery/')}">갤러리 전체 보기</a></p>
+</div></section>
+
 <section class="sec sec-lesson"><div class="wrap lesson-grid">
   <div class="reveal">
     <p class="eyebrow">LESSON</p><h2 class="h2">스키·보드 강습은 1:1과 2:1만 운영합니다</h2>
@@ -140,13 +151,6 @@ export function home(u, posts = []) {
   <div class="wrap m-tit white reveal"><h2>강사진 소개</h2><p>${esc(INSTRUCTOR_LEAD)}</p></div>
   <div class="wrap reveal">${instCards(u)}<p class="center inst-more"><a class="btn btn-glass" href="${u('lesson/instructors/')}">강사진 자세히 보기</a></p></div>
 </section>
-
-<section class="sec sec-gallery"><div class="wrap">
-  <div class="sec-hd reveal"><p class="eyebrow">GALLERY</p><h2 class="h2">뽀드득 갤러리</h2><p>매장 장비와 의류, 새로 들어온 장비를 사진으로 확인하세요.</p></div>
-  ${tabsBar('gal', [['all', '전체'], ...GALLERY_CATS.map(c => [c, c])])}
-  <div class="gal-grid" data-filter-grid="gal">${galleryItems(u, GALLERY.slice(0, 8), 'home-gal')}<p class="gal-empty" hidden>등록된 사진을 준비하고 있습니다.</p></div>
-  <p class="center"><a class="btn btn-line" href="${u('gallery/')}">갤러리 전체 보기</a></p>
-</div></section>
 
 <section class="sec sec-steps"><div class="wrap">
   <div class="sec-hd reveal"><p class="eyebrow">HOW TO BOOK</p><h2 class="h2">예약은 이렇게 진행됩니다</h2></div>
@@ -181,9 +185,8 @@ export function about(u) {
   return subHead(u, { eyebrow: 'ABOUT', title: '소개 및 내부전경', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개 및 내부전경']] })
     + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
     + `<section class="sec"><div class="wrap narrow">
-  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 프리미엄 스키·스노보드 렌탈과 전문 강습을 함께 운영하는 스키 파트너입니다.</strong> ${esc(SITE.address.full)}에 있고, ${esc(SITE.near)} 거리입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
+  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
   <div class="prose reveal">${ABOUT.paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
-  <dl class="branch reveal"><div><dt>렌탈샵</dt><dd>${BRANCHES.rental.map(esc).join(', ')}</dd></div><div><dt>강습센터</dt><dd>${BRANCHES.lesson.map(esc).join(', ')}</dd></div></dl>
 </div></section>
 <section class="sec sec-tint"><div class="wrap">
   <div class="sec-hd reveal"><p class="eyebrow">INTERIOR</p><h2 class="h2">내부전경</h2><p>현장 방문 전, 내부 전경을 미리 확인해보세요.</p></div>

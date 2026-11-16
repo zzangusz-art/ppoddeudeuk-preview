@@ -16,7 +16,7 @@ const OUT = path.resolve(ROOT, opt('--out') || 'dist');
 
 const D = await import('./src/data.mjs');
 const { loadPosts } = await import('./tools/blog/lib.mjs');
-const { SITE, FAQ, STAY, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, BRANCHES, KEYWORDS, NOTICES, USED } = D;
+const { SITE, FAQ, STAY, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, SCALE, KEYWORDS, NOTICES, USED } = D;
 const { makeUrl, pageUrl, won } = await import('./src/lib.mjs');
 const S = await import('./src/schema.mjs');
 const { page } = await import('./src/layout.mjs');
@@ -75,7 +75,7 @@ emit({ out: 'blog/index.html', section: 'blog', pri: '0.7', type: 'CollectionPag
 
 // ── 뽀드득 안내 ──
 emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['홈', ''], ['소개 및 내부전경', 'about/']], faq: faqOf('about'),
-  title: '뽀드득 소개 및 내부전경 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. 렌탈샵 ${BRANCHES.rental.join('·')}, 강습센터 ${BRANCHES.lesson[0]}. 매장 내부 사진.`,
+  title: '뽀드득 소개 및 내부전경 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. ${SCALE.gear}·${SCALE.wear}·${SCALE.staff}. 매장 내부 사진.`,
   body: u => P.about(u) });
 emit({ out: 'location/index.html', section: 'location', crumbs: [['홈', ''], ['오시는 길', 'location/']], faq: faqOf('location'),
   title: '용평렌탈샵 뽀드득 오시는 길 — 평창 대관령면 올림픽로 238 (용평·알펜시아 5분)', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
@@ -163,7 +163,7 @@ const llms = `# ${SITE.name} (${SITE.nameEn}) — 용평·알펜시아 스키 �
 - 주소: ${SITE.address.full} (지번 ${SITE.address.old})
 - 대표전화: ${SITE.phone}
 - 영업시간: ${SITE.hours}
-- 렌탈샵: ${BRANCHES.rental.join(', ')} / 강습센터: ${BRANCHES.lesson.join(', ')}
+- 매장 규모: ${SCALE.gear}, ${SCALE.wear}, ${SCALE.staff}
 - 리프트권 할인은 이용 1일 전까지 전화 예약 필수
 - 강습: 1:1·2:1만 운영(3명 이상 불가), 2·3·4시간(1시간 없음), 스키와 보드 요금 같음
 - 공식 홈페이지: ${SITE.url}

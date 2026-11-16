@@ -1,5 +1,5 @@
 // 구조화 데이터(JSON-LD). 원시 HTML에 그대로 들어가므로 AI 크롤러가 바로 읽는다.
-import { SITE, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, BRANCHES } from './data.mjs';
+import { SITE, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE } from './data.mjs';
 
 const ID = { org: SITE.url + '#business', site: SITE.url + '#website' };
 const krw = (price, name, extra = {}) => ({ '@type': 'Offer', name, price, priceCurrency: 'KRW', ...extra });
@@ -32,7 +32,6 @@ export function business() {
     areaServed: ['용평리조트', '모나 용평', '알펜시아리조트', '평창군 대관령면'],
     founder: { '@type': 'Person', name: SITE.ceo },
     knowsAbout: ['스키 렌탈', '스노보드 렌탈', '스키복 렌탈', '스키 강습', '리프트권 할인'],
-    department: [...BRANCHES.rental.map(b => ({ '@type': 'LocalBusiness', name: `뽀드득 렌탈샵 ${b}` })), ...BRANCHES.lesson.map(b => ({ '@type': 'LocalBusiness', name: `뽀드득 강습센터 ${b}` }))],
     hasOfferCatalog: { '@type': 'OfferCatalog', name: `뽀드득 ${SITE.season} 요금`, itemListElement: offers },
   };
 }

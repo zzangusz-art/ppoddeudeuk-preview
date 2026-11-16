@@ -607,3 +607,19 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .fld-size .fld{margin:0}
 .fld-size+.hint{margin:6px 0 18px;font-size:13px}
 @media (max-width:760px){.fld-size{gap:8px}.fld-size select{font-size:15px;padding-left:9px;padding-right:20px;background-position:right 6px center}}
+
+/* 메인 갤러리: 분류별 한 줄(장비·의류·장비관리·강습, 각 4장) */
+.gal-row+.gal-row{margin-top:clamp(28px,3.4vw,44px)}
+.gal-row-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line,#E5E7EB)}
+.gal-row-hd h3{font-size:clamp(19px,1.6vw,22px);font-weight:800;letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:10px}
+.gal-row-hd h3::before{content:"";width:4px;height:1em;border-radius:2px;background:var(--red,#E3262B)}
+.gal-row-hd a{display:inline-flex;align-items:center;gap:4px;font-size:14.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.gal-row-hd a:hover{color:var(--red,#E3262B)}.gal-row-hd a svg{width:16px;height:16px}
+.gal-row .gal-empty{padding:34px 0}
+.gal-strip{grid-template-columns:repeat(4,1fr)!important}
+@media (max-width:760px){
+  .gal-strip{display:flex!important;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -20px;padding:0 20px 6px;scrollbar-width:none}
+  .gal-strip::-webkit-scrollbar{display:none}
+  .gal-strip .gi{flex:0 0 44%;scroll-snap-align:start}
+  .gal-row .gal-empty{padding:26px 0;font-size:14px}
+}
