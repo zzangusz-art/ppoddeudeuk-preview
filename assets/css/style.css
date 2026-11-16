@@ -690,3 +690,4 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
   .qn{min-height:2.6em;display:flex;align-items:center}
   .qc{width:100%}.qc button{flex:1;height:34px;font-size:19px}.qc input{flex:1;width:auto;height:34px}
 }
+.gal-row+.center{margin-top:clamp(36px,4.4vw,56px)}
