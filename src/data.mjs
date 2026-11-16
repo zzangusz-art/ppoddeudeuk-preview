@@ -25,7 +25,7 @@ export const SITE = {
     region: '강원특별자치도', locality: '평창군 대관령면', street: '올림픽로 238', postal: '25342',
   },
   near: '용평리조트(모나 용평)·알펜시아 스키장까지 차로 약 5분',
-  url: process.env.SITE_URL || 'https://ppoddeudeuk.co.kr/', // 도메인 확정 전 기본값(고객 결정 대기)
+  url: process.env.SITE_URL || 'https://bboski.co.kr/', // 운영 도메인(2026-11-16 연결)
   tagline: "눈밭 위 '뽀드득' 소리와 함께, 당신의 겨울이 시작됩니다",
   maps: {
     kakao: 'https://place.map.kakao.com/298093176',          // 기존 사이트 '카카오 지도 크게 보기'와 같은 장소
