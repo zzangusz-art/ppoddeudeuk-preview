@@ -367,7 +367,7 @@ export function bookForm(u, type) {
       <label><span>시간</span><select name="lessonHours" disabled><option value="">선택</option><option>2시간</option><option>3시간</option><option>4시간</option></select></label></div>`, { sub: '1:1·2:1만, 2·3·4시간' })}
     ${row(`<span>사이즈표${isQ ? '' : ` ${req}`}</span>`, `<div class="sz-box">
       <p class="sz-lead"><b>${isQ ? '사이즈표를 미리 적어 주시면 견적이 정확해집니다.' : '사이즈표를 보내 주셔야 예약이 완료됩니다.'}</b> 장비 수량을 고르면 한 분씩 입력칸이 생깁니다.</p>
-      <details class="sz-why"><summary>나이·이름·사이즈를 받는 이유 ${ICON.chev}</summary><ul>${SIZE_GUIDE.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ul><p>장비와 부츠는 수량이 정해져 있어, 사이즈표를 늦게 주시거나 주지 않으시면 예약이 취소되는 경우가 있습니다. 예약을 완료해 주신 분을 가장 먼저 준비합니다.</p></details>
+      <div class="sz-why" role="note"><p class="sz-why-t"><span aria-hidden="true">!</span>나이·이름·사이즈를 꼭 받는 이유</p><ul>${SIZE_GUIDE.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ul><p class="sz-warn">장비와 부츠는 수량이 정해져 있어, <strong>사이즈표를 늦게 주시거나 주지 않으시면 예약이 취소되는 경우가 있습니다.</strong> 예약을 완료해 주신 분을 가장 먼저 준비합니다.</p></div>
       <div class="sz-list" data-sizes><p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p></div></div>`, { cls: 'bk-size' })}
     ${row(`<label for="${type}-memo">요청사항</label>`, `<textarea id="${type}-memo" name="memo" rows="3" maxlength="1000" placeholder="예: 단체 이용, 헬멧·고글 필요, 도착 예정 시간 등"></textarea>`)}
   </div>

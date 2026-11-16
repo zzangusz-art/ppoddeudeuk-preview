@@ -315,40 +315,63 @@
     return over;
   }
 
-  // 전체 명단(여러 팀을 한 표에)
+  // 품목 문자열('초급자 스키 ×2')을 [이름, 수량]으로 — 예전 접수(수량 없음)는 1개로 본다
+  const itemsOf = v => (Array.isArray(v) ? v : v ? [v] : []).map(s => { const m = String(s).match(/^(.*?)\s*×\s*(\d+)$/); return m ? [m[1].trim(), +m[2]] : [String(s).trim(), 1]; }).filter(([n]) => n);
+  const KINDS = [['ski', '스키'], ['board', '보드'], ['wear', '의류']];
+  const tally = (list, key) => { const m = new Map(); for (const l of list) for (const [n, c] of itemsOf((l.detail || {})[key])) m.set(n, (m.get(n) || 0) + c); return [...m]; };
+  const feetOf = list => { const m = new Map(); for (const l of list) for (const z of (l.detail || {}).sizes || []) { const f = parseInt(z.foot, 10); if (f) m.set(f, (m.get(f) || 0) + 1); } return [...m].sort((a, b) => a[0] - b[0]); };
+  const pcs = pairs => pairs.map(([n, c]) => `<span class="pc">${h(n)} <b>${c}</b></span>`).join('');
+  const needSizes = l => { const d = l.detail || {}; return itemsOf(d.ski).length + itemsOf(d.board).length > 0 && !(d.sizes || []).length && !legacySize(d); };
+  const extraOf = z => [z.len && `길이 ${z.len}`, z.kind === 'board' && z.stance, z.kind === 'board' && z.angle && `바인딩 ${z.angle}`].filter(Boolean).join(' · ');
+
+  // 전체 명단: 맨 위 준비 요약(팀·인원·강습·사이즈표 미접수, 장비·의류·부츠 사이즈 합계) + 스키장·타임별로 묶은 표
   function printSheet(date, items) {
-    const people = items.reduce((a, l) => a + (parseInt(l.people) || 0), 0);
-    const byResort = Object.entries(items.reduce((a, l) => (a[l.resort || '스키장 미정'] = (a[l.resort || '스키장 미정'] || 0) + 1, a), {})).map(([k, n]) => `${k} ${n}건`).join(' · ');
-    const row = (l, i) => { const d = l.detail || {};
-      const gear = gearLines(d).map(([k, v]) => `${k}: ${v}`).join(' / ');
-      const size = d.sizes && d.sizes.length ? d.sizes.map(sizeShort).join(', ') : legacySize(d);
-      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${i + 1}</td><td class="nm">${h(l.name)}${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="ph">${h(l.phone)}</td>
-        <td>${h((l.resort || '').replace('스키장', ''))} <small class="tm">${h(l.time || '')}</small></td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
-        <td>${h(gear)}</td><td>${h(lessonText(d))}</td><td>${h(size)}</td>
-        <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
-    const html = `<div class="ps-in"><header><div><b class="ps-brand">뽀드득</b><h1>예약자 명단 — ${h(dayName(date))}</h1></div>
-      <p>총 <b>${num(items.length)}팀</b>${people ? ` · 인원 <b>${num(people)}명</b>` : ''} · ${h(byResort)}<br><span>출력 ${h(nowText())} · ${h(ME.user.name)}</span></p></header>
-      <table><colgroup><col style="width:2.6%"><col style="width:7%"><col style="width:8.6%"><col style="width:14%"><col style="width:3.8%"><col style="width:18%"><col style="width:8%"><col style="width:14%"><col><col style="width:4.6%"><col style="width:3.4%"><col style="width:3.4%"></colgroup>
-      <thead><tr><th>No</th><th>이름</th><th>연락처</th><th>스키장·타임</th><th>인원</th><th>장비·의류</th><th>강습</th><th>사이즈표 (나이/키/발)</th><th>요청사항 · 관리 메모</th><th>상태</th><th>수령</th><th>반납</th></tr></thead>
-      <tbody>${items.map(row).join('')}</tbody></table><footer>${FOOT}</footer></div>`;
-    const over = doPrint(html, `뽀드득_예약자명단_${date}`, 7);
-    if (over) toast(`${items.length}팀이라 1장에 다 들어가지 않아 2장 이상으로 나뉩니다`, 6000);
+    const live = items.filter(l => l.status !== 'cancel');
+    const people = live.reduce((a, l) => a + (parseInt(l.people) || 0), 0);
+    const lessons = live.filter(l => (l.detail || {}).lesson).length, missing = live.filter(needSizes).length;
+    const prep = [...KINDS.map(([k, t]) => [t, tally(live, k)]), ['부츠(발 mm)', feetOf(live).map(([f, c]) => [String(f), c])]].filter(([, p]) => p.length);
+    const groups = []; for (const l of items) { const key = `${l.resort || '스키장 미정'}|${l.time || '타임 미정'}`; let g = groups.find(x => x.key === key); if (!g) groups.push(g = { key, list: [] }); g.list.push(l); }
+    let no = 0;
+    const row = l => { const d = l.detail || {}, z = d.sizes || [];
+      const gear = KINDS.map(([k, t]) => [t, itemsOf(d[k])]).filter(([, v]) => v.length).map(([t, v]) => `<div><i>${t}</i>${v.map(([n, c]) => `${h(n)} <b>×${c}</b>`).join(', ')}</div>`).join('');
+      const size = z.length ? z.map(x => `<div><b>${h(x.name || '-')}</b> ${h([x.age || '-', x.height || '-', x.foot || '-'].join('/'))}${extraOf(x) ? ` <small>${h(extraOf(x))}</small>` : ''}</div>`).join('')
+        : needSizes(l) ? '<span class="warn">사이즈표 미접수</span>' : h(legacySize(d));
+      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${++no}</td><td class="nm">${h(l.name)}<small>${h(l.phone)}</small>${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
+        <td class="gear">${gear || '<span class="mute">—</span>'}</td><td>${h(lessonText(d)) || '<span class="mute">—</span>'}</td><td class="sz">${size || '<span class="mute">—</span>'}</td>
+        <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st st-${l.status}">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
+    const html = `<div class="ps-in ps-day"><header><div><b class="ps-brand">뽀드득 · 예약자 명단</b><h1>${h(dayName(date))}</h1></div>
+      <p><span>출력 ${h(nowText())} · ${h(ME.user.name)}</span></p></header>
+      <div class="ps-sum"><div><span>예약</span><b>${num(live.length)}팀</b></div><div><span>인원</span><b>${num(people)}명</b></div><div><span>강습</span><b>${num(lessons)}팀</b></div><div class="${missing ? 'alert' : ''}"><span>사이즈표 미접수</span><b>${num(missing)}팀</b></div>
+        ${groups.map(g => { const [r, t] = g.key.split('|'); return `<div class="tg"><span>${h(r.replace('스키장', ''))} · ${h(t.split(' ').slice(0, 2).join(' '))}</span><b>${num(g.list.filter(l => l.status !== 'cancel').length)}팀</b></div>`; }).join('')}</div>
+      ${prep.length ? `<div class="ps-prep"><p class="t">오늘 준비할 것 <small>(취소 제외 · 부츠는 사이즈마다 ±10mm 여분 같이)</small></p>${prep.map(([t, p]) => `<div><i>${h(t)}</i><span>${pcs(p)}</span></div>`).join('')}</div>` : ''}
+      <table><colgroup><col style="width:3%"><col style="width:10%"><col style="width:4.5%"><col style="width:19%"><col style="width:9%"><col style="width:19%"><col><col style="width:5%"><col style="width:3.6%"><col style="width:3.6%"></colgroup>
+      <thead><tr><th>No</th><th>이름 · 연락처</th><th>인원</th><th>장비 · 의류 (수량)</th><th>강습</th><th>사이즈표 (이름 나이/키/발)</th><th>요청사항 · 관리 메모</th><th>상태</th><th>수령</th><th>반납</th></tr></thead>
+      <tbody>${groups.map(g => { const [r, t] = g.key.split('|'), ls = g.list.filter(l => l.status !== 'cancel'); return `<tr class="grp"><td colspan="10">${h(r)} <b>${h(t)}</b><span>${num(ls.length)}팀 · ${num(ls.reduce((a, l) => a + (parseInt(l.people) || 0), 0))}명</span></td></tr>${g.list.map(row).join('')}`; }).join('')}</tbody></table>
+      <footer>${FOOT}</footer></div>`;
+    const over = doPrint(html, `뽀드득_예약자명단_${date}`, 7.5);
+    if (over) toast(`${items.length}팀이라 한 장에 다 들어가지 않아 2장 이상으로 나뉩니다(표 머리글은 장마다 반복)`, 6000);
   }
 
-  // 팀별 개별 출력(한 팀 = 한 장): 예약 정보 + 고른 장비 + 이용자별 사이즈표(부츠 여분 사이즈 포함)
+  // 팀별 개별 출력(한 팀 = 한 장): 예약 정보 · 장비 준비표 · 이용자별 사이즈표(부츠 여분·길이) · 요청 · 확인란
   function printTeams(list) {
+    const spare = f => { const n = parseInt(f, 10); return n >= 150 && n <= 350 ? `${n - 10} · ${n + 10}` : ''; };
+    const lenOf = x => x.len ? h(x.len) : parseInt(x.height, 10) > 90 ? `<span class="auto">${parseInt(x.height, 10) - 20} 전후</span>` : '';
     const page = l => { const d = l.detail || {}, z = d.sizes || [], board = z.some(x => x.kind === 'board');
-      const info = [['연락처', l.phone], ['이용날짜', dayName(l.use_date)], ['스키장', l.resort], ['이용타임', l.time], ['인원', l.people && l.people + '명'], ['강습', lessonText(d)], ['접수', `${l.typeName} #${l.id} · ${l.created.slice(0, 16)}`], ['상태', l.statusName]].filter(r => r[1]);
-      const spare = f => { const n = parseInt(f, 10); return n >= 150 && n <= 350 ? `${n - 10} · ${n + 10}` : ''; };
-      const len = x => x.len || (parseInt(x.height, 10) > 90 ? `<span class="auto">${parseInt(x.height, 10) - 20} 전후</span>` : '');
-      const sizeTable = z.length ? `<h2>이용자별 사이즈표 <small>${num(z.length)}명</small></h2><table class="ps-sz"><thead><tr><th>No</th><th>장비</th><th>이름</th><th>나이</th><th>키</th><th>발</th><th>부츠 여분</th><th>${board && z.every(x => x.kind === 'board') ? '데크' : board ? '플레이트·데크' : '플레이트'} 길이</th>${board ? '<th>선행발</th><th>바인딩(앞/뒤)</th>' : ''}<th>수령</th><th>반납</th></tr></thead>
-        <tbody>${z.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${h(x.gear)}</td><td class="nm">${h(x.name || '')}</td><td class="c">${h(x.age || '')}</td><td class="c">${h(x.height || '')}</td><td class="c">${h(x.foot || '')}</td><td class="c">${h(spare(x.foot))}</td><td class="c">${x.len ? h(x.len) : len(x)}</td>${board ? `<td class="c">${h(x.stance || '')}</td><td class="c">${x.kind === 'board' ? h((x.angle || '12/0').replace('/', '° / ') + '°') : ''}</td>` : ''}<td class="ck"></td><td class="ck"></td></tr>`).join('')}</tbody></table>`
-        : legacySize(d) ? `<h2>사이즈</h2><p>${h(legacySize(d))}</p>` : '<h2>이용자별 사이즈표</h2><p class="none">아직 받지 못했습니다 — 손님께 사이즈표(이름/나이/키/발)를 요청해 주세요.</p>';
-      return `<div class="ps-in ps-team"><header><div><b class="ps-brand">뽀드득 · ${h(l.typeName)} 확인서</b><h1>${h(l.name)} 팀 — ${h(dayName(l.use_date))}</h1></div><p><span>출력 ${h(nowText())} · ${h(ME.user.name)}</span></p></header>
+      const info = [['연락처', l.phone], ['인원', l.people && l.people + '명'], ['강습', lessonText(d) || '없음'], ['상태', l.statusName], ['접수', `${l.typeName} #${l.id} · ${l.created.slice(0, 16)}`], ['처리', l.handled_by && `${l.handled_by} · ${l.updated.slice(5, 16)}`]].filter(r => r[1]);
+      const gearRows = KINDS.flatMap(([k, t]) => itemsOf(d[k]).map(([n, c]) => [t, n, c]));
+      const feet = feetOf([l]);
+      const lenHead = board && z.every(x => x.kind === 'board') ? '데크 길이' : board ? '플레이트·데크 길이' : '플레이트 길이';
+      const sizeTable = z.length ? `<h2>이용자별 사이즈표 <small>${num(z.length)}명 · 길이 미입력은 키-20 전후로 세팅</small></h2><table class="ps-sz"><thead><tr><th>No</th><th>장비</th><th>이름</th><th>나이</th><th>키</th><th>발</th><th>부츠 여분</th><th>${lenHead}</th>${board ? '<th>선행발</th><th>바인딩(앞/뒤)</th>' : ''}<th>장비 준비</th><th>수령</th><th>반납</th></tr></thead>
+        <tbody>${z.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${h(x.gear)}</td><td class="nm">${h(x.name || '')}</td><td class="c">${h(x.age || '')}</td><td class="c">${h(x.height || '')}</td><td class="c big">${h(x.foot || '')}</td><td class="c">${h(spare(x.foot))}</td><td class="c">${lenOf(x)}</td>${board ? `<td class="c">${x.kind === 'board' ? h(x.stance || '') : ''}</td><td class="c">${x.kind === 'board' ? h((x.angle || '12/0').replace('/', '° / ') + '°') : ''}</td>` : ''}<td class="ck"></td><td class="ck"></td><td class="ck"></td></tr>`).join('')}</tbody></table>
+        ${feet.length ? `<p class="ps-feet"><b>부츠 준비</b> ${pcs(feet.map(([f, c]) => [f + 'mm', c]))} <small>사이즈마다 ±10mm 여분 같이</small></p>` : ''}`
+        : legacySize(d) ? `<h2>사이즈</h2><p>${h(legacySize(d))}</p>` : gearRows.some(r => r[0] !== '의류') ? '<h2>이용자별 사이즈표</h2><p class="none">아직 받지 못했습니다 — 손님께 사이즈표(이름/나이/키/발)를 요청해 주세요.</p>' : '';
+      return `<div class="ps-in ps-team"><header><div><b class="ps-brand">뽀드득 · ${h(l.typeName)} 확인서</b><h1>${h(l.name)} 팀</h1></div>
+          <div class="ps-when"><b>${h(dayName(l.use_date))}</b><span>${h(l.resort || '스키장 미정')}</span><span>${h(l.time || '타임 미정')}</span></div></header>
         <dl class="ps-info">${info.map(([k, v]) => `<div><dt>${h(k)}</dt><dd>${h(v)}</dd></div>`).join('')}</dl>
-        ${gearLines(d).length ? `<h2>렌탈 장비·의류</h2><ul class="ps-gear">${gearLines(d).map(([k, v]) => `<li><b>${h(k)}</b>${h(v)}</li>`).join('')}</ul>` : ''}
+        ${gearRows.length ? `<h2>렌탈 장비 · 의류</h2><table class="ps-gt"><thead><tr><th>구분</th><th>품목</th><th>수량</th><th>준비</th></tr></thead><tbody>${gearRows.map(([t, n, c]) => `<tr><td class="c">${t}</td><td>${h(n)}</td><td class="c big">${c}</td><td class="ck"></td></tr>`).join('')}</tbody></table>` : ''}
         ${sizeTable}
         ${l.memo || l.admin_memo ? `<h2>요청사항 · 메모</h2><div class="ps-memo">${l.memo ? `<p>${h(l.memo)}</p>` : ''}${l.admin_memo ? `<p class="adm">관리 메모: ${h(l.admin_memo)}</p>` : ''}</div>` : ''}
+        <div class="ps-sign"><div><span>준비 담당</span></div><div><span>고객 수령 확인</span></div><div><span>반납 확인</span></div></div>
         <footer>${FOOT}</footer></div>`; };
     const first = list[0];
     const over = doPrint(list.map(page).join(''), list.length === 1 ? `뽀드득_${first.name}_${first.use_date || ''}` : `뽀드득_팀별출력_${first.use_date || ''}_${list.length}팀`, 8);

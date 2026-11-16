@@ -632,11 +632,6 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .bk-lesson label{display:flex;align-items:center;gap:8px}.bk-lesson label span{font-size:14px;font-weight:700;white-space:nowrap}
 .sz-box{display:grid;gap:10px}
 .sz-lead{margin:0;font-size:14.5px}.sz-lead b{color:var(--red)}
-.sz-why{background:var(--snow);border-radius:10px;padding:10px 14px;font-size:13.5px;color:var(--ink2)}
-.sz-why summary{display:flex;justify-content:space-between;align-items:center;font-weight:700;cursor:pointer;list-style:none}.sz-why summary::-webkit-details-marker{display:none}
-.sz-why summary svg{width:18px;height:18px;fill:currentColor;transition:transform .2s}.sz-why[open] summary svg{transform:rotate(180deg)}
-.sz-why ul{margin:10px 0 6px;display:grid;gap:5px}.sz-why li{display:grid;grid-template-columns:70px 1fr;gap:8px}.sz-why li b{color:var(--ink)}
-.sz-why p{margin:6px 0 2px}
 .sz-list{display:grid;gap:8px}
 .sz-empty{margin:0;padding:16px;border:1.5px dashed var(--line);border-radius:10px;text-align:center;color:var(--muted);font-size:14px}
 .sz{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
@@ -668,7 +663,6 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
   .bk-lesson label span{width:34px}
   .sz-f,.sz[data-kind=board] .sz-f{grid-template-columns:repeat(4,minmax(0,1fr))}
   .sf-name{grid-column:span 2}.sf-len{grid-column:span 2}.sf-stance{grid-column:span 2}.sf-ang{grid-column:span 1}
-  .sz-why li{grid-template-columns:1fr;gap:0}
   .book-aside{grid-template-columns:1fr}
   .bk-submit .btn{width:100%}
 }
@@ -692,3 +686,13 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .gal-cols~.center{margin-top:clamp(32px,4vw,48px)}
 @media (max-width:980px){.gal-cols{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}}
 @media (max-width:760px){.gal-cols{gap:10px;row-gap:26px}.gal-stack{gap:8px}.gal-stack .gi figcaption{padding:8px 10px;font-size:13px}.gal-col .gal-row-hd h3{font-size:17px}.gal-col .gal-row-hd a{font-size:13px}.gal-cols+.gal-credit{text-align:left}}
+
+/* 사이즈표 안내: 접지 않고 항상 보이게, 강조 */
+.sz-why{background:#fff5f5;border:2px solid var(--red);border-radius:12px;padding:16px 18px;font-size:14.5px;color:var(--ink)}
+.sz-why-t{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:16.5px;font-weight:900;color:var(--red)}
+.sz-why-t span{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:15px;flex:none}
+.sz-why ul{margin:0;display:grid;gap:7px;list-style:none;padding:0}
+.sz-why li{display:grid;grid-template-columns:78px 1fr;gap:10px;line-height:1.55}
+.sz-why li b{color:var(--ink);font-weight:800;background:#fff;border:1px solid #f3c4c6;border-radius:6px;text-align:center;padding:1px 0;height:fit-content}
+.sz-warn{margin:12px 0 0;padding:10px 12px;background:var(--red);color:#fff;border-radius:8px;line-height:1.55}.sz-warn strong{font-weight:900}
+@media (max-width:760px){.sz-why{padding:14px}.sz-why li{grid-template-columns:1fr;gap:3px}.sz-why li b{width:fit-content;padding:1px 10px}}

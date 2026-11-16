@@ -246,6 +246,35 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
 .ps-team .none{color:#B91C1C;font-weight:700}
 .ps-team td.ck{width:3.5em}
 #printSheet .ps-team+.ps-team{margin-top:40px}
+/* 출력 v2: 준비 요약·묶음·확인란 */
+.ps-in .ps-brand{display:block}
+.ps-day header h1{font-size:max(18px,2.1em)}
+.ps-sum{display:flex;flex-wrap:wrap;gap:.5em;margin:0 0 .7em}
+.ps-sum>div{border:1.5px solid #111;border-radius:.5em;padding:.35em .8em;display:flex;align-items:baseline;gap:.5em;background:#fff}
+.ps-sum span{font-size:.92em;color:#444}.ps-sum b{font-size:1.35em}
+.ps-sum .alert{border-color:#C8102E;background:#FFF1F2}.ps-sum .alert b,.ps-sum .alert span{color:#C8102E}
+.ps-sum .tg{border-style:dashed;border-color:#9CA3AF}.ps-sum .tg b{font-size:1.1em}
+.ps-prep{border:1.5px solid #111;border-radius:.5em;padding:.5em .8em;margin:0 0 .8em;background:#F8FAFC}
+.ps-prep .t{margin:0 0 .35em;font-weight:800;font-size:1.05em}.ps-prep .t small{font-weight:500;color:#555;font-size:.85em}
+.ps-prep>div{display:flex;gap:.6em;align-items:flex-start;margin-top:.25em}.ps-prep i{font-style:normal;font-weight:800;flex:none;width:6.2em}
+.ps-prep>div>span{display:flex;flex-wrap:wrap;gap:.3em .35em}
+.pc{display:inline-block;border:1px solid #9CA3AF;border-radius:999px;padding:.05em .6em;background:#fff;white-space:nowrap}.pc b{color:#C8102E;margin-left:.15em}
+.ps-in tr.grp td{background:#111!important;color:#fff;font-weight:700;font-size:1.05em;padding:.4em .6em}
+.ps-in tr.grp td b{margin-left:.4em}.ps-in tr.grp td span{float:right;font-weight:600;opacity:.9}
+.ps-in td.nm small{display:block;font-weight:500;color:#333}
+.ps-in td.gear div,.ps-in td.sz div{margin:0 0 .15em}.ps-in td.gear i{font-style:normal;font-weight:800;margin-right:.35em;color:#C8102E}
+.ps-in td.sz small{color:#555}.ps-in .warn{color:#C8102E;font-weight:800}.ps-in .mute{color:#aaa}
+.ps-in td.st-new{color:#C8102E;font-weight:800}.ps-in td.st-done{color:#15803D;font-weight:700}
+.ps-in td.ck{background:#fff!important}
+.ps-team header{align-items:center}
+.ps-team header h1{font-size:max(20px,2.3em)}
+.ps-when{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:.15em}
+.ps-when b{font-size:1.6em}.ps-when span{border:1.5px solid #111;border-radius:999px;padding:.05em .7em;font-weight:700}
+.ps-gt{width:auto!important;min-width:60%}.ps-gt td.big,.ps-sz td.big{font-size:1.2em;font-weight:800}
+.ps-feet{margin:.5em 0 0;display:flex;flex-wrap:wrap;gap:.35em;align-items:center}.ps-feet small{color:#555}
+.ps-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:.8em;margin-top:1.2em}
+.ps-sign div{border:1.5px solid #111;border-radius:.4em;height:3.6em;padding:.3em .6em}.ps-sign span{font-size:.9em;font-weight:700;color:#444}
+.ps-in .ps-memo{border:1px solid #9CA3AF;border-radius:.4em;padding:.5em .7em}
 @media print{
   @page{size:A4 landscape;margin:10mm}
   html,body{background:#fff!important}
