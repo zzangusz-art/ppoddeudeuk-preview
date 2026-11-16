@@ -1,6 +1,6 @@
 /* 뽀드득 어드민 — GitHub Pages 미리보기용 데모(서버 없이 화면만 둘러보기)
    - build.mjs 가 미리보기 빌드 때 dist/admin/ 에 어드민 화면과 함께 이 파일·demo-data.json 을 넣는다(실제 서버(Railway)의 /admin 에는 들어가지 않음)
-   - /api/admin/* 요청을 브라우저 안에서 시험용 데이터로 대신 답한다. 로그인: demo / demo
+   - /api/admin/* 요청을 브라우저 안에서 시험용 데이터로 대신 답한다. 로그인: admin / 1234(총괄관리자), bboski / 1234(업체 관리자)
    - 실제 계정·접수·비밀번호는 전혀 들어 있지 않고, 바꾼 내용은 새로고침하면 처음으로 돌아간다 */
 (() => {
   const BASE = location.pathname.replace(/admin\/.*$|admin$/, '');
@@ -12,7 +12,7 @@
   const day = n => kst(Date.now() - n * 864e5).slice(0, 10);
   const TYPES = { quick: '빠른 문의', quote: '견적문의', reserve: '예약' }, STATUS = { new: '신규', contacted: '연락함', done: '완료', cancel: '취소' };
   let user = null;
-  const L = (id, ago, type, status, name, phone, use, resort, time, people, detail, memo, admin) => ({ id, created: kst(Date.now() - ago * 3600e3), type, status, name, phone, use_date: use, resort, time, people, detail, memo, admin_memo: admin || '', updated: kst(Date.now() - ago * 3600e3), handled_by: status === 'new' ? '' : '뽀드득 대표', page: '', summary: '' });
+  const L = (id, ago, type, status, name, phone, use, resort, time, people, detail, memo, admin) => ({ id, created: kst(Date.now() - ago * 3600e3), type, status, name, phone, use_date: use, resort, time, people, detail, memo, admin_memo: admin || '', updated: kst(Date.now() - ago * 3600e3), handled_by: status === 'new' ? '' : '업체 관리자', page: '', summary: '' });
   const leads = [
     L(11, 5, 'reserve', 'contacted', '윤가람(시험)', '010-1234-5678', day(-39), '용평스키장', '1타임 오전 09:00~13:00', '2', { board: ['초급자 보드 ×2'], wear: ['프리미엄 의류세트 ×2'], sizes: [{ gear: '초급자 보드', kind: 'board', name: '윤가람', age: '29', height: '165', foot: '245', stance: '왼발(레귤러)', angle: '12/0' }, { gear: '초급자 보드', kind: 'board', name: '윤나래', age: '27', height: '158', foot: '235', len: '140', stance: '오른발(구피)', angle: '18/-6' }] }, '처음 타 봐요', '11/10 통화, 예약 확정'),
     L(10, 8, 'reserve', 'new', '오세훈(시험)', '010-8765-4321', day(-39), '알펜시아스키장', '1타임 주간 09:00~13:00', '3', { ski: ['중급자 스키 ×3'], lesson: '스키', lessonPeople: '1명', lessonHours: '3시간', sizes: [{ gear: '중급자 스키', kind: 'ski', name: '오세훈', age: '41', height: '176', foot: '270' }, { gear: '중급자 스키', kind: 'ski', name: '오민지', age: '38', height: '162', foot: '240' }, { gear: '중급자 스키', kind: 'ski', name: '오하준', age: '12', height: '150', foot: '230', len: '130' }] }, '헬멧 3개 필요'),
@@ -41,7 +41,8 @@
   async function api(method, path, body) {
     const D = await load(), q = new URL(path, location.origin).searchParams, p = path.split('?')[0].replace(/^.*\/api\/admin/, '');
     if (p === '/me') return json({ user, ready: true, store: 'demo', storeReady: true, canWriteUsers: true, dbPersistent: true, types: TYPES, status: STATUS, galleryCats: D.galleryCats, faqPages: D.faqPages, sections: {} });
-    if (p === '/login') { if (body.id === 'demo' && body.pw === 'demo') { user = { id: 'demo', name: '데모 관리자', role: 'owner', roleName: '관리자' }; return json({ ok: true }); } return bad('데모 아이디·비밀번호는 demo / demo 입니다', 401); }
+    if (p === '/login') { const acc = { admin: { id: 'admin', name: '총괄관리자', role: 'owner', roleName: '총괄관리자' }, bboski: { id: 'bboski', name: '업체 관리자', role: 'client', roleName: '업체 관리자' } }[body.id];
+      if (acc && body.pw === '1234') { user = { ...acc, weakPw: true }; return json({ ok: true }); } return bad('데모 계정은 admin / 1234, bboski / 1234 입니다', 401); }
     if (p === '/logout') { user = null; return json({ ok: true }); }
     if (!user) return bad('로그인이 필요합니다', 401);
     if (p === '/dashboard') { const v = visits(14); return json({ counts: counts(), daily: v.map(x => ({ date: x.date, n: x.leads })), recent: leads.slice(0, 6).map(out), visits: v, totals: { uv: v.reduce((a, b) => a + b.uv, 0), pv: v.reduce((a, b) => a + b.pv, 0), calls: v.reduce((a, b) => a + b.calls, 0) }, statsPersistent: true }); }
@@ -60,7 +61,7 @@
     if (m) { const l = leads.find(x => x.id === +m[1]); if (!l) return bad('접수를 찾지 못했습니다', 404);
       if (method === 'GET') return json({ lead: out(l) });
       if (method === 'DELETE') { leads.splice(leads.indexOf(l), 1); return json({ ok: true }); }
-      if (STATUS[body.status]) l.status = body.status; if (body.adminMemo != null) l.admin_memo = body.adminMemo; l.updated = kst(); l.handled_by = '데모 관리자'; return json({ lead: out(l) }); }
+      if (STATUS[body.status]) l.status = body.status; if (body.adminMemo != null) l.admin_memo = body.adminMemo; l.updated = kst(); l.handled_by = user.name; return json({ lead: out(l) }); }
     m = p.match(/^\/content\/(\w+)$/);
     if (m) { const k = m[1], def = D.defaults[k];
       if (method === 'GET') return json({ value: site[k] ?? def, default: def, changed: k in site });
@@ -70,8 +71,8 @@
     if (p === '/stats') { const v = visits(Math.min(90, +q.get('days') || 30)); return json({ days: v, total: statsTotal(v), persistent: true }); }
     if (p === '/blog') { const now = kst().slice(0, 16); return json({ posts: D.posts.map(x => ({ ...x, live: `${x.date} ${x.time || '00:00'}` <= now })), todo: D.todo, drafts: [] }); }
     if (p === '/blog/topics') return json({ ok: true, commit: 'local-demo' });
-    if (p === '/log') return json({ commits: D.commits, audit: [{ at: kst(Date.now() - 36e5), user: '뽀드득 대표', action: '접수 연락함', target: '#6' }, { at: kst(Date.now() - 72e5), user: '뽀드득 대표', action: '로그인', target: '' }, { at: kst(Date.now() - 864e5), user: 'Kevin(세느루)', action: '요금 저장', target: '' }] });
-    if (p === '/users') { if (method === 'GET') return json({ users: [{ id: 'kevin', name: 'Kevin(세느루)', role: 'owner', roleName: '관리자', created: '2026-11-10' }, { id: 'ppoddeudeuk', name: '뽀드득 대표', role: 'client', roleName: '업체 담당자', created: '2026-11-10' }, { id: 'demo', name: '데모 관리자', role: 'owner', roleName: '관리자', created: '2026-11-10' }], canWrite: true });
+    if (p === '/log') return json({ commits: D.commits, audit: [{ at: kst(Date.now() - 36e5), user: '업체 관리자', action: '접수 연락함', target: '#6' }, { at: kst(Date.now() - 72e5), user: '업체 관리자', action: '로그인', target: '' }, { at: kst(Date.now() - 864e5), user: '총괄관리자', action: '요금 저장', target: '' }] });
+    if (p === '/users') { if (method === 'GET') return json({ users: [{ id: 'admin', name: '총괄관리자', role: 'owner', roleName: '총괄관리자', created: '2026-11-16' }, { id: 'bboski', name: '업체 관리자', role: 'client', roleName: '업체 관리자', created: '2026-11-16' }], canWrite: true });
       return json({ ok: true, password: '(데모 — 실제 비밀번호는 만들지 않습니다)' }); }
     if (p === '/me/password') return bad('데모에서는 비밀번호를 바꿀 수 없습니다');
     return bad('없는 요청', 404);

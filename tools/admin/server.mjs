@@ -153,7 +153,7 @@ const routes = [];
 const route = (method, pattern, role, fn) => routes.push({ method, re: new RegExp('^' + pattern.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$'), role, fn });
 
 route('GET', '/api/admin/me', null, async ({ user }) => ({
-  user: user && { id: user.id, name: user.name, role: user.role, roleName: ROLES[user.role] }, ready: ready(), store: store.kind, storeReady: store.ready(),
+  user: user && { id: user.id, name: user.name, role: user.role, roleName: ROLES[user.role], weakPw: !!user.weak }, ready: ready(), store: store.kind, storeReady: store.ready(),
   canWriteUsers: canWriteUsers(), dbPersistent: DB.dbPersistent(), types: DB.TYPES, status: DB.STATUS, galleryCats: GALLERY_CATS, faqPages: FAQ_PAGES,
   sections: Object.fromEntries(Object.entries(SECTIONS).map(([k, s]) => [k, { name: s.name, owner: !!s.owner }])) }));
 
@@ -227,14 +227,14 @@ route('POST', '/api/admin/users', 'owner', async ({ data, user }) => {
     DB.audit(user.name, '계정 만들기', id); return { ok: true, password: pw };
   }
   const u = list.find(x => x.id === id); need(u, 404, '계정을 찾지 못했습니다');
-  if (act === 'reset') { const pw = newPassword(); u.hash = hashPassword(pw); u.changed = kst(); saveUsers(list); DB.audit(user.name, '비밀번호 초기화', id); return { ok: true, password: pw }; }
+  if (act === 'reset') { const pw = newPassword(); u.hash = hashPassword(pw); u.changed = kst(); delete u.weak; saveUsers(list); DB.audit(user.name, '비밀번호 초기화', id); return { ok: true, password: pw }; }
   if (act === 'delete') { need(u.id !== user.id, 400, '내 계정은 지울 수 없습니다'); saveUsers(list.filter(x => x.id !== id)); DB.audit(user.name, '계정 삭제', id); return { ok: true }; }
   throw new HttpError(400, '알 수 없는 요청');
 });
 route('POST', '/api/admin/me/password', 'client', async ({ data, user }) => {
   const r = login(user.id, data.current, 'pw:' + user.id); need(r.user, 400, '지금 비밀번호가 맞지 않습니다');
   const next = String(data.next || ''); need(next.length >= 10 && /[a-zA-Z]/.test(next) && /\d/.test(next), 400, '새 비밀번호는 10자 이상, 영문과 숫자를 섞어 주세요');
-  const list = loadUsers(); const u = list.find(x => x.id === user.id); u.hash = hashPassword(next); u.changed = kst(); saveUsers(list);
+  const list = loadUsers(); const u = list.find(x => x.id === user.id); u.hash = hashPassword(next); u.changed = kst(); delete u.weak; saveUsers(list);
   DB.audit(user.name, '내 비밀번호 변경'); return { ok: true };
 });
 

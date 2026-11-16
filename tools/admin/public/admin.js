@@ -120,7 +120,7 @@
   function loginView() {
     $('#app').innerHTML = `<div class="login-wrap"><div class="login-art" style="background-image:url(${BASE}assets/video/hero-poster.jpg)"><b>접수 확인부터 공지·요금 수정까지<br>한 화면에서</b><p>뽀드득 홈페이지 관리자</p></div>
       <form class="login" id="lf"><img src="${BASE}assets/img/brand/logo.png" alt="뽀드득"><h1>관리자 로그인</h1><p class="sub">받은 아이디와 비밀번호를 입력해 주세요.</p>
-      ${ME.store === 'demo' ? '<div class="box info"><b>미리보기 데모</b> — 아이디 <b>demo</b>, 비밀번호 <b>demo</b> 로 들어가 보세요. 시험용 데이터이고 저장되지 않습니다.</div>' : ME.ready ? '' : '<div class="box warn">어드민 초기 설정 전입니다(계정·SESSION_SECRET). 관리자에게 알려 주세요.</div>'}
+      ${ME.store === 'demo' ? '<div class="box info"><b>미리보기 데모</b> — 총괄관리자 <b>admin</b> / 업체 관리자 <b>bboski</b> (비밀번호 <b>1234</b>)로 들어가 보세요. 시험용 데이터이고 저장되지 않습니다.</div>' : ME.ready ? '' : '<div class="box warn">어드민 초기 설정 전입니다(계정·SESSION_SECRET). 관리자에게 알려 주세요.</div>'}
       <div class="form-stack"><label class="fld"><span>아이디</span><input class="in" name="id" autocomplete="username" required autocapitalize="off"></label>
       <label class="fld"><span>비밀번호</span><input class="in" name="pw" type="password" autocomplete="current-password" required></label>
       <button class="btn pri" type="submit">로그인</button></div></form></div>`;
@@ -179,6 +179,7 @@
     const v = shell('대시보드', { desc: `${h(ME.user.name)}님, 오늘 들어온 접수와 홈페이지 방문을 한눈에 확인하세요.`, tool: `<a class="btn sm" href="${BASE}" target="_blank" rel="noopener">${ico('out')}홈페이지</a>` });
     const d = await api('GET', '/api/admin/dashboard');
     const c = d.counts, warn = [];
+    if (ME.user.weakPw) warn.push('비밀번호가 짧아(4자리 등) 남이 맞히기 쉽습니다. 고객 연락처가 담긴 화면이니 왼쪽 아래 「내 계정」에서 10자 이상(영문+숫자)으로 바꿔 주세요.');
     if (!ME.dbPersistent) warn.push('접수 DB가 서버 볼륨(DATA_DIR)에 연결되어 있지 않아 다시 배포하면 접수 기록이 사라질 수 있습니다. 관리자에게 알려 주세요.');
     if (!d.statsPersistent && ME.user.role === 'owner') warn.push('방문 집계 저장소(DATA_DIR)가 없어 서버를 다시 시작하면 통계가 초기화됩니다.');
     const uv7 = d.visits.slice(-7).reduce((a, b) => a + b.uv, 0);
