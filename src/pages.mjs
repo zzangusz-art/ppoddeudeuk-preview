@@ -83,8 +83,6 @@ export const instCards = u => `<div class="inst-cards">${INSTRUCTORS.map(it => {
 
 // 메인 갤러리: 분류별로 한 줄씩(각 최대 4장) — 업체 요청 순서
 const HOME_GAL_CATS = ['장비', '의류', '장비관리', '강습'];
-// 무료 이미지(stock: 출처)가 섞여 있으면 갤러리 아래에 한 줄로 밝힌다
-const stockNote = list => { const src = [...new Set(list.filter(g => g.stock).map(g => g.stock))]; return src.length ? `<p class="gal-credit">장비관리·강습 사진 일부는 ${src.join('·')} 무료 이미지(참고용)입니다.</p>` : ''; };
 
 // ── 홈 ──
 const popupHtml = u => {
@@ -135,7 +133,6 @@ export function home(u, posts = []) {
   <div class="gal-cols">${HOME_GAL_CATS.map(cat => { const list = GALLERY.filter(g => g.cat === cat).slice(0, 4); return `<div class="gal-col reveal">
     <div class="gal-row-hd"><h3>${esc(cat)}</h3><a href="${u('gallery/')}#${encodeURIComponent(cat)}">더보기 ${ICON.arrow}</a></div>
     ${list.length ? `<div class="gal-stack">${galleryItems(u, list, 'home-gal-' + cat)}</div>` : '<p class="gal-empty">사진을 준비하고 있습니다.</p>'}</div>`; }).join('')}</div>
-  ${stockNote(GALLERY.filter(g => HOME_GAL_CATS.includes(g.cat)))}
   <p class="center"><a class="btn btn-line" href="${u('gallery/')}">갤러리 전체 보기</a></p>
 </div></section>
 
@@ -232,7 +229,6 @@ export function gallery(u) {
     + `<section class="sec"><div class="wrap">
   ${tabsBar('gal', [['all', '전체'], ...GALLERY_CATS.map(c => [c, c + ' 갤러리'])])}
   <div class="gal-grid" data-filter-grid="gal">${galleryItems(u, GALLERY, 'gal')}<p class="gal-empty" hidden>등록된 사진을 준비하고 있습니다.</p></div>
-  ${stockNote(GALLERY)}
   <p class="note">중고장비 직거래 사진은 <a href="${u('secondhand/')}">중고장비 직거래장터</a>에서 볼 수 있습니다.</p>
 </div></section>`;
 }

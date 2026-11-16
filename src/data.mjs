@@ -187,12 +187,14 @@ export const GALLERY = ov('gallery', [
   { cat: '장비', img: 'store/interior-4.webp', title: '장비 착용 공간', date: '2026-02-19' },
   { cat: '의류', img: 'store/interior-5.webp', title: '스키복 의류 코너', date: '2026-02-19' },
   { cat: '의류', img: 'store/interior-3.webp', title: '헬멧과 고글 진열', date: '2026-02-19' },
+  { cat: '의류', img: 'scene/lineup.webp', title: '어반그레이 스키복 착용', date: '2026-11-16' },
   // 장비관리·강습: 실제 매장 사진이 생기기 전까지 무료 이미지(Unsplash·Pexels 라이선스, 출처 표기 의무 없음) — 어드민 갤러리에서 바꾸면 됨
   { cat: '장비관리', img: 'gallery/stock-care-wax-block.webp', title: '스키 베이스 왁싱', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '장비관리', img: 'gallery/stock-care-wax-iron.webp', title: '왁스 다림질', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '장비관리', img: 'gallery/stock-care-bench.webp', title: '스키 정비 작업', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '장비관리', img: 'gallery/stock-care-boots.webp', title: '부츠·장비 보관', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '강습', img: 'scene/group.webp', title: '스키장 슬로프', date: '2026-11-16' },
+  { cat: '강습', img: 'scene/carve.webp', title: '카빙 턴 연습', date: '2026-11-16' },
   { cat: '강습', img: 'gallery/stock-lesson-child.webp', title: '어린이 자세 교정', date: '2026-11-16', stock: 'Pexels' },
   { cat: '강습', img: 'gallery/stock-lesson-kids.webp', title: '어린이 단체 강습', date: '2026-11-16', stock: 'Pexels' },
 ]);
