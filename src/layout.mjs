@@ -41,8 +41,10 @@ export const ICON = {
 function analytics() {
   const a = SITE.analytics;
   let s = '';
-  if (a.googleVerify) s += `<meta name="google-site-verification" content="${esc(a.googleVerify)}">`;
-  if (a.naverVerify) s += `<meta name="naver-site-verification" content="${esc(a.naverVerify)}">`;
+  // 소유확인 코드는 쉼표로 여러 개(예: http://www 와 https:// 를 따로 등록한 경우)
+  const codes = v => String(v || '').split(/[\s,]+/).filter(Boolean);
+  for (const c of codes(a.googleVerify)) s += `<meta name="google-site-verification" content="${esc(c)}">`;
+  for (const c of codes(a.naverVerify)) s += `<meta name="naver-site-verification" content="${esc(c)}">`;
   return s;
 }
 function tracking(on) {

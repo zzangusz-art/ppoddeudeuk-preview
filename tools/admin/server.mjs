@@ -69,9 +69,10 @@ const SECTIONS = {
     return { phone, sms, hours: oneLine(v.hours, 60) };
   } },
   tags: { name: '추적 코드', owner: true, clean: v => {
-    const o = { ga4: oneLine(v.ga4, 30), naverWa: oneLine(v.naverWa, 40), naverVerify: oneLine(v.naverVerify, 80), googleVerify: oneLine(v.googleVerify, 80) };
+    const o = { ga4: oneLine(v.ga4, 30), naverWa: oneLine(v.naverWa, 40), naverVerify: oneLine(v.naverVerify, 250).replace(/\s*,\s*/g, ','), googleVerify: oneLine(v.googleVerify, 250).replace(/\s*,\s*/g, ',') };
     need(!o.ga4 || /^G-[A-Z0-9]{4,}$/.test(o.ga4), 400, 'GA4 측정 ID 형식: G-XXXXXXX');
-    for (const k of ['naverWa', 'naverVerify', 'googleVerify']) need(!o[k] || /^[\w-]+$/.test(o[k]), 400, `${k}: 영문·숫자·-·_ 만`);
+    need(!o.naverWa || /^[\w-]+$/.test(o.naverWa), 400, 'naverWa: 영문·숫자·-·_ 만');
+    for (const k of ['naverVerify', 'googleVerify']) need(!o[k] || /^[\w-]+(,[\w-]+)*$/.test(o[k]), 400, `${k}: 영문·숫자·-·_ 만(여러 개는 쉼표로)`);
     return o;
   } },
   popup: { name: '팝업', clean: (v, files) => {

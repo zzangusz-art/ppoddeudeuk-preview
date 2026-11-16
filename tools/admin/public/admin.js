@@ -619,7 +619,7 @@
       '': dashboard, leads, stats, prices, popup, me, log, users, blog,
       notices: () => listEditor('notices'), gallery: () => listEditor('gallery'), used: () => listEditor('used'), faq: () => listEditor('faq'), instructors: () => listEditor('instructors'),
       site: () => simpleForm('site', '기본정보', '홈페이지 전체(머리말·바닥글·전화 버튼·예약 안내·구조화 데이터)에 들어가는 연락처입니다.', [['phone', '대표전화', '033-336-9884'], ['sms', '문자 받을 휴대폰', '010-0000-0000', '접수 서버가 안 될 때 손님이 문자로 보내는 번호'], ['hours', '영업시간', '시즌 중 매일 08:00~23:00']]),
-      tags: () => simpleForm('tags', '추적 코드', '검색엔진 소유확인·방문 분석 코드입니다. 운영 도메인 연결 뒤 넣으세요(미리보기 주소에는 분석 태그가 들어가지 않습니다).', [['ga4', 'GA4 측정 ID', 'G-XXXXXXXXXX'], ['naverWa', '네이버 애널리틱스 ID', ''], ['naverVerify', '네이버 서치어드바이저 소유확인', 'naver-site-verification 값'], ['googleVerify', '구글 서치콘솔 소유확인', 'google-site-verification 값']]),
+      tags: () => simpleForm('tags', '추적 코드', '검색엔진 소유확인·방문 분석 코드입니다. 운영 도메인 연결 뒤 넣으세요(미리보기 주소에는 분석 태그가 들어가지 않습니다).', [['ga4', 'GA4 측정 ID', 'G-XXXXXXXXXX'], ['naverWa', '네이버 애널리틱스 ID', ''], ['naverVerify', '네이버 서치어드바이저 소유확인', 'naver-site-verification 값(여러 개는 쉼표로)'], ['googleVerify', '구글 서치콘솔 소유확인', 'google-site-verification 값(여러 개는 쉼표로)']]),
     };
     const fn = views[r] || dashboard;
     try { await fn(); } catch (e) { const v = $('#view'); if (v) v.innerHTML = `<div class="box bad">${h(e.message)}</div>`; else fail(e); }
