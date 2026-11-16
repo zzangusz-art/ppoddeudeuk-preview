@@ -192,10 +192,9 @@ export const GALLERY = ov('gallery', [
   { cat: '장비관리', img: 'gallery/stock-care-wax-iron.webp', title: '왁스 다림질', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '장비관리', img: 'gallery/stock-care-bench.webp', title: '스키 정비 작업', date: '2026-11-16', stock: 'Unsplash' },
   { cat: '장비관리', img: 'gallery/stock-care-boots.webp', title: '부츠·장비 보관', date: '2026-11-16', stock: 'Unsplash' },
-  { cat: '강습', img: 'gallery/stock-lesson-instructor.webp', title: '1:1 스키 강습', date: '2026-11-16', stock: 'Pexels' },
+  { cat: '강습', img: 'scene/group.webp', title: '스키장 슬로프', date: '2026-11-16' },
   { cat: '강습', img: 'gallery/stock-lesson-child.webp', title: '어린이 자세 교정', date: '2026-11-16', stock: 'Pexels' },
   { cat: '강습', img: 'gallery/stock-lesson-kids.webp', title: '어린이 단체 강습', date: '2026-11-16', stock: 'Pexels' },
-  { cat: '강습', img: 'gallery/stock-lesson-hongcheon.webp', title: '초급 슬로프 (강원 홍천)', date: '2026-11-16', stock: 'Unsplash' },
 ]);
 export const USED = ov('used', [
   { img: 'gallery/used-head.webp', title: '중고 스키 15만원', body: '해당 상품 15만원입니다. 현재 2대 있습니다.', price: 150000, qty: 2, date: '2026-03-25' },
