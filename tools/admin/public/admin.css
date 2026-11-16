@@ -222,9 +222,34 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
 .ps-in tbody tr:nth-child(even) td{background:#FAFAFB}
 .ps-in tr{break-inside:avoid}
 .ps-in footer{margin-top:6px;font-size:10px;color:#666}
+/* 출력 창 탭 · 팀 목록 */
+.ptabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;background:#F1F3F6;border-radius:12px;padding:4px}
+.ptabs button{border:0;background:none;border-radius:9px;padding:9px 8px;font-weight:800;font-size:14.5px;color:var(--sub);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.ptabs button small{font-weight:600;font-size:11.5px;color:#9CA3AF}
+.ptabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(17,24,39,.12)}.ptabs button.on small{color:var(--sub)}
+.tlist-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tlist{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:40vh;overflow:auto}
+.tlist label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+.tlist input{width:18px;height:18px;margin-top:2px;flex:none}
+.tlist span{font-size:14px}.tlist small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
+.szlist{list-style:none;margin:0;padding:10px 12px;background:#F8FAFC;border-radius:10px;display:grid;gap:4px;font-size:13.5px}
+/* 팀별 1장 */
+.ps-team h2{font-size:1.15em;margin:1.1em 0 .45em;display:flex;align-items:baseline;gap:6px}.ps-team h2 small{font-size:.8em;color:#666;font-weight:600}
+.ps-info{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #9CA3AF;border-width:1px 0 0 1px;margin:0}
+.ps-info div{display:flex;border:1px solid #9CA3AF;border-width:0 1px 1px 0;min-width:0}
+.ps-info dt{flex:none;width:5.6em;background:#F1F3F6;font-weight:700;padding:.45em .5em;font-size:.95em}
+.ps-info dd{margin:0;padding:.45em .6em;min-width:0;overflow-wrap:anywhere}
+.ps-gear{list-style:none;margin:0;padding:0;display:grid;gap:.3em}.ps-gear li{display:flex;gap:.8em}.ps-gear b{flex:none;width:3em}
+.ps-sz th,.ps-sz td{text-align:center}.ps-sz td:nth-child(2),.ps-sz td.nm{text-align:left}
+.ps-sz .auto{color:#888}
+.ps-memo p{margin:0 0 .3em}.ps-memo .adm{color:#B91C1C}
+.ps-team .none{color:#B91C1C;font-weight:700}
+.ps-team td.ck{width:3.5em}
+#printSheet .ps-team+.ps-team{margin-top:40px}
 @media print{
   @page{size:A4 landscape;margin:10mm}
   html,body{background:#fff!important}
   body>*:not(#printSheet){display:none!important}
   #printSheet{display:block!important}
+  #printSheet .ps-team{break-after:page}#printSheet .ps-team:last-child{break-after:auto}#printSheet .ps-team+.ps-team{margin-top:0}
 }

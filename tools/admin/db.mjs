@@ -35,6 +35,11 @@ export const kstNow = (t = Date.now()) => new Date(t + 9 * 3600e3).toISOString()
 const one = (s, n) => String(s ?? '').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim().slice(0, n);
 const line = (s, n) => one(s, n).replace(/\s+/g, ' ');
 export const phoneFmt = s => { const d = String(s || '').replace(/\D/g, ''); return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : d.length === 10 ? (d.startsWith('02') ? `02-${d.slice(2, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`) : d.length === 9 ? `02-${d.slice(2, 5)}-${d.slice(5)}` : d; };
+// 이용자별 사이즈표(예약 폼): 장비 1대마다 이름/나이/키/발 + 길이·선행발·바인딩 각도
+const cleanSizes = v => (Array.isArray(v) ? v : []).slice(0, 40).map(z => z && typeof z === 'object' ? Object.fromEntries(Object.entries({
+  gear: line(z.gear, 30), kind: z.kind === 'board' ? 'board' : 'ski', name: line(z.name, 20), age: line(z.age, 3), height: line(z.height, 3), foot: line(z.foot, 3), len: line(z.len, 3),
+  stance: z.kind === 'board' ? line(z.stance, 12) : '', angle: z.kind === 'board' && /^-?\d{1,2}\/-?\d{1,2}$/.test(z.angle || '') ? z.angle : '' }).filter(([, x]) => x)) : null).filter(z => z && z.gear);
+export const sizeLine = z => `${z.gear} ${[z.name || '-', z.age || '-', z.height || '-', z.foot || '-'].join('/')}` + [z.len && `길이 ${z.len}`, z.stance, z.angle && `바인딩 ${z.angle}`].filter(Boolean).map(x => ' · ' + x).join('');
 const list = (v, n = 20, m = 40) => (Array.isArray(v) ? v : v ? [v] : []).map(x => line(x, m)).filter(Boolean).slice(0, n);
 
 // 홈페이지 접수 저장(검증 실패면 Error(status 400))
@@ -45,12 +50,12 @@ export function addLead(b, ipHash) {
   const digits = String(b.phone || '').replace(/\D/g, ''); if (!/^0\d{8,10}$/.test(digits)) throw bad('연락처를 확인해 주세요');
   if (!(b.agree === 'on' || b.agree === true || b.agree === 'true')) throw bad('개인정보 수집·이용 동의가 필요합니다');
   const useDate = /^\d{4}-\d{2}-\d{2}$/.test(b.date || '') ? b.date : '';
-  const detail = { topic: list(b.topic), ski: list(b.ski), board: list(b.board), wear: list(b.wear), lesson: line(b.lesson, 20), lessonPeople: line(b.lessonPeople, 20), lessonHours: line(b.lessonHours, 20), qty: line(b.qty, 12), height: line(b.height, 12), foot: line(b.foot, 12) };
+  const detail = { topic: list(b.topic), ski: list(b.ski), board: list(b.board), wear: list(b.wear), lesson: line(b.lesson, 20), lessonPeople: line(b.lessonPeople, 20), lessonHours: line(b.lessonHours, 20), qty: line(b.qty, 12), height: line(b.height, 12), foot: line(b.foot, 12), sizes: cleanSizes(b.sizes) };
   for (const k of Object.keys(detail)) if (!detail[k] || (Array.isArray(detail[k]) && !detail[k].length)) delete detail[k];
   const resort = { yongpyong: '용평스키장', alpensia: '알펜시아스키장' }[b.resort] || line(b.resort, 30);
   const r = db.prepare(`INSERT INTO leads (created, type, name, phone, use_date, resort, time, people, detail, memo, summary, page, ip_hash, updated)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(kstNow(), type, name, phoneFmt(digits), useDate, resort, line(b.time, 60), line(b.people, 10),
-    JSON.stringify(detail), one(b.memo, 1000), one(b.summary, 3000), line(b.page, 200), ipHash || '', kstNow());
+    JSON.stringify(detail), one(b.memo, 1000), one(b.summary, 6000), line(b.page, 200), ipHash || '', kstNow());
   return Number(r.lastInsertRowid);
 }
 
@@ -113,7 +118,7 @@ export function csv({ status = '', type = '' } = {}) {
   const cell = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) || /^[=+\-@]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? "'" : '') + s.replace(/"/g, '""')}"` : s; };
   const head = ['번호', '접수일시', '종류', '상태', '이름', '연락처', '이용날짜', '스키장', '이용타임', '인원', '문의 항목·장비', '고객 요청', '관리 메모', '처리자'];
   const rows = all.map(r => [r.id, r.created, r.typeName, r.statusName, r.name, r.phone, r.use_date, r.resort, r.time, r.people,
-    Object.entries(r.detail).map(([k, v]) => `${{ topic: '문의', ski: '스키', board: '보드', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈' }[k] || k}: ${Array.isArray(v) ? v.join('/') : v}`).join(' | '),
+    Object.entries(r.detail).map(([k, v]) => k === 'sizes' ? `사이즈표: ${v.map(sizeLine).join(' / ')}` : `${{ topic: '문의', ski: '스키', board: '보드', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈' }[k] || k}: ${Array.isArray(v) ? v.join('/') : v}`).join(' | '),
     r.memo, r.admin_memo, r.handled_by]);
   return '﻿' + [head, ...rows].map(r => r.map(cell).join(',')).join('\r\n');
 }

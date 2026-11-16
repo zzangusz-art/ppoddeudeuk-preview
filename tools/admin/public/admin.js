@@ -227,88 +227,149 @@
     v.addEventListener('click', e => { const r = e.target.closest('[data-lead]'); if (r) openLead(r.dataset.lead); });
     const open = q.get('open'); if (open) openLead(open);
   }
-  // ── 날짜별 예약자 명단 PDF 출력(A4 가로 1장) — 브라우저 인쇄 창에서 「PDF로 저장」 또는 바로 인쇄
+  // ── 예약자 PDF 출력 — 브라우저 인쇄 창에서 「PDF로 저장」 또는 바로 인쇄
+  //   전체 명단: 고른 날짜의 여러 팀을 A4 가로 1장 표로 / 팀별 개별: 팀마다 1장(이용자별 사이즈표 포함)
+  //   어느 쪽이든 손님이 고른 항목(수량 1 이상)만 찍힌다
   const WEEK = '일월화수목금토';
-  const dayName = d => `${d.replace(/-/g, '.')} (${WEEK[new Date(d + 'T00:00:00Z').getUTCDay()]})`;
+  const dayName = d => d ? `${d.replace(/-/g, '.')} (${WEEK[new Date(d + 'T00:00:00Z').getUTCDay()]})` : '날짜 미정';
+  const arr = x => Array.isArray(x) ? x.join(', ') : x || '';
+  const gearLines = d => [['스키', d.ski], ['보드', d.board], ['의류', d.wear]].filter(([, v]) => v && (Array.isArray(v) ? v.length : v)).map(([k, v]) => [k, arr(v)]);
+  const lessonText = d => d.lesson ? [d.lesson, d.lessonPeople, d.lessonHours].filter(Boolean).join(' · ') : '';
+  const sizeShort = z => `${z.name || '-'} ${[z.age || '-', z.height || '-', z.foot || '-'].join('/')}`;
+  const sizeLine = z => `${z.gear} ${[z.name || '-', z.age || '-', z.height || '-', z.foot || '-'].join('/')}` + [z.len && `길이 ${z.len}`, z.stance, z.angle && `바인딩 ${z.angle}`].filter(Boolean).map(x => ' · ' + x).join('');
+  const legacySize = d => [d.qty, d.height && '키 ' + d.height, d.foot && '발 ' + d.foot].filter(Boolean).join(' · ');
+  const nowText = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
+  const FOOT = '뽀드득 · 평창군 대관령면 올림픽로 238 · 033-336-9884 — 고객 개인정보가 담긴 문서입니다. 사용 후 파기해 주세요.';
+
   async function printDay() {
     const el = document.createElement('div'); el.className = 'drawer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     let dates = []; try { dates = (await api('GET', `/api/admin/leads/day?date=`)).dates; } catch (e) { return fail(e); }
     const def = dates[0] ? dates[0].d : today();
-    el.innerHTML = `<div class="pane"><div class="pane-h"><button class="btn ghost sm x" data-x aria-label="닫기">${ico('x')}</button><h2>날짜별 예약자 명단 출력</h2>
-      <p class="help" style="margin:6px 0 0">고른 이용날짜의 예약을 A4 가로 1장으로 정리합니다. 인쇄 창이 열리면 대상(프린터)에서 <b>PDF로 저장</b>을 고르세요.</p></div>
+    let mode = 'all', teams = [];
+    el.innerHTML = `<div class="pane"><div class="pane-h"><button class="btn ghost sm x" data-x aria-label="닫기">${ico('x')}</button><h2>예약자 PDF 출력</h2>
+      <p class="help" style="margin:6px 0 0">인쇄 창이 열리면 대상(프린터)에서 <b>PDF로 저장</b>을 고르세요. 손님이 고른 항목만 찍힙니다.</p>
+      <div class="ptabs" role="tablist"><button type="button" role="tab" data-mode="all" class="on">전체 명단<small>여러 팀을 한 장에</small></button><button type="button" role="tab" data-mode="team">팀별 개별 출력<small>한 팀씩 한 장</small></button></div></div>
       <div class="pane-b"><label class="fld"><span>이용날짜</span><input class="in" type="date" data-date value="${def}"></label>
       ${dates.length ? `<div><p class="lbl">예약이 있는 날짜</p><div class="dchips">${dates.map(x => `<button type="button" data-d="${x.d}" class="${x.d === def ? 'on' : ''}">${h(md(x.d))} <small>${num(x.n)}건</small></button>`).join('')}</div></div>` : '<p class="help">오늘 이후 예약이 아직 없습니다. 날짜를 직접 고를 수 있습니다.</p>'}
       <div><p class="lbl">포함할 접수</p><label class="chk"><input type="checkbox" data-quote> 견적문의도 함께 넣기</label><label class="chk"><input type="checkbox" data-cancel> 취소된 예약도 넣기</label></div>
-      <button class="btn pri" data-go>${ico('print')}PDF 출력</button></div></div>`;
+      <div data-teams hidden></div>
+      <button class="btn pri" data-go>${ico('print')}<span data-golabel>전체 명단 PDF 출력</span></button></div></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 200); document.removeEventListener('keydown', esc); };
     const esc = e => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', esc);
+    const opts = () => ({ date: $('[data-date]', el).value, types: ['reserve', ...($('[data-quote]', el).checked ? ['quote'] : [])].join(','), cancel: $('[data-cancel]', el).checked ? 1 : 0 });
+    const load = async () => { const o = opts(); if (!o.date) return []; return (await api('GET', `/api/admin/leads/day?date=${o.date}&types=${o.types}&cancel=${o.cancel}`)).items; };
+    const box = $('[data-teams]', el), golabel = $('[data-golabel]', el);
+    const picked = () => teams.filter(t => $(`[data-team="${t.id}"]`, box)?.checked);
+    const label = () => { golabel.textContent = mode === 'all' ? '전체 명단 PDF 출력' : `선택한 ${picked().length}팀 PDF 출력`; };
+    const showTeams = async () => {
+      if (mode !== 'team') return;
+      box.hidden = false; box.innerHTML = '<p class="help">불러오는 중…</p>';
+      try { teams = await load(); } catch (e) { box.innerHTML = ''; return fail(e); }
+      box.innerHTML = teams.length ? `<div class="tlist-h"><p class="lbl" style="margin:0">출력할 팀 <small>${num(teams.length)}팀</small></p><label class="chk" style="margin:0"><input type="checkbox" data-all checked> 전체 선택</label></div>
+        <ul class="tlist">${teams.map(t => { const z = (t.detail || {}).sizes || []; return `<li><label><input type="checkbox" data-team="${t.id}" checked><span><b>${h(t.name)}</b> ${h(t.phone)}<small>${h([(t.resort || '').replace('스키장', ''), t.time, t.people && t.people + '명', z.length && `사이즈표 ${z.length}명`, t.status === 'cancel' && '취소'].filter(Boolean).join(' · '))}</small></span></label></li>`; }).join('')}</ul>`
+        : `<p class="help">${h(dayName(opts().date))} 예약이 없습니다.</p>`;
+      label();
+    };
     el.addEventListener('click', async e => {
       if (e.target === el || e.target.closest('[data-x]')) return close();
+      const tab = e.target.closest('[data-mode]');
+      if (tab) { mode = tab.dataset.mode; $$('[data-mode]', el).forEach(b => b.classList.toggle('on', b === tab)); box.hidden = mode !== 'team'; label(); return showTeams(); }
       const chip = e.target.closest('[data-d]');
-      if (chip) { $('[data-date]', el).value = chip.dataset.d; $$('[data-d]', el).forEach(b => b.classList.toggle('on', b === chip)); return; }
+      if (chip) { $('[data-date]', el).value = chip.dataset.d; $$('[data-d]', el).forEach(b => b.classList.toggle('on', b === chip)); return showTeams(); }
       if (!e.target.closest('[data-go]')) return;
-      const date = $('[data-date]', el).value; if (!date) return toast('이용날짜를 골라 주세요');
-      const types = ['reserve', ...($('[data-quote]', el).checked ? ['quote'] : [])].join(',');
-      try { const d = await api('GET', `/api/admin/leads/day?date=${date}&types=${types}&cancel=${$('[data-cancel]', el).checked ? 1 : 0}`);
-        if (!d.items.length) return toast(`${dayName(date)} 예약이 없습니다`);
-        close(); setTimeout(() => printSheet(date, d.items), 220); } catch (err) { fail(err); }
+      const date = opts().date; if (!date) return toast('이용날짜를 골라 주세요');
+      try {
+        if (mode === 'all') { const items = await load(); if (!items.length) return toast(`${dayName(date)} 예약이 없습니다`); close(); setTimeout(() => printSheet(date, items), 220); return; }
+        const sel = picked(); if (!sel.length) return toast('출력할 팀을 골라 주세요');
+        close(); setTimeout(() => printTeams(sel), 220);
+      } catch (err) { fail(err); }
     });
-    $('[data-date]', el).onchange = e => $$('[data-d]', el).forEach(b => b.classList.toggle('on', b.dataset.d === e.target.value));
+    el.addEventListener('change', e => {
+      if (e.target.matches('[data-date]')) { $$('[data-d]', el).forEach(b => b.classList.toggle('on', b.dataset.d === e.target.value)); return showTeams(); }
+      if (e.target.matches('[data-quote],[data-cancel]')) return showTeams();
+      if (e.target.matches('[data-all]')) $$('[data-team]', box).forEach(c => { c.checked = e.target.checked; });
+      if (e.target.matches('[data-team],[data-all]')) { const all = $('[data-all]', box); if (all) all.checked = $$('[data-team]', box).every(c => c.checked); label(); }
+    });
   }
-  function printSheet(date, items) {
-    const arr = x => Array.isArray(x) ? x.join(', ') : x || '';
-    const people = items.reduce((a, l) => a + (parseInt(l.people) || 0), 0);
-    const byResort = Object.entries(items.reduce((a, l) => (a[l.resort || '스키장 미정'] = (a[l.resort || '스키장 미정'] || 0) + 1, a), {})).map(([k, n]) => `${k} ${n}건`).join(' · ');
-    const now = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
-    const row = (l, i) => { const d = l.detail || {};
-      const gear = [d.ski && '스키: ' + arr(d.ski), d.board && '보드: ' + arr(d.board), d.wear && '의류: ' + arr(d.wear)].filter(Boolean).join(' / ');
-      const lesson = d.lesson ? [d.lesson, d.lessonPeople, d.lessonHours].filter(Boolean).join(' · ') : '';
-      const size = [d.qty, d.height && '키 ' + d.height, d.foot && '발 ' + d.foot].filter(Boolean).join(' · ');
-      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${i + 1}</td><td class="nm">${h(l.name)}${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="ph">${h(l.phone)}</td>
-        <td>${h((l.resort || '').replace('스키장', ''))} <small class="tm">${h(l.time || '')}</small></td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
-        <td>${h(gear)}</td><td>${h(lesson)}</td><td>${h(size)}</td>
-        <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
+
+  // 인쇄 공통: 시트를 붙이고, 각 장이 A4 가로 1장(186mm)에 들어가도록 글자 크기를 줄인 뒤 인쇄 창
+  function doPrint(html, title, min) {
     let sheet = $('#printSheet'); if (sheet) sheet.remove();
-    sheet = document.createElement('div'); sheet.id = 'printSheet';
-    sheet.innerHTML = `<div class="ps-in"><header><div><b class="ps-brand">뽀드득</b><h1>예약자 명단 — ${h(dayName(date))}</h1></div>
-      <p>총 <b>${num(items.length)}건</b>${people ? ` · 인원 <b>${num(people)}명</b>` : ''} · ${h(byResort)}<br><span>출력 ${h(now)} · ${h(ME.user.name)}</span></p></header>
-      <table><colgroup><col style="width:2.6%"><col style="width:7%"><col style="width:8.6%"><col style="width:15%"><col style="width:3.8%"><col style="width:18%"><col style="width:8%"><col style="width:12%"><col><col style="width:4.6%"><col style="width:3.4%"><col style="width:3.4%"></colgroup>
-      <thead><tr><th>No</th><th>이름</th><th>연락처</th><th>스키장·타임</th><th>인원</th><th>장비</th><th>강습</th><th>수량·키·발</th><th>요청사항 · 관리 메모</th><th>상태</th><th>수령</th><th>반납</th></tr></thead>
-      <tbody>${items.map(row).join('')}</tbody></table>
-      <footer>뽀드득 · 평창군 대관령면 올림픽로 238 · 033-336-9884 — 고객 개인정보가 담긴 문서입니다. 사용 후 파기해 주세요.</footer></div>`;
-    document.body.appendChild(sheet);
-    // 1장에 맞추기: A4 가로 인쇄 영역(277×190mm)에 들어가도록 글자 크기를 줄인다
-    // 표 폭은 A4 그대로 두고 글자 크기만 줄여 높이를 맞춘다(12px → 최소 7px, 그보다 많으면 2장)
-    const inner = $('.ps-in', sheet), H = 186 * 3.7795, tall = () => inner.getBoundingClientRect().height > H;
-    sheet.classList.add('measure');
-    let fs = 12; inner.style.fontSize = fs + 'px';
-    while (tall() && fs > 7) { fs = Math.round((fs - .25) * 4) / 4; inner.style.fontSize = fs + 'px'; }
-    const fits = !tall();
+    sheet = document.createElement('div'); sheet.id = 'printSheet'; sheet.innerHTML = html;
+    document.body.appendChild(sheet); sheet.classList.add('measure');
+    const H = 186 * 3.7795; let over = 0;
+    $$('.ps-in', sheet).forEach(inner => {
+      const tall = () => inner.getBoundingClientRect().height > H;
+      let fs = 12; inner.style.fontSize = fs + 'px';
+      while (tall() && fs > min) { fs = Math.round((fs - .25) * 4) / 4; inner.style.fontSize = fs + 'px'; }
+      if (tall()) over++;
+    });
     sheet.classList.remove('measure');
-    if (!fits) toast(`${items.length}건이라 1장에 다 들어가지 않아 2장 이상으로 나뉩니다`, 6000);
-    const prevTitle = document.title; document.title = `뽀드득_예약자명단_${date}`;
+    const prevTitle = document.title; document.title = title;
     const done = () => { document.title = prevTitle; window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
     setTimeout(() => window.print(), 60);
+    return over;
   }
-  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈' };
-  const leadBrief = l => [l.time, ...Object.entries(l.detail || {}).map(([k, x]) => Array.isArray(x) ? x.join(', ') : x), l.memo].filter(Boolean).join(' · ');
+
+  // 전체 명단(여러 팀을 한 표에)
+  function printSheet(date, items) {
+    const people = items.reduce((a, l) => a + (parseInt(l.people) || 0), 0);
+    const byResort = Object.entries(items.reduce((a, l) => (a[l.resort || '스키장 미정'] = (a[l.resort || '스키장 미정'] || 0) + 1, a), {})).map(([k, n]) => `${k} ${n}건`).join(' · ');
+    const row = (l, i) => { const d = l.detail || {};
+      const gear = gearLines(d).map(([k, v]) => `${k}: ${v}`).join(' / ');
+      const size = d.sizes && d.sizes.length ? d.sizes.map(sizeShort).join(', ') : legacySize(d);
+      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${i + 1}</td><td class="nm">${h(l.name)}${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="ph">${h(l.phone)}</td>
+        <td>${h((l.resort || '').replace('스키장', ''))} <small class="tm">${h(l.time || '')}</small></td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
+        <td>${h(gear)}</td><td>${h(lessonText(d))}</td><td>${h(size)}</td>
+        <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
+    const html = `<div class="ps-in"><header><div><b class="ps-brand">뽀드득</b><h1>예약자 명단 — ${h(dayName(date))}</h1></div>
+      <p>총 <b>${num(items.length)}팀</b>${people ? ` · 인원 <b>${num(people)}명</b>` : ''} · ${h(byResort)}<br><span>출력 ${h(nowText())} · ${h(ME.user.name)}</span></p></header>
+      <table><colgroup><col style="width:2.6%"><col style="width:7%"><col style="width:8.6%"><col style="width:14%"><col style="width:3.8%"><col style="width:18%"><col style="width:8%"><col style="width:14%"><col><col style="width:4.6%"><col style="width:3.4%"><col style="width:3.4%"></colgroup>
+      <thead><tr><th>No</th><th>이름</th><th>연락처</th><th>스키장·타임</th><th>인원</th><th>장비·의류</th><th>강습</th><th>사이즈표 (나이/키/발)</th><th>요청사항 · 관리 메모</th><th>상태</th><th>수령</th><th>반납</th></tr></thead>
+      <tbody>${items.map(row).join('')}</tbody></table><footer>${FOOT}</footer></div>`;
+    const over = doPrint(html, `뽀드득_예약자명단_${date}`, 7);
+    if (over) toast(`${items.length}팀이라 1장에 다 들어가지 않아 2장 이상으로 나뉩니다`, 6000);
+  }
+
+  // 팀별 개별 출력(한 팀 = 한 장): 예약 정보 + 고른 장비 + 이용자별 사이즈표(부츠 여분 사이즈 포함)
+  function printTeams(list) {
+    const page = l => { const d = l.detail || {}, z = d.sizes || [], board = z.some(x => x.kind === 'board');
+      const info = [['연락처', l.phone], ['이용날짜', dayName(l.use_date)], ['스키장', l.resort], ['이용타임', l.time], ['인원', l.people && l.people + '명'], ['강습', lessonText(d)], ['접수', `${l.typeName} #${l.id} · ${l.created.slice(0, 16)}`], ['상태', l.statusName]].filter(r => r[1]);
+      const spare = f => { const n = parseInt(f, 10); return n >= 150 && n <= 350 ? `${n - 10} · ${n + 10}` : ''; };
+      const len = x => x.len || (parseInt(x.height, 10) > 90 ? `<span class="auto">${parseInt(x.height, 10) - 20} 전후</span>` : '');
+      const sizeTable = z.length ? `<h2>이용자별 사이즈표 <small>${num(z.length)}명</small></h2><table class="ps-sz"><thead><tr><th>No</th><th>장비</th><th>이름</th><th>나이</th><th>키</th><th>발</th><th>부츠 여분</th><th>${board && z.every(x => x.kind === 'board') ? '데크' : board ? '플레이트·데크' : '플레이트'} 길이</th>${board ? '<th>선행발</th><th>바인딩(앞/뒤)</th>' : ''}<th>수령</th><th>반납</th></tr></thead>
+        <tbody>${z.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${h(x.gear)}</td><td class="nm">${h(x.name || '')}</td><td class="c">${h(x.age || '')}</td><td class="c">${h(x.height || '')}</td><td class="c">${h(x.foot || '')}</td><td class="c">${h(spare(x.foot))}</td><td class="c">${x.len ? h(x.len) : len(x)}</td>${board ? `<td class="c">${h(x.stance || '')}</td><td class="c">${x.kind === 'board' ? h((x.angle || '12/0').replace('/', '° / ') + '°') : ''}</td>` : ''}<td class="ck"></td><td class="ck"></td></tr>`).join('')}</tbody></table>`
+        : legacySize(d) ? `<h2>사이즈</h2><p>${h(legacySize(d))}</p>` : '<h2>이용자별 사이즈표</h2><p class="none">아직 받지 못했습니다 — 손님께 사이즈표(이름/나이/키/발)를 요청해 주세요.</p>';
+      return `<div class="ps-in ps-team"><header><div><b class="ps-brand">뽀드득 · ${h(l.typeName)} 확인서</b><h1>${h(l.name)} 팀 — ${h(dayName(l.use_date))}</h1></div><p><span>출력 ${h(nowText())} · ${h(ME.user.name)}</span></p></header>
+        <dl class="ps-info">${info.map(([k, v]) => `<div><dt>${h(k)}</dt><dd>${h(v)}</dd></div>`).join('')}</dl>
+        ${gearLines(d).length ? `<h2>렌탈 장비·의류</h2><ul class="ps-gear">${gearLines(d).map(([k, v]) => `<li><b>${h(k)}</b>${h(v)}</li>`).join('')}</ul>` : ''}
+        ${sizeTable}
+        ${l.memo || l.admin_memo ? `<h2>요청사항 · 메모</h2><div class="ps-memo">${l.memo ? `<p>${h(l.memo)}</p>` : ''}${l.admin_memo ? `<p class="adm">관리 메모: ${h(l.admin_memo)}</p>` : ''}</div>` : ''}
+        <footer>${FOOT}</footer></div>`; };
+    const first = list[0];
+    const over = doPrint(list.map(page).join(''), list.length === 1 ? `뽀드득_${first.name}_${first.use_date || ''}` : `뽀드득_팀별출력_${first.use_date || ''}_${list.length}팀`, 8);
+    if (over) toast(`${over}팀은 인원이 많아 2장 이상으로 나뉩니다`, 6000);
+  }
+  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈', sizes: '사이즈표' };
+  const leadBrief = l => [l.time, ...Object.entries(l.detail || {}).map(([k, x]) => k === 'sizes' ? `사이즈표 ${x.length}명` : Array.isArray(x) ? x.join(', ') : x), l.memo].filter(Boolean).join(' · ');
   async function openLead(id) {
     let l; try { l = (await api('GET', `/api/admin/leads/${id}`)).lead; } catch (e) { return fail(e); }
     const el = document.createElement('div'); el.className = 'drawer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
     const tel = l.phone.replace(/\D/g, '');
     const rows = [['접수일시', l.created], ['이용날짜', l.use_date], ['스키장', l.resort], ['이용타임', l.time], ['인원', l.people && l.people + '명'],
-      ...Object.entries(l.detail || {}).map(([k, x]) => [DETAIL_NAMES[k] || k, Array.isArray(x) ? x.join(', ') : x]), ['고객 요청', l.memo], ['보낸 페이지', l.page], ['마지막 처리', l.handled_by && `${l.handled_by} · ${l.updated}`]].filter(r => r[1]);
+      ...Object.entries(l.detail || {}).filter(([k]) => k !== 'sizes').map(([k, x]) => [DETAIL_NAMES[k] || k, Array.isArray(x) ? x.join(', ') : x]), ['고객 요청', l.memo], ['보낸 페이지', l.page], ['마지막 처리', l.handled_by && `${l.handled_by} · ${l.updated}`]].filter(r => r[1]);
     el.innerHTML = `<div class="pane"><div class="pane-h"><button class="btn ghost sm x" data-x aria-label="닫기">${ico('x')}</button>
       <p style="margin:0 0 6px">${tp(l)} <span class="muted">#${l.id}</span></p><h2>${h(l.name)} ${pill(l)}</h2><p class="ph" style="margin:4px 0 0;font-size:17px;font-weight:700">${h(l.phone)}</p>
       <div class="calls"><a class="btn pri" href="tel:${tel}">${ico('phone')}전화하기</a><a class="btn" href="sms:${tel}">${ico('sms')}문자 보내기</a></div></div>
       <div class="pane-b"><div><p class="lbl">연락 상태</p><div class="stbtns">${Object.entries(ME.status).map(([k, n]) => `<button type="button" class="st-${k}${l.status === k ? ' on' : ''}" data-st="${k}">${h(n)}</button>`).join('')}</div></div>
       <dl class="dl">${rows.map(([k, x]) => `<dt>${h(k)}</dt><dd>${h(x)}</dd>`).join('')}</dl>
+      ${(l.detail || {}).sizes && l.detail.sizes.length ? `<div><p class="lbl">이용자별 사이즈표 <small>${l.detail.sizes.length}명 · 이름/나이/키/발</small></p><ul class="szlist">${l.detail.sizes.map(z => `<li>${h(sizeLine(z))}</li>`).join('')}</ul></div>` : ''}
       ${l.summary ? `<div><p class="lbl">고객이 보낸 내용 그대로</p><pre class="sumbox">${h(l.summary)}</pre></div>` : ''}
       <label class="fld"><span>관리 메모 <small>고객에게는 보이지 않습니다</small></span><textarea class="in" data-memo placeholder="예: 11/12 통화, 초급자 스키 2대·강습 2시간 확정">${h(l.admin_memo || '')}</textarea></label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark" data-savememo>메모 저장</button><button class="btn danger" data-del style="margin-left:auto">${ico('trash')}접수 삭제</button></div></div></div>`;
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark" data-savememo>메모 저장</button><button class="btn" data-print1>${ico('print')}이 팀 PDF 출력</button><button class="btn danger" data-del style="margin-left:auto">${ico('trash')}접수 삭제</button></div></div></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
     let changed = false;
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 200); document.removeEventListener('keydown', esc); if (changed && route()[0] === 'leads') leads(); else if (changed && route()[0] === '') dashboard(); };
@@ -318,6 +379,7 @@
       if (e.target === el || e.target.closest('[data-x]')) return close();
       const st = e.target.closest('[data-st]');
       if (st) { try { const r = await api('POST', `/api/admin/leads/${id}`, { status: st.dataset.st }); changed = true; $$('[data-st]', el).forEach(b => b.classList.toggle('on', b === st)); $('.pane-h h2 .pill', el).outerHTML = pill(r.lead); toast(`'${r.lead.statusName}'(으)로 바꿨습니다`); } catch (err) { fail(err); } return; }
+      if (e.target.closest('[data-print1]')) { printTeams([l]); return; }
       if (e.target.closest('[data-savememo]')) { try { await api('POST', `/api/admin/leads/${id}`, { adminMemo: $('[data-memo]', el).value }); changed = true; toast('메모를 저장했습니다'); } catch (err) { fail(err); } return; }
       if (e.target.closest('[data-del]')) { if (!confirm(`${l.name}님의 접수를 지울까요? 되돌릴 수 없습니다.`)) return; try { await api('DELETE', `/api/admin/leads/${id}`); changed = true; toast('접수를 지웠습니다'); close(); } catch (err) { fail(err); } }
     });

@@ -233,68 +233,104 @@
     });
   });
 
-  /* 3단계 견적·예약 접수 */
+  /* 견적·예약 접수(표 형식 한 장: 장비 ± 수량 → 이용자별 사이즈표) */
   $$('form[data-book]').forEach(form => {
-    const type = form.dataset.book, label = type === 'quote' ? '견적문의' : '예약';
-    const steps = $$('.bstep', form), dots = $$('.book-steps li', form), done = $('.bdone', form);
+    const type = form.dataset.book, label = type === 'quote' ? '견적문의' : '예약', isR = type === 'reserve';
+    const main = $('.bk-form', form), done = $('.bdone', form);
     const RES = CFG.resorts || {}; // src/data.mjs RESORTS 에서 옴(스키장별 타임·정설시간)
-    let cur = 0;
-    const date = form.elements.date;
-    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-    date.min = today;
-    const go = i => { steps.forEach((s, k) => s.classList.toggle('is-on', k === i)); dots.forEach((d, k) => { d.classList.toggle('is-on', k === i); d.classList.toggle('is-done', k < i); }); cur = i; form.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); const f = steps[i].querySelector('input, select, textarea'); f && setTimeout(() => f.focus({ preventScroll: true }), 300); };
-    // 스키장 → 정설시간 안내 + 타임 선택지
-    const tbox = $('[data-time-opts]', form), ghint = $('[data-grooming]', form);
-    form.addEventListener('change', e => {
-      if (e.target.name === 'resort') {
-        const r = RES[e.target.value];
-        ghint.innerHTML = `<b>${r.name} 정설시간 ${r.g}</b> · 선택하신 스키장에 따라 시간대가 달라집니다.`; ghint.classList.add('warn');
-        tbox.innerHTML = r.t.map(([n, opts]) => `<div class="tgrp"><b>${n}</b><div class="chips">${opts.map(([o, h]) => `<label class="chip"><input type="radio" name="time" value="${n} ${o} ${h}" required><span>${o} ${h}</span></label>`).join('')}</div></div>`).join('');
-      }
-      if (e.target.name === 'lesson') { const on = !!e.target.value; ['lessonPeople', 'lessonHours'].forEach(n => { form.elements[n].disabled = !on; if (!on) form.elements[n].value = ''; }); }
-      e.target.classList && e.target.classList.remove('is-invalid');
+    const E = form.elements, date = E.date, tel = E.phone;
+    date.min = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    const ghint = $('[data-grooming]', form), tsel = $$('[data-tname]', form), szBox = $('[data-sizes]', form);
+    const ANG = [30, 24, 18, 12, 6, 0, -6, -12, -18, -24, -30];
+    const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    // 수량(± 버튼)
+    const qtys = $$('input[data-kind]', form);
+    const clamp = el => { el.value = Math.max(0, Math.min(30, parseInt(el.value, 10) || 0)); el.closest('.qty').classList.toggle('on', +el.value > 0); };
+    form.addEventListener('click', e => {
+      const b = e.target.closest('[data-d]'); if (!b) return;
+      const el = b.parentElement.querySelector('input'); el.value = (+el.value || 0) + +b.dataset.d; clamp(el); sizes();
     });
+    qtys.forEach(el => el.addEventListener('input', () => { clamp(el); sizes(); }));
+    const picked = kind => qtys.filter(el => el.dataset.kind === kind && +el.value > 0).map(el => [el.dataset.item, +el.value]);
+    // 이용자별 사이즈표: 스키·보드 1대마다 한 줄(입력한 값은 다시 그려도 유지)
+    const keep = {};
+    const save = () => $$('.sz', szBox).forEach(r => { keep[r.dataset.key] = Object.fromEntries($$('[data-f]', r).map(x => [x.dataset.f, x.value])); });
+    const EMPTY = '<p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p>';
+    function sizes() {
+      save();
+      const units = [...picked('ski').map(([n, c]) => ['ski', n, c]), ...picked('board').map(([n, c]) => ['board', n, c])]
+        .flatMap(([k, n, c]) => Array.from({ length: c }, (_, i) => [k, n, i + 1, c]));
+      if (!units.length) { szBox.innerHTML = EMPTY; return; }
+      const opt = (list, v, fmt = x => x) => list.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${fmt(x)}</option>`).join('');
+      const deg = x => (x > 0 ? '+' : '') + x + '°';
+      szBox.innerHTML = units.slice(0, 40).map(([k, n, i, c]) => {
+        const key = `${n}#${i}`, v = keep[key] || {}, board = k === 'board';
+        const f = (fld, ph, extra = '') => `<label class="sf sf-${fld}"><span>${ph}</span><input data-f="${fld}" value="${esc(v[fld])}" ${extra}></label>`;
+        return `<div class="sz" data-key="${esc(key)}" data-kind="${k}" data-item="${esc(n)}"><b class="sz-h">${esc(n)}${c > 1 ? ` <em>${i}</em>` : ''}</b><div class="sz-f">`
+          + f('name', '이름', 'maxlength="20" autocomplete="off"') + f('age', '나이', 'inputmode="numeric" maxlength="3"')
+          + f('height', '키(cm)', 'inputmode="numeric" maxlength="3"') + f('foot', '발(mm)', 'inputmode="numeric" maxlength="3"')
+          + f('len', board ? '데크 길이' : '플레이트 길이', 'inputmode="numeric" maxlength="3" placeholder="키-20"')
+          + (board ? `<label class="sf sf-stance"><span>선행발</span><select data-f="stance">${opt(['', '왼발(레귤러)', '오른발(구피)'], v.stance, x => x || '선택')}</select></label>`
+            + `<label class="sf sf-ang"><span>바인딩 앞</span><select data-f="front">${opt(ANG, v.front ?? 12, deg)}</select></label>`
+            + `<label class="sf sf-ang"><span>바인딩 뒤</span><select data-f="back">${opt(ANG, v.back ?? 0, deg)}</select></label>` : '')
+          + '</div></div>';
+      }).join('') + (units.length > 40 ? '<p class="sz-empty">40명이 넘는 단체는 나머지 분들의 사이즈를 요청사항에 적거나 문자로 보내 주세요.</p>' : '');
+    }
+    const sizeRows = () => $$('.sz', szBox).map(r => {
+      const g = f => (r.querySelector(`[data-f="${f}"]`) || {}).value || '';
+      const board = r.dataset.kind === 'board';
+      return { gear: r.dataset.item, kind: r.dataset.kind, name: g('name').trim(), age: g('age').trim(), height: g('height').trim(), foot: g('foot').trim(), len: g('len').trim(), ...(board ? { stance: g('stance'), angle: `${g('front')}/${g('back')}` } : {}) };
+    });
+    const sizeLine = z => `${z.gear} ${[z.name || '-', z.age || '-', z.height || '-', z.foot || '-'].join('/')}` + [z.len && `길이 ${z.len}`, z.stance, z.angle && `바인딩 ${z.angle}`].filter(Boolean).map(x => ' · ' + x).join('');
+    // 스키장 → 정설시간 + 1·2·3타임 선택지(하나만)
+    form.addEventListener('change', e => {
+      const t = e.target;
+      if (t.name === 'resort') {
+        const r = RES[t.value]; ghint.hidden = false; ghint.textContent = `${r.name} 정설시간 ${r.g}`;
+        tsel.forEach(sel => {
+          const grp = r.t.find(([n]) => n === sel.dataset.tname); sel.disabled = !grp;
+          sel.innerHTML = '<option value="">선택</option>' + (grp ? grp[1].map(([o, h]) => `<option value="${sel.dataset.tname} ${o} ${h}">${o} ${h}</option>`).join('') : '');
+        });
+        E.time.value = '';
+      }
+      if (t.dataset && t.dataset.tname) { tsel.forEach(s2 => { if (s2 !== t) s2.value = ''; }); E.time.value = t.value; $('[data-times]', form).classList.remove('is-invalid'); }
+      if (t.name === 'lesson') { const on = !!t.value; ['lessonPeople', 'lessonHours'].forEach(n => { E[n].disabled = !on; if (!on) E[n].value = ''; }); }
+      if (t.classList) t.classList.remove('is-invalid');
+    });
+    form.addEventListener('input', e => { if (e.target.classList) e.target.classList.remove('is-invalid'); });
     // 전화번호 자동 하이픈
-    const tel = form.elements.phone;
     tel.addEventListener('input', () => { const d = tel.value.replace(/\D/g, '').slice(0, 11); tel.value = d.length < 4 ? d : d.length < 8 ? `${d.slice(0, 3)}-${d.slice(3)}` : `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`; });
-    const need = i => {
-      const s = steps[i]; let ok = true, msg = '';
-      if (i === 0) {
-        if (!date.value) { ok = false; msg = '이용날짜를 선택해 주세요'; date.classList.add('is-invalid'); }
-        else if (!form.querySelector('[name=resort]:checked')) { ok = false; msg = '스키장을 선택해 주세요'; }
-        else if (!form.querySelector('[name=time]:checked')) { ok = false; msg = '이용타임을 선택해 주세요'; }
-      }
-      if (i === 1 && form.elements.lesson.value) {
-        if (!form.elements.lessonPeople.value) { ok = false; msg = '강습 인원을 선택해 주세요'; form.elements.lessonPeople.classList.add('is-invalid'); }
-        else if (!form.elements.lessonHours.value) { ok = false; msg = '강습 시간을 선택해 주세요'; form.elements.lessonHours.classList.add('is-invalid'); }
-      }
-      if (i === 2) {
-        if (!form.elements.name.value.trim()) { ok = false; msg = '작성자명을 입력해 주세요'; form.elements.name.classList.add('is-invalid'); }
-        else if (!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(tel.value)) { ok = false; msg = '전화번호를 확인해 주세요'; tel.classList.add('is-invalid'); }
-        else if (!form.elements.agree.checked) { ok = false; msg = '개인정보 수집 및 이용에 동의해 주세요'; }
-      }
-      if (!ok) toast(msg);
-      return ok;
+    const bad = (el, msg) => {
+      if (el) { el.classList.add('is-invalid'); el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); setTimeout(() => el.focus && el.focus({ preventScroll: true }), 250); }
+      toast(msg); return false;
     };
-    $$('[data-next]', form).forEach(b => b.addEventListener('click', () => need(cur) && go(cur + 1)));
-    $$('[data-prev]', form).forEach(b => b.addEventListener('click', () => go(cur - 1)));
-    const vals = n => $$(`[name="${n}"]:checked`, form).map(x => x.value);
+    const check = () => {
+      if (!E.name.value.trim()) return bad(E.name, '작성자명을 입력해 주세요');
+      if (!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(tel.value)) return bad(tel, '전화번호를 확인해 주세요');
+      if (!date.value) return bad(date, '이용날짜를 선택해 주세요');
+      if (!form.querySelector('[name=resort]:checked')) return bad($('.bk-resort', form), '스키장을 선택해 주세요');
+      if (!E.time.value) return bad($('[data-times]', form), '이용타임을 하나 선택해 주세요');
+      if (E.lesson.value && !E.lessonPeople.value) return bad(E.lessonPeople, '강습 인원을 선택해 주세요');
+      if (E.lesson.value && !E.lessonHours.value) return bad(E.lessonHours, '강습 시간을 선택해 주세요');
+      if (isR) for (const r of $$('.sz', szBox)) for (const [f, n] of [['name', '이름'], ['age', '나이'], ['height', '키'], ['foot', '발 사이즈']]) {
+        const el = r.querySelector(`[data-f="${f}"]`); if (!el.value.trim()) return bad(el, `사이즈표: ${r.dataset.item}의 ${n}을(를) 입력해 주세요`);
+      }
+      if (!E.agree.checked) return bad(E.agree, '개인정보 수집 및 이용에 동의해 주세요');
+      return true;
+    };
+    const items = kind => picked(kind).map(([n, c]) => `${n} ×${c}`);
     const summary = () => {
       const r = RES[form.querySelector('[name=resort]:checked').value];
-      const L = [`[뽀드득 ${label}]`, `이용날짜: ${date.value}`, `스키장: ${r.name}`, `이용타임: ${vals('time')[0]}`];
-      if (form.elements.people.value) L.push(`이용 인원: ${form.elements.people.value}명`);
-      const ski = vals('ski'), board = vals('board'), wear = vals('wear');
-      if (ski.length) L.push(`스키장비: ${ski.join(', ')}`); if (board.length) L.push(`보드장비: ${board.join(', ')}`); if (wear.length) L.push(`의류: ${wear.join(', ')}`);
-      if (form.elements.lesson.value) L.push(`강습: ${form.elements.lesson.value} ${form.elements.lessonPeople.value} ${form.elements.lessonHours.value}`);
-      const fit = [['qty', '장비 수량'], ['height', '키'], ['foot', '발 사이즈']].filter(([n]) => form.elements[n] && form.elements[n].value).map(([n, t]) => `${t} ${form.elements[n].value}`);
-      if (fit.length) L.push(`사이즈: ${fit.join(', ')}`);
-      L.push(`이름: ${form.elements.name.value.trim()}`, `연락처: ${tel.value}`);
-      if (form.elements.memo.value.trim()) L.push(`요청사항: ${form.elements.memo.value.trim()}`);
+      const L = [`[뽀드득 ${label}]`, `이름: ${E.name.value.trim()}`, `연락처: ${tel.value}`, `이용날짜: ${date.value}`, `스키장: ${r.name}`, `이용타임: ${E.time.value}`];
+      if (E.people.value) L.push(`이용 인원: ${E.people.value}명`);
+      [['ski', '스키장비'], ['board', '보드장비'], ['wear', '의류']].forEach(([k, t]) => { const v = items(k); if (v.length) L.push(`${t}: ${v.join(', ')}`); });
+      if (E.lesson.value) L.push(`강습: ${E.lesson.value} ${E.lessonPeople.value} ${E.lessonHours.value}`);
+      const z = sizeRows(); if (z.length) L.push('사이즈표(이름/나이/키/발):', ...z.map(x => '- ' + sizeLine(x)));
+      if (E.memo.value.trim()) L.push(`요청사항: ${E.memo.value.trim()}`);
       return L.join('\n');
     };
     const finish = (text, sent) => {
-      steps.forEach(s => s.classList.remove('is-on')); dots.forEach(d => { d.classList.remove('is-on'); d.classList.add('is-done'); });
-      done.hidden = false; $('[data-summary]', done).textContent = text;
+      main.hidden = true; done.hidden = false; $('[data-summary]', done).textContent = text;
       $('[data-done-title]', done).textContent = sent ? `${label} 접수가 완료되었습니다` : '접수 내용을 확인해 주세요';
       $('[data-done-lead]', done).textContent = sent ? '확인 후 남겨 주신 연락처로 안내드립니다. 급한 문의는 전화 주세요.' : `아래 버튼으로 내용을 문자로 보내 주시면 확인 후 연락드립니다. 문자가 어려우면 ${CFG.phone}로 전화 주세요.`;
       const sms = $('[data-sms]', done); sms.hidden = sent || !CFG.sms;
@@ -302,17 +338,22 @@
       done.focus(); done.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     };
     $('[data-copy-summary]', form).addEventListener('click', () => copy($('[data-summary]', form).textContent, '접수 내용을 복사했습니다'));
-    $('[data-restart]', form).addEventListener('click', () => { form.reset(); tbox.innerHTML = '<p class="hint">스키장을 먼저 선택해 주세요.</p>'; ghint.textContent = '선택하신 스키장에 따라 시간대가 달라집니다.'; ghint.classList.remove('warn'); done.hidden = true; dots.forEach(d => d.classList.remove('is-done')); go(0); });
+    $('[data-restart]', form).addEventListener('click', () => {
+      form.reset(); qtys.forEach(clamp); Object.keys(keep).forEach(k => delete keep[k]); szBox.innerHTML = EMPTY;
+      tsel.forEach(sel => { sel.disabled = true; sel.innerHTML = '<option value="">스키장 먼저 선택</option>'; }); ghint.hidden = true;
+      ['lessonPeople', 'lessonHours'].forEach(n => { E[n].disabled = true; });
+      done.hidden = true; main.hidden = false; form.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      if (!need(2)) return;
-      if (form.elements.company.value) return; // 자동 등록 방지
+      if (!check()) return;
+      if (E.company.value) return; // 자동 등록 방지
       const text = summary();
       if (!CFG.endpoint) return finish(text, false);
       const btn = form.querySelector('[type=submit]'); btn.disabled = true; btn.textContent = '접수 중…';
       try {
         const body = Object.fromEntries(new FormData(form)); body.type = type; body.summary = text;
-        ['ski', 'board', 'wear'].forEach(n => { body[n] = vals(n); });
+        ['ski', 'board', 'wear'].forEach(n => { body[n] = items(n); }); body.sizes = sizeRows();
         const r = await fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
         if (!r.ok) throw new Error(r.status);
         finish(text, true);

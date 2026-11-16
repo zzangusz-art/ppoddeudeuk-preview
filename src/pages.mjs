@@ -326,51 +326,52 @@ export function instructors(u) {
 </div></section>`;
 }
 
-// ── 견적문의·예약하기 (기존 게시판형 폼 15칸 → 3단계 접수) ──
+// ── 견적문의·예약하기 (기존 게시판형 표 폼을 간결하게: 라벨 | 입력, 장비는 ± 수량, 이용자별 사이즈표) ──
+export const SIZE_GUIDE = [
+  ['나이', '아동용과 성인용 장비는 무게가 달라, 아동인지 성인인지 구분해 장비를 준비합니다.'],
+  ['이름', '장비와 부츠에 이름표를 붙여 두어 도착하시면 신청하신 장비를 바로 찾으실 수 있습니다.'],
+  ['발 사이즈', '부츠가 맞지 않을 때를 대비해 앞뒤 사이즈(예: 270이면 260·280) 여분을 같이 준비해 둡니다.'],
+  ['길이', '원하시는 플레이트·데크 길이가 없으면 키에서 약 20cm 뺀 길이 전후로 세팅해 드립니다.'],
+  ['바인딩', '25/26 신형 살로몬 턴테이블 바인딩(6도 단위)입니다. 기본 12°/0°, 덕·전향은 원하시는 각도를 골라 주세요.'],
+];
 export function bookForm(u, type) {
   const isQ = type === 'quote';
-  const chips = (name, items) => items.map(it => `<label class="chip"><input type="checkbox" name="${name}" value="${esc(it)}"><span>${esc(it)}</span></label>`).join('');
   const wearItems = RENTAL_ITEMS.wear.flatMap(([n, parts]) => [n, ...parts.map(p => `${n.replace(' 의류세트', '')} ${p}만`)]);
-  return `<form class="book" data-book="${type}" novalidate>
-  <ol class="book-steps" aria-hidden="true"><li class="is-on"><span>1</span>날짜·스키장</li><li><span>2</span>렌탈·강습</li><li><span>3</span>연락처</li></ol>
-  <fieldset class="bstep is-on" data-step="1"><legend class="sr">1단계 날짜·스키장</legend>
-    <div class="fld"><label for="${type}-date">이용날짜 <i>*</i></label><input type="date" id="${type}-date" name="date" required></div>
-    <div class="fld"><span class="lbl">스키장 선택 <i>*</i></span><div class="seg">${RESORTS.map((r, i) => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required${i === 0 ? '' : ''}><span><b>${r.name}</b><small>정설 ${r.grooming}</small></span></label>`).join('')}</div>
-      <p class="hint" data-grooming>선택하신 스키장에 따라 시간대가 달라집니다.</p></div>
-    <div class="fld"><span class="lbl">이용타임 <i>*</i></span><div class="time-opts" data-time-opts><p class="hint">스키장을 먼저 선택해 주세요.</p></div></div>
-    <div class="fld"><label for="${type}-people">이용 인원</label><input type="number" id="${type}-people" name="people" min="1" max="99" inputmode="numeric" placeholder="예: 4"></div>
-    <div class="bnav"><span></span><button type="button" class="btn btn-red" data-next>다음 단계</button></div>
-  </fieldset>
-  <fieldset class="bstep" data-step="2"><legend class="sr">2단계 렌탈·강습</legend>
-    <p class="hint">필요한 것만 고르세요. 수량은 요청사항에 적어 주시면 됩니다.</p>
-    <div class="fld"><span class="lbl">스키장비 렌탈</span><div class="chips">${chips('ski', RENTAL_ITEMS.ski)}</div></div>
-    <div class="fld"><span class="lbl">보드장비 렌탈</span><div class="chips">${chips('board', RENTAL_ITEMS.board)}</div></div>
-    <div class="fld"><span class="lbl">의류 렌탈</span><div class="chips">${chips('wear', wearItems)}</div></div>
-    <div class="fld-row">
-      <div class="fld"><span class="lbl">강습 종목</span><div class="seg seg-sm">${['선택 안 함', '스키', '보드'].map((t, i) => `<label class="seg-it"><input type="radio" name="lesson" value="${i ? t : ''}"${i === 0 ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div></div>
-      <div class="fld"><label for="${type}-lp">강습 인원</label><select id="${type}-lp" name="lessonPeople" disabled><option value="">선택</option><option>1명</option><option>2명</option></select></div>
-      <div class="fld"><label for="${type}-lh">강습 시간</label><select id="${type}-lh" name="lessonHours" disabled><option value="">선택</option><option>2시간</option><option>3시간</option><option>4시간</option></select></div>
+  const step = (kind, it) => `<div class="qty"><span class="qn">${esc(it)}</span><span class="qc"><button type="button" data-d="-1" aria-label="${esc(it)} 빼기">−</button><input type="number" data-kind="${kind}" data-item="${esc(it)}" value="0" min="0" max="30" inputmode="numeric" aria-label="${esc(it)} 수량"><button type="button" data-d="1" aria-label="${esc(it)} 더하기">+</button></span></div>`;
+  const row = (th, td, o = {}) => `<div class="bk-row${o.cls ? ' ' + o.cls : ''}"><div class="bk-th">${th}${o.sub ? `<small>${o.sub}</small>` : ''}</div><div class="bk-td">${td}</div></div>`;
+  const req = '<i>*</i>';
+  return `<form class="bk" data-book="${type}" novalidate>
+  <div class="bk-form">
+  <p class="bk-req">${req} 표시는 꼭 입력해 주세요.</p>
+  <div class="bk-tbl">
+    <div class="bk-row bk-2">
+      <div class="bk-th"><label for="${type}-name">작성자명 ${req}</label></div><div class="bk-td"><input id="${type}-name" name="name" autocomplete="name" required maxlength="30"></div>
+      <div class="bk-th"><label for="${type}-phone">전화번호 ${req}</label></div><div class="bk-td"><input id="${type}-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="010-0000-0000" maxlength="13"></div>
     </div>
-    <p class="hint">강습은 1:1·2:1만 운영하며(3명 이상 불가), 2·3·4시간 단위입니다.</p>
-    <div class="bnav"><button type="button" class="btn btn-line" data-prev>이전</button><button type="button" class="btn btn-red" data-next>다음 단계</button></div>
-  </fieldset>
-  <fieldset class="bstep" data-step="3"><legend class="sr">3단계 연락처</legend>
-    <div class="fld-row">
-      <div class="fld"><label for="${type}-name">작성자명 <i>*</i></label><input id="${type}-name" name="name" autocomplete="name" required maxlength="30"></div>
-      <div class="fld"><label for="${type}-phone">전화번호 <i>*</i></label><input id="${type}-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="010-0000-0000" maxlength="13"></div>
+    <div class="bk-row bk-2">
+      <div class="bk-th"><label for="${type}-date">이용날짜 ${req}</label></div><div class="bk-td"><input type="date" id="${type}-date" name="date" required></div>
+      <div class="bk-th"><label for="${type}-people">이용 인원</label></div><div class="bk-td"><input type="number" id="${type}-people" name="people" min="1" max="99" inputmode="numeric" placeholder="예: 4"></div>
     </div>
-    <div class="fld-row fld-size">
-      <div class="fld"><label for="${type}-qty">장비 수량</label><select id="${type}-qty" name="qty"><option value="">선택</option>${Array.from({ length: 10 }, (_, i) => `<option>${i + 1}세트</option>`).join('')}<option value="11세트 이상">11~</option></select></div>
-      <div class="fld"><label for="${type}-height">키(cm)</label><select id="${type}-height" name="height"><option value="">선택</option><option value="110cm 이하">~110</option>${Array.from({ length: 8 }, (_, i) => `<option value="${111 + i * 10}~${120 + i * 10}cm">${111 + i * 10}~${120 + i * 10}</option>`).join('')}<option value="191cm 이상">191~</option></select></div>
-      <div class="fld"><label for="${type}-foot">발 사이즈(mm)</label><select id="${type}-foot" name="foot"><option value="">선택</option><option value="200mm 이하">~200</option>${Array.from({ length: 19 }, (_, i) => `<option value="${205 + i * 5}mm">${205 + i * 5}</option>`).join('')}<option value="300mm 이상">300~</option></select></div>
-    </div>
-    <p class="hint">여러 명이면 대표 한 분 기준으로 고르고, 나머지 분들의 키·발 사이즈는 아래 요청사항에 적어 주세요.</p>
-    <div class="fld"><label for="${type}-memo">특이사항 및 요청사항</label><textarea id="${type}-memo" name="memo" rows="4" maxlength="1000" placeholder="예: 동반 2명 — 165cm·240mm / 178cm·270mm, 단체 여부, 원하는 장비 등"></textarea></div>
-    <details class="agree-box"><summary>개인정보 수집 및 이용에 대한 안내 ${ICON.chev}</summary><p>${esc(PRIVACY.short)}</p><dl>${PRIVACY.items.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
-    <label class="agree"><input type="checkbox" name="agree" required><span>개인정보 수집 및 이용에 동의합니다. <i>*</i></span></label>
-    <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div class="bnav"><button type="button" class="btn btn-line" data-prev>이전</button><button type="submit" class="btn btn-red">${isQ ? '견적 요청하기' : '예약 접수하기'}</button></div>
-  </fieldset>
+    ${row(`<span>스키장 선택 ${req}</span>`, `<div class="bk-resort">${RESORTS.map(r => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required><span>${r.name}</span></label>`).join('')}</div><p class="bk-note" data-grooming hidden></p>`, { sub: '선택하신 스키장에 따라 시간대가 달라집니다.' })}
+    ${row(`<span>이용타임 ${req}</span>`, `<div class="bk-times" data-times>${RESORTS[0].times.map(t => `<label class="tsel"><b>${t.name}</b><select data-tname="${t.name}" disabled aria-label="${t.name}"><option value="">스키장 먼저 선택</option></select></label>`).join('')}</div><input type="hidden" name="time">`, { sub: '1·2·3타임 중 하나만 고르세요.' })}
+    ${row('스키장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.ski.map(it => step('ski', it)).join('')}</div>`)}
+    ${row('보드장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.board.map(it => step('board', it)).join('')}</div>`)}
+    ${row('의류 렌탈', `<div class="qgrid">${wearItems.map(it => step('wear', it)).join('')}</div>`)}
+    ${row('강습', `<div class="bk-lesson">
+      <label><span>종목</span><select name="lesson"><option value="">선택 안 함</option><option>스키</option><option>보드</option></select></label>
+      <label><span>인원</span><select name="lessonPeople" disabled><option value="">선택</option><option value="1명">1명 (1:1)</option><option value="2명">2명 (2:1)</option></select></label>
+      <label><span>시간</span><select name="lessonHours" disabled><option value="">선택</option><option>2시간</option><option>3시간</option><option>4시간</option></select></label></div>`, { sub: '1:1·2:1만, 2·3·4시간' })}
+    ${row(`<span>사이즈표${isQ ? '' : ` ${req}`}</span>`, `<div class="sz-box">
+      <p class="sz-lead"><b>${isQ ? '사이즈표를 미리 적어 주시면 견적이 정확해집니다.' : '사이즈표를 보내 주셔야 예약이 완료됩니다.'}</b> 장비 수량을 고르면 한 분씩 입력칸이 생깁니다.</p>
+      <details class="sz-why"><summary>나이·이름·사이즈를 받는 이유 ${ICON.chev}</summary><ul>${SIZE_GUIDE.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ul><p>장비와 부츠는 수량이 정해져 있어, 사이즈표를 늦게 주시거나 주지 않으시면 예약이 취소되는 경우가 있습니다. 예약을 완료해 주신 분을 가장 먼저 준비합니다.</p></details>
+      <div class="sz-list" data-sizes><p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p></div></div>`, { cls: 'bk-size' })}
+    ${row(`<label for="${type}-memo">요청사항</label>`, `<textarea id="${type}-memo" name="memo" rows="3" maxlength="1000" placeholder="예: 단체 이용, 헬멧·고글 필요, 도착 예정 시간 등"></textarea>`)}
+  </div>
+  <details class="agree-box"><summary>개인정보 수집 및 이용에 대한 안내 ${ICON.chev}</summary><p>${esc(PRIVACY.short)}</p><dl>${PRIVACY.items.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
+  <label class="agree"><input type="checkbox" name="agree" required><span>개인정보 수집 및 이용에 동의합니다. ${req}</span></label>
+  <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <p class="bk-submit"><button type="submit" class="btn btn-red">${isQ ? '견적 요청하기' : '예약 접수하기'}</button></p>
+  </div>
   <div class="bdone" hidden tabindex="-1">
     <h2 class="h3" data-done-title>접수 내용을 확인해 주세요</h2>
     <p data-done-lead></p>
@@ -382,7 +383,7 @@ export function bookForm(u, type) {
 }
 export function book(u, type) {
   const isQ = type === 'quote';
-  return subHead(u, { eyebrow: isQ ? 'ESTIMATE' : 'RESERVATION', title: isQ ? '견적문의' : '예약하기', lead: isQ ? '이용 날짜와 스키장, 필요한 장비·강습을 알려 주시면 견적을 안내드립니다.' : '날짜·스키장 → 렌탈·강습 → 연락처, 3단계로 예약을 접수합니다.', bg: isQ ? 'scene/group.webp' : 'scene/lineup.webp', crumbs: [[isQ ? '견적문의' : '예약하기']] })
+  return subHead(u, { eyebrow: isQ ? 'ESTIMATE' : 'RESERVATION', title: isQ ? '견적문의' : '예약하기', lead: isQ ? '이용 날짜와 스키장, 필요한 장비·강습을 알려 주시면 견적을 안내드립니다.' : '날짜·스키장·장비 수량과 이용자별 사이즈표를 한 번에 접수합니다.', bg: isQ ? 'scene/group.webp' : 'scene/lineup.webp', crumbs: [[isQ ? '견적문의' : '예약하기']] })
     + subTabs(u, [['예약하기', 'reserve/'], ['견적문의', 'quote/']], isQ ? 'quote/' : 'reserve/')
     + `<section class="sec"><div class="wrap book-grid">
   <div>${bookForm(u, type)}</div>
