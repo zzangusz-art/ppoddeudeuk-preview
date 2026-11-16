@@ -53,8 +53,8 @@ export const ABOUT = {
     '예약 및 견적 문의, 단체 강습 상담 등 궁금하신 사항이 있으시면 카카오톡 상담 또는 매장 연락처로 문의해주시기 바랍니다. 뽀드득이 친절하고 정확하게 안내해드리겠습니다.',
   ],
   interior: [
-    ['interior-1', '스키 장비 진열대 전경'], ['interior-2', '헬멧과 고글 진열'], ['interior-3', '스키복 의류 코너'],
-    ['interior-4', '스키 부츠 진열'], ['interior-5', '매장 내부 전경'], ['interior-6', '스노보드 바인딩'],
+    ['interior-1', '스키 장비 진열대 전경'], ['interior-2', '스키 부츠 진열'], ['interior-3', '헬멧과 고글 진열'],
+    ['interior-4', '장비 착용 공간'], ['interior-5', '스키복 의류 코너'], ['interior-6', '스노보드 바인딩'],
   ],
 };
 
@@ -182,10 +182,20 @@ export const GALLERY = ov('gallery', [
   { cat: '의류', img: 'gallery/wear-urbangray.webp', title: '어반그레이 의류', date: '2026-03-18' },
   { cat: '장비', img: 'gallery/gear-volkl.webp', title: '뵐클 중급자 스키 입고', date: '2026-03-18' },
   { cat: '장비', img: 'store/interior-1.webp', title: '스키 장비 진열대', date: '2026-02-19' },
-  { cat: '장비', img: 'store/interior-4.webp', title: '스키 부츠 진열', date: '2026-02-19' },
+  { cat: '장비', img: 'store/interior-2.webp', title: '스키 부츠 진열', date: '2026-02-19' },
   { cat: '장비', img: 'store/interior-6.webp', title: '스노보드 바인딩', date: '2026-02-19' },
-  { cat: '의류', img: 'store/interior-3.webp', title: '스키복 의류 코너', date: '2026-02-19' },
-  { cat: '의류', img: 'store/interior-2.webp', title: '헬멧과 고글 진열', date: '2026-02-19' },
+  { cat: '장비', img: 'store/interior-4.webp', title: '장비 착용 공간', date: '2026-02-19' },
+  { cat: '의류', img: 'store/interior-5.webp', title: '스키복 의류 코너', date: '2026-02-19' },
+  { cat: '의류', img: 'store/interior-3.webp', title: '헬멧과 고글 진열', date: '2026-02-19' },
+  // 장비관리·강습: 실제 매장 사진이 생기기 전까지 무료 이미지(Unsplash·Pexels 라이선스, 출처 표기 의무 없음) — 어드민 갤러리에서 바꾸면 됨
+  { cat: '장비관리', img: 'gallery/stock-care-wax-block.webp', title: '스키 베이스 왁싱', date: '2026-11-16', stock: 'Unsplash' },
+  { cat: '장비관리', img: 'gallery/stock-care-wax-iron.webp', title: '왁스 다림질', date: '2026-11-16', stock: 'Unsplash' },
+  { cat: '장비관리', img: 'gallery/stock-care-bench.webp', title: '스키 정비 작업', date: '2026-11-16', stock: 'Unsplash' },
+  { cat: '장비관리', img: 'gallery/stock-care-boots.webp', title: '부츠·장비 보관', date: '2026-11-16', stock: 'Unsplash' },
+  { cat: '강습', img: 'gallery/stock-lesson-instructor.webp', title: '1:1 스키 강습', date: '2026-11-16', stock: 'Pexels' },
+  { cat: '강습', img: 'gallery/stock-lesson-child.webp', title: '어린이 자세 교정', date: '2026-11-16', stock: 'Pexels' },
+  { cat: '강습', img: 'gallery/stock-lesson-kids.webp', title: '어린이 단체 강습', date: '2026-11-16', stock: 'Pexels' },
+  { cat: '강습', img: 'gallery/stock-lesson-hongcheon.webp', title: '초급 슬로프 (강원 홍천)', date: '2026-11-16', stock: 'Unsplash' },
 ]);
 export const USED = ov('used', [
   { img: 'gallery/used-head.webp', title: '중고 스키 15만원', body: '해당 상품 15만원입니다. 현재 2대 있습니다.', price: 150000, qty: 2, date: '2026-03-25' },

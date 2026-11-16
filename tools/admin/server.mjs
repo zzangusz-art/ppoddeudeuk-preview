@@ -94,7 +94,7 @@ const SECTIONS = {
   } },
   gallery: { name: '갤러리', clean: (v, files) => {
     need(Array.isArray(v) && v.length <= 300, 400, '형식 오류');
-    return v.map((g, i) => ({ cat: GALLERY_CATS.includes(g.cat) ? g.cat : GALLERY_CATS[0], img: imageField(g.img, 'gallery', files, i), title: oneLine(g.title, 40) || '뽀드득 갤러리', date: isDate(g.date) ? g.date : kst() }));
+    return v.map((g, i) => ({ cat: GALLERY_CATS.includes(g.cat) ? g.cat : GALLERY_CATS[0], img: imageField(g.img, 'gallery', files, i), title: oneLine(g.title, 40) || '뽀드득 갤러리', date: isDate(g.date) ? g.date : kst(), ...(g.stock && g.img === String(g.img) && g.img.startsWith('gallery/stock-') ? { stock: oneLine(g.stock, 20) } : {}) }));
   } },
   used: { name: '중고장비', clean: (v, files) => {
     need(Array.isArray(v) && v.length <= 100, 400, '형식 오류');

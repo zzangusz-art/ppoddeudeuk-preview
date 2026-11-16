@@ -593,20 +593,11 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 /* 예약·견적 폼: 장비 수량·키·발 사이즈(휴대폰도 한 줄 3칸) */
 
 /* 메인 갤러리: 분류별 한 줄(장비·의류·장비관리·강습, 각 4장) */
-.gal-row+.gal-row{margin-top:clamp(28px,3.4vw,44px)}
 .gal-row-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line,#E5E7EB)}
 .gal-row-hd h3{font-size:clamp(19px,1.6vw,22px);font-weight:800;letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:10px}
 .gal-row-hd h3::before{content:"";width:4px;height:1em;border-radius:2px;background:var(--red,#E3262B)}
 .gal-row-hd a{display:inline-flex;align-items:center;gap:4px;font-size:14.5px;font-weight:700;color:var(--muted);white-space:nowrap}
 .gal-row-hd a:hover{color:var(--red,#E3262B)}.gal-row-hd a svg{width:16px;height:16px}
-.gal-row .gal-empty{padding:34px 0}
-.gal-strip{grid-template-columns:repeat(4,1fr)!important}
-@media (max-width:760px){
-  .gal-strip{display:flex!important;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -20px;padding:0 20px 6px;scrollbar-width:none}
-  .gal-strip::-webkit-scrollbar{display:none}
-  .gal-strip .gi{flex:0 0 44%;scroll-snap-align:start}
-  .gal-row .gal-empty{padding:26px 0;font-size:14px}
-}
 
 /* ── 예약·견적 폼(표 형식: 라벨 | 입력) ── */
 .book-grid{grid-template-columns:1fr!important}
@@ -690,4 +681,14 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
   .qn{min-height:2.6em;display:flex;align-items:center}
   .qc{width:100%}.qc button{flex:1;height:34px;font-size:19px}.qc input{flex:1;width:auto;height:34px}
 }
-.gal-row+.center{margin-top:clamp(36px,4.4vw,56px)}
+
+/* 메인 갤러리: 장비·의류·장비관리·강습 4열, 열마다 사진이 아래로(최대 4장) */
+.gal-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(14px,1.6vw,24px);align-items:start}
+.gal-col .gal-row-hd{margin-bottom:12px}
+.gal-stack{display:grid;gap:12px}
+.gal-stack .gi figcaption{padding:10px 12px;font-size:14px}.gal-stack .gi time{display:none}
+.gal-col .gal-empty{padding:40px 10px}
+.gal-cols+.gal-credit,.gal-grid+.gal-credit{margin:14px 0 0;font-size:12.5px;color:var(--muted);text-align:right}
+.gal-cols~.center{margin-top:clamp(32px,4vw,48px)}
+@media (max-width:980px){.gal-cols{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}}
+@media (max-width:760px){.gal-cols{gap:10px;row-gap:26px}.gal-stack{gap:8px}.gal-stack .gi figcaption{padding:8px 10px;font-size:13px}.gal-col .gal-row-hd h3{font-size:17px}.gal-col .gal-row-hd a{font-size:13px}.gal-cols+.gal-credit{text-align:left}}
