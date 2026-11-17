@@ -91,6 +91,7 @@
   const NAV = [
     ['현황', [['', '대시보드', 'home'], ['leads', '접수 관리', 'inbox', 'badge'], ['stats', '접속 통계', 'chart']]],
     ['게시판', [['blog', '블로그', 'pen'], ['notices', '공지사항', 'notice'], ['gallery', '갤러리', 'photo'], ['used', '중고장비', 'tag'], ['faq', '자주 묻는 질문', 'faq']]],
+    ['메인 화면', [['homePhotos', '메인 소개 사진', 'photo'], ['rateCards', '메인 요금표 카드', 'won'], ['lessonVideos', '강습 영상', 'pen']]],
     ['운영 정보', [['instructors', '강사진', 'coach'], ['prices', '요금 관리', 'won'], ['popup', '팝업', 'pop'], ['site', '기본정보', 'info']]],
   ];
   const OWNER_ONLY = ['blog'];   // 게시판 안에 있지만 관리자(세느루)에게만 보이는 메뉴
@@ -415,19 +416,35 @@
     notices: { title: '공지사항', desc: '홈페이지 공지사항과 메인 화면 공지 목록에 보입니다. 위에 있는 공지가 가장 먼저 보입니다.', layout: 'stack', addTop: true,
       fields: [{ k: 'title', label: '제목', full: true }, { k: 'date', label: '날짜', type: 'date' }, { k: 'body', label: '내용', type: 'textarea', full: true, hint: '줄을 바꾸면 문단이 나뉩니다' }],
       blank: () => ({ title: '', date: today(), body: '' }), load: it => ({ ...it, body: Array.isArray(it.body) ? it.body.join('\n') : it.body }), name: it => it.title },
-    gallery: { title: '갤러리', desc: '홈페이지 갤러리와 메인 화면에 보입니다(메인은 위에서 8장). 사진은 자동으로 줄여서 올라갑니다.', layout: 'cards', addTop: true, img: 'img',
+    gallery: { title: '갤러리', desc: '홈페이지 갤러리와 메인 화면에 보입니다(메인은 분류마다 위에서 4장). 사진은 자동으로 줄여서 올라갑니다.', layout: 'cards', addTop: true, img: 'img',
+      photo: ['가로 촬영', '4:3', '1200×900px', '가운데 기준으로 4:3 으로 잘려 보입니다'],
       fields: [{ k: 'title', label: '사진 설명' }, { k: 'cat', label: '분류', type: 'select', opts: () => ME.galleryCats.map(c => [c, c]) }, { k: 'date', label: '날짜', type: 'date' }],
       blank: () => ({ img: '', title: '', cat: ME.galleryCats[0], date: today() }), name: it => it.title },
     used: { title: '중고장비', desc: '중고장비 직거래장터에 보입니다. 팔린 상품은 「판매완료」를 켜 두거나 지우세요.', layout: 'rows', addTop: true, img: 'img',
+      photo: ['가로 촬영', '4:3', '1200×900px', '상품 전체가 가운데 오게 찍어 주세요'],
       fields: [{ k: 'title', label: '제목' }, { k: 'price', label: '가격(원)', type: 'number' }, { k: 'qty', label: '수량', type: 'number' }, { k: 'date', label: '등록일', type: 'date' }, { k: 'body', label: '설명', type: 'textarea', full: true }, { k: 'sold', label: '판매완료', type: 'toggle' }],
       blank: () => ({ img: '', title: '', price: 0, qty: 1, date: today(), body: '', sold: false }), name: it => it.title },
     faq: { title: '자주 묻는 질문', desc: '질문과 답은 홈페이지 FAQ 와 검색엔진·AI 답변용 구조화 데이터(FAQPage)에 같이 들어갑니다. 답의 첫 문장에 핵심(금액·시간)을 쓰면 AI 답변에 잘 인용됩니다.', layout: 'stack',
       fields: [{ k: 'q', label: '질문', full: true }, { k: 'a', label: '답변', type: 'textarea', full: true }, { k: 'pages', label: '보일 페이지', type: 'checks', opts: () => ME.faqPages, full: true }],
       blank: () => ({ q: '', a: '', pages: ['home'] }), name: it => it.q },
     instructors: { title: '강사진', desc: '강사진 소개 페이지와 메인 화면 「강사진 소개」에 보입니다. 사진은 자격증·프로필 사진을 올리세요(자격 번호는 가려서).', layout: 'cards', img: 'img',
+      photo: ['가로', '약 16:10', '1200×750px', '자격증 카드 비율, 자격 번호는 가려서'],
       fields: [{ k: 'name', label: '이름', ph: '예: 홍길동 강사' }, { k: 'cred', label: '자격', ph: '대한스키지도자연맹(KSIA) 자격 강사' }, { k: 'career', label: '경력 한 줄', ph: '예: 데몬스트레이터 · 강습 10년' }],
       blank: () => ({ img: '', name: '', cred: '대한스키지도자연맹(KSIA) 자격 강사', career: '' }), name: it => it.name || it.cred },
+    homePhotos: { title: '메인 소개 사진', desc: '메인 「뽀드득은 어떤 곳인가요?」 옆에 2×2로 보이는 사진입니다. 위에서부터 왼쪽 위 → 오른쪽 위 → 왼쪽 아래 → 오른쪽 아래 순서입니다.', layout: 'cards', img: 'img', max: 4,
+      photo: ['세로 촬영', '4:5', '960×1200px', '위아래가 조금 잘릴 수 있어 얼굴·상품을 가운데보다 약간 위에'],
+      fields: [{ k: 'title', label: '사진 설명', ph: '예: 어반그레이 스키복 착용' }],
+      blank: () => ({ img: '', title: '' }), name: it => it.title },
+    rateCards: { title: '메인 요금표 카드', desc: '메인 「뽀드득 요금표」의 카드 5장입니다. 카드를 누르면 가는 페이지는 순서대로 고정입니다(용평 리프트 · 알펜시아 리프트 · 장비 · 의류 · 보호장비). 글씨는 사진 위에 흰색으로 올라가니 어두운 사진이 잘 보입니다.', layout: 'cards', img: 'img', fixed: true,
+      photo: ['정사각형', '1:1', '1000×1000px', '가로로 찍었다면 가운데 정사각형만 보입니다'],
+      fields: [{ k: 'title', label: '카드 글씨' }], blank: () => ({ img: '', title: '' }), name: it => it.title },
+    lessonVideos: { title: '강습 영상', desc: '강습 요금 페이지에 「강습 영상」으로 보입니다. 영상은 유튜브에 올린 뒤 주소만 붙여 넣으세요(파일을 직접 올리지 않습니다). 등록된 영상이 없으면 이 칸은 홈페이지에 안 보입니다.', layout: 'stack', addTop: false,
+      fields: [{ k: 'url', label: '유튜브 주소', full: true, ph: 'https://youtu.be/... 또는 https://www.youtube.com/watch?v=...', hint: '쇼츠 주소도 됩니다' }, { k: 'title', label: '영상 제목', full: true, ph: '예: 초급 A자 정지 연습' }],
+      blank: () => ({ url: '', title: '' }), load: it => ({ ...it, url: it.url || (it.id ? `https://youtu.be/${it.id}` : '') }), name: it => it.title || it.url },
   };
+  // 사진 칸 안내: [촬영 방향, 비율, 권장 크기, 한 줄 팁]
+  const photoHint = (p, short) => !p ? '' : short ? `<small class="phint">${h(p[0])} · ${h(p[1])} · ${h(p[2])}</small>`
+    : `<div class="box info phbox"><b>사진 안내</b> <span>${h(p[0])}</span> · 비율 <span>${h(p[1])}</span> · 권장 <span>${h(p[2])}</span> 이상 — ${h(p[3])}. 큰 사진은 자동으로 줄여서 올라갑니다.</div>`;
   function fieldHtml(f, it, i) {
     const v = it[f.k], id = `f-${i}-${f.k}`, lab = `<span>${h(f.label)}${f.hint ? `<small>${h(f.hint)}</small>` : ''}</span>`, style = f.full ? ' style="grid-column:1/-1"' : '';
     if (f.type === 'textarea') return `<label class="fld"${style}>${lab}<textarea class="in" data-f="${f.k}" id="${id}">${h(v)}</textarea></label>`;
@@ -442,10 +459,10 @@
     const d = await api('GET', `/api/admin/content/${key}`);
     let list = d.value.map(it => S.load ? S.load(clone(it)) : clone(it)); const fresh = new Set();
     const draw = () => {
-      v.innerHTML = `<div class="savebar" style="position:static;margin:0 0 14px;padding:0;background:none"><button class="btn dark" data-add>${ico('plus')}새로 추가</button><span class="help" style="margin:0">총 ${list.length}개</span></div>
+      v.innerHTML = `${photoHint(S.photo)}<div class="savebar" style="position:static;margin:0 0 14px;padding:0;background:none">${S.fixed ? '' : `<button class="btn dark" data-add ${S.max && list.length >= S.max ? 'disabled' : ''}>${ico('plus')}새로 추가</button>`}<span class="help" style="margin:0">총 ${list.length}개${S.max ? ` (최대 ${S.max}개)` : ''}</span></div>
       <div class="items ${S.layout === 'cards' ? 'cardgrid' : S.layout === 'rows' ? 'rows' : ''}">${list.length ? list.map((it, i) => `<div class="item${fresh.has(it) ? ' new' : ''}" data-i="${i}">
-        <div class="item-h"><span class="no">${i + 1}</span><button class="btn xs ghost" data-mv="-1" title="위로" ${i ? '' : 'disabled'}>${ico('up')}</button><button class="btn xs ghost" data-mv="1" title="아래로" ${i < list.length - 1 ? '' : 'disabled'}>${ico('down')}</button><button class="btn xs ghost danger" data-rm title="삭제">${ico('trash')}</button></div>
-        ${S.img ? `<div class="thumb">${it[S.img] ? `<img src="${h(imgSrc(it[S.img]))}" alt="">` : '사진을 올려 주세요'}<button class="btn sm up" data-pic>${ico('cam')}${it[S.img] ? '바꾸기' : '사진 올리기'}</button></div>` : ''}
+        <div class="item-h"><span class="no">${i + 1}</span>${S.fixed ? '' : `<button class="btn xs ghost" data-mv="-1" title="위로" ${i ? '' : 'disabled'}>${ico('up')}</button><button class="btn xs ghost" data-mv="1" title="아래로" ${i < list.length - 1 ? '' : 'disabled'}>${ico('down')}</button><button class="btn xs ghost danger" data-rm title="삭제">${ico('trash')}</button>`}</div>
+        ${S.img ? `<div class="thumb${S.photo ? ' r-' + S.photo[1].replace(/[^\d]/g, '') : ''}">${it[S.img] ? `<img src="${h(imgSrc(it[S.img]))}" alt="">` : '사진을 올려 주세요'}<button class="btn sm up" data-pic>${ico('cam')}${it[S.img] ? '바꾸기' : '사진 올리기'}</button></div>${photoHint(S.photo, true)}` : ''}
         <div class="${S.layout === 'stack' ? 'grid2' : 'form-stack'}" style="${S.layout === 'stack' ? '' : 'gap:10px'}">${S.fields.map(f => fieldHtml(f, it, i)).join('')}</div></div>`).join('') : `<div class="empty card"><b>아직 등록된 항목이 없습니다</b>「새로 추가」를 눌러 시작하세요.</div>`}</div>
       <div class="savebar"><button class="btn pri" data-save>저장하고 홈페이지에 반영</button>${d.changed ? '<button class="btn ghost sm" data-reset>처음 값으로 되돌리기</button>' : ''}<span class="dirty" ${dirty ? '' : 'hidden'}>저장하지 않은 변경이 있습니다</span></div>`;
     };
@@ -460,7 +477,7 @@
     v.addEventListener('click', async e => {
       const b = e.target.closest('button'); if (!b) return;
       const box = b.closest('[data-i]'), i = box ? +box.dataset.i : -1;
-      if (b.dataset.add != null) { const it = S.blank(); fresh.add(it); if (S.addTop) list.unshift(it); else list.push(it); markDirty(); draw(); const first = $(S.addTop ? '.item' : '.item:last-child', v); first && first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      if (b.dataset.add != null) { if (S.max && list.length >= S.max) return toast(`최대 ${S.max}개까지입니다`); const it = S.blank(); fresh.add(it); if (S.addTop) list.unshift(it); else list.push(it); markDirty(); draw(); const first = $(S.addTop ? '.item' : '.item:last-child', v); first && first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       if (b.dataset.mv) { const j = i + +b.dataset.mv; [list[i], list[j]] = [list[j], list[i]]; markDirty(); draw(); return; }
       if (b.dataset.rm != null) { if (!confirm(`「${S.name(list[i]) || (i + 1) + '번째'}」을(를) 지울까요? (저장해야 홈페이지에서 빠집니다)`)) return; list.splice(i, 1); markDirty(); draw(); return; }
       if (b.dataset.pic != null) { const f = await pickFile(); if (!f) return; try { b.disabled = true; list[i][S.img] = await prepImage(f); markDirty(); draw(); } catch (err) { fail(err); b.disabled = false; } return; }
@@ -543,7 +560,7 @@
       <label class="toggle"><input type="checkbox" data-k="on"${p.on ? ' checked' : ''}>팝업 띄우기</label>
       <label class="fld"><span>제목</span><input class="in" data-k="title" value="${h(p.title)}" maxlength="40" placeholder="예: 26/27 시즌 사전 예약 오픈"></label>
       <label class="fld"><span>내용</span><textarea class="in" data-k="body" maxlength="300" placeholder="예: 리프트권 사전 예약 시 최대 50% 할인">${h(p.body)}</textarea></label>
-      <div class="fld"><span>사진 <small>선택</small></span><div style="display:flex;gap:8px"><button class="btn sm" data-pic>${ico('cam')}${p.img ? '사진 바꾸기' : '사진 올리기'}</button>${p.img ? '<button class="btn sm ghost danger" data-nopic>사진 빼기</button>' : ''}</div></div>
+      <div class="fld"><span>사진 <small>선택 · 정사각형 또는 세로(4:5) · 권장 800×1000px · 글씨가 있으면 가운데에</small></span><div style="display:flex;gap:8px"><button class="btn sm" data-pic>${ico('cam')}${p.img ? '사진 바꾸기' : '사진 올리기'}</button>${p.img ? '<button class="btn sm ghost danger" data-nopic>사진 빼기</button>' : ''}</div></div>
       <div class="grid2"><label class="fld"><span>버튼 연결 주소 <small>선택</small></span><input class="in" data-k="link" value="${h(p.link)}" placeholder="/reserve/ 또는 https://…"></label><label class="fld"><span>버튼 글자</span><input class="in" data-k="linkText" value="${h(p.linkText)}" placeholder="예약하기"></label></div>
       <div class="grid2"><label class="fld"><span>시작일 <small>비우면 바로</small></span><input class="in" type="date" data-k="from" value="${h(p.from)}"></label><label class="fld"><span>종료일 <small>비우면 계속</small></span><input class="in" type="date" data-k="to" value="${h(p.to)}"></label></div></div></section>
       <section class="card"><h2>미리보기</h2><p class="h-sub">홈페이지에서는 왼쪽 위(휴대폰은 아래쪽)에 뜹니다.</p><div id="pv">${prev()}</div></section></div>
@@ -643,7 +660,7 @@
     if (own.includes(r) && ME.user.role !== 'owner') { location.hash = '#/'; return; }
     const views = {
       '': dashboard, leads, stats, prices, popup, me, log, users, blog,
-      notices: () => listEditor('notices'), gallery: () => listEditor('gallery'), used: () => listEditor('used'), faq: () => listEditor('faq'), instructors: () => listEditor('instructors'),
+      notices: () => listEditor('notices'), gallery: () => listEditor('gallery'), used: () => listEditor('used'), faq: () => listEditor('faq'), instructors: () => listEditor('instructors'), homePhotos: () => listEditor('homePhotos'), rateCards: () => listEditor('rateCards'), lessonVideos: () => listEditor('lessonVideos'),
       site: () => simpleForm('site', '기본정보', '홈페이지 전체(머리말·바닥글·전화 버튼·예약 안내·구조화 데이터)에 들어가는 연락처입니다.', [['phone', '대표전화', '033-336-9884'], ['sms', '문자 받을 휴대폰', '010-0000-0000', '접수 서버가 안 될 때 손님이 문자로 보내는 번호'], ['hours', '영업시간', '시즌 중 매일 08:00~23:00']]),
       tags: () => simpleForm('tags', '추적 코드', '검색엔진 소유확인·방문 분석 코드입니다. 운영 도메인 연결 뒤 넣으세요(미리보기 주소에는 분석 태그가 들어가지 않습니다).', [['ga4', 'GA4 측정 ID', 'G-XXXXXXXXXX'], ['naverWa', '네이버 애널리틱스 ID', ''], ['naverVerify', '네이버 서치어드바이저 소유확인', 'naver-site-verification 값(여러 개는 쉼표로)'], ['googleVerify', '구글 서치콘솔 소유확인', 'google-site-verification 값(여러 개는 쉼표로)']]),
     };

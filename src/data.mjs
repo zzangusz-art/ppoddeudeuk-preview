@@ -52,8 +52,6 @@ export const ABOUT = {
     '또한 뽀드득은 공식 자격을 갖춘 소속 강사진과 함께, 초급부터 상급까지 수준별·목표별 맞춤 강습을 운영하고 있습니다. 기본 자세부터 턴, 스피드 컨트롤, 안전 수칙까지 단계적으로 지도하여 짧은 시간에도 확실한 성장을 경험하실 수 있도록 체계적으로 진행합니다.',
     '예약 및 견적 문의, 단체 강습 상담 등 궁금하신 사항이 있으시면 카카오톡 상담 또는 매장 연락처로 문의해주시기 바랍니다. 뽀드득이 친절하고 정확하게 안내해드리겠습니다.',
   ],
-  // 메인 '뽀드득은 어떤 곳인가요?' 옆 사진(2026-11-16 업체 제공, 2×2)
-  homePhotos: [['about/urbangray', '어반그레이 스키복 착용'], ['about/pkgo', '픽고 스키복'], ['about/skis', '스키 장비 진열(뵐클·엘란)'], ['about/boards', '스노보드 장비(살로몬)']],
   interior: [
     ['interior-1', '스키 장비 진열대 전경'], ['interior-2', '스키 부츠 진열'], ['interior-3', '헬멧과 고글 진열'],
     ['interior-4', '장비 착용 공간'], ['interior-5', '스키복 의류 코너'], ['interior-6', '스노보드 바인딩'],
@@ -153,10 +151,29 @@ export const RENTALS = [
 
 // 예약 폼 렌탈 항목(기존 관리자 렌탈 관리 = 폼 선택지)
 export const RENTAL_ITEMS = {
-  ski: ['초급자 스키', '중급자 스키', '중급자 블레이드', '중급자 숏스키', '중급자 인라인스키', '상급자 데모스키', '상급자 대회전스키', '상급자 파우더스키', '최상급자 월드컵스키', '최상급자 FIS선수용스키'],
-  board: ['초급자 보드', '중급자 보드', '상급자 보드', '상급자 우드해머', '최상급자 보드', '최상급자 카본해머', '최상급자 스텝온'],
-  wear: [['프리미엄 의류세트', ['상의', '하의']], ['하이엔드 의류세트', ['상의', '하의']], ['점프슈트세트', []]],
+  // 예약 폼: 세로 = 등급, 가로 = 품목([종류(ski|board) — 사이즈표 줄 구분용, 품목명]) — 업체 수정사항(2026-11-16)
+  grades: [
+    ['초급자', [['ski', '초급자 스키'], ['board', '초급자 보드']]],
+    ['중급자', [['ski', '중급자 스키'], ['ski', '중급자 블레이드'], ['ski', '중급자 숏스키'], ['ski', '중급자 인라인스키'], ['board', '중급자 보드']]],
+    ['상급자', [['ski', '상급자 데모스키'], ['ski', '상급자 대회전스키'], ['ski', '상급자 파우더스키'], ['board', '상급자 보드'], ['board', '상급자 우드해머']]],
+    ['최상급자', [['ski', '최상급자 월드컵스키'], ['ski', '최상급자 FIS선수용스키'], ['board', '최상급자 보드'], ['board', '최상급자 카본해머'], ['board', '최상급자 스텝온']]],
+  ],
+  wear: [['프리미엄 의류', ['프리미엄 의류세트', '프리미엄 상의만', '프리미엄 하의만']], ['하이엔드 의류', ['하이엔드 의류세트', '하이엔드 상의만', '하이엔드 하의만']]],
 };
+// 예전 코드 호환(종류별 목록)
+RENTAL_ITEMS.ski = RENTAL_ITEMS.grades.flatMap(([, its]) => its.filter(([k]) => k === 'ski').map(([, n]) => n));
+RENTAL_ITEMS.board = RENTAL_ITEMS.grades.flatMap(([, its]) => its.filter(([k]) => k === 'board').map(([, n]) => n));
+
+// 메인 「뽀드득은 어떤 곳인가요?」 옆 사진(2×2, 세로) · 메인 요금표 카드 5장 · 강습 영상(유튜브) — 어드민에서 바꿈
+export const HOME_PHOTOS = ov('homePhotos', [
+  { img: 'about/urbangray.webp', title: '어반그레이 스키복 착용' }, { img: 'about/pkgo.webp', title: '픽고 스키복' },
+  { img: 'about/skis.webp', title: '스키 장비 진열(뵐클·엘란)' }, { img: 'about/boards.webp', title: '스노보드 장비(살로몬)' },
+]);
+export const RATE_CARDS = ov('rateCards', [
+  { title: '용평리프트 요금표', img: 'main/rate-1.webp' }, { title: '알펜시아리프트 요금표', img: 'main/rate-2.webp' },
+  { title: '장비 요금표', img: 'main/rate-3.webp' }, { title: '의류 요금표', img: 'main/rate-4.webp' }, { title: '보호장비 요금표', img: 'main/rate-5.webp' },
+]);
+export const LESSON_VIDEOS = ov('lessonVideos', []);   // [{ id: 유튜브 영상 ID, title }]
 
 // ── 강습 ──
 export const LESSON_FEE = ov('lesson', {

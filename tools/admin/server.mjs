@@ -111,6 +111,23 @@ const SECTIONS = {
     return v.map((t, i) => { const o = { img: imageField(t.img, 'instructor', files, i), name: oneLine(t.name, 20), cred: oneLine(t.cred, 60), career: oneLine(t.career, 120) };
       need(o.name || o.cred, 400, `${i + 1}번째 강사: 이름이나 자격을 입력해 주세요`); for (const k of ['name', 'career']) if (!o[k]) delete o[k]; return o; });
   } },
+  homePhotos: { name: '메인 소개 사진', clean: (v, files) => {
+    need(Array.isArray(v) && v.length >= 1 && v.length <= 4, 400, '사진은 1~4장입니다');
+    return v.map((g, i) => ({ img: imageField(g.img, 'home', files, i), title: oneLine(g.title, 40) || '뽀드득 매장' }));
+  } },
+  rateCards: { name: '메인 요금표 카드', clean: (v, files) => {
+    const base = DEFAULTS.rateCards; need(Array.isArray(v) && v.length === base.length, 400, '카드는 5장 그대로입니다(순서·연결 페이지 고정)');
+    return base.map((b, i) => ({ title: oneLine(v[i].title, 20) || b.title, img: imageField(v[i].img, 'rate', files, i) }));
+  } },
+  lessonVideos: { name: '강습 영상', clean: v => {
+    need(Array.isArray(v) && v.length <= 12, 400, '영상은 12개까지입니다');
+    return v.map((x, i) => {
+      const raw = String(x.url || x.id || '').trim();
+      const id = (raw.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{6,20})/) || raw.match(/^([\w-]{11})$/) || [])[1];
+      need(id, 400, `${i + 1}번째: 유튜브 영상 주소를 확인해 주세요(예: https://youtu.be/...)`);
+      return { id, title: oneLine(x.title, 50) };
+    });
+  } },
   lift: { name: '리프트 요금', clean: v => {
     const base = DEFAULTS.lift; need(Array.isArray(v) && v.length === base.length, 400, '형식 오류');
     return base.map((b, i) => { const x = v[i] || {};

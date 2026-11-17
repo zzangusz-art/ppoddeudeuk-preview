@@ -284,3 +284,7 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
 }
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:640px){.row2{grid-template-columns:1fr}}
 .ptbl th small{display:block;font-weight:500;color:var(--sub);font-size:11.5px}
+/* 사진 안내 */
+.phbox{margin:0 0 14px;font-size:14px}.phbox span{font-weight:800}
+.phint{display:block;margin:6px 0 0;font-size:12px;color:var(--sub)}
+.thumb.r-45 img{aspect-ratio:4/5!important;height:auto!important;object-fit:cover}.thumb.r-11 img{aspect-ratio:1/1!important;height:auto!important;object-fit:cover}

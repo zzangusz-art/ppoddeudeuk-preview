@@ -727,3 +727,14 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 @media (max-width:860px){.lift-promo{grid-template-columns:auto 1fr}.lp-cta{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0}.lp-cta .btn{flex:1 1 140px}.lp-cta small{width:100%}}
 @media (max-width:560px){.lift-promo{grid-template-columns:1fr;text-align:center}.lp-badge{margin:0 auto}.rate-block .h3 .cond{display:block;width:fit-content;margin:8px 0 0}}
 @media (max-width:560px){.tbl-time{font-size:13.5px}.tbl-time th{white-space:nowrap;min-width:52px}.tbl-time .tt{display:block}}
+
+/* 예약 폼 등급별 줄 */
+.bk-grade .bk-th{font-size:15.5px}
+/* 강습 영상 */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:0 0 32px}
+.vcard{margin:0;border-radius:var(--r-lg);overflow:hidden;background:#000;box-shadow:var(--sh)}
+.vplay{position:relative;display:block;width:100%;aspect-ratio:16/9;padding:0;border:0;cursor:pointer;background:#000}
+.vplay img{width:100%;height:100%;object-fit:cover;opacity:.88;transition:opacity .2s}.vplay:hover img{opacity:1}
+.vbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:46px;border-radius:12px;background:var(--red);color:#fff;font-size:22px;display:grid;place-items:center}
+.vframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+.vcard figcaption{background:#fff;padding:10px 14px;font-weight:700;font-size:14.5px}

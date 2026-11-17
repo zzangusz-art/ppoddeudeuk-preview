@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTALS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTALS, RENTAL_ITEMS, HOME_PHOTOS, RATE_CARDS, LESSON_VIDEOS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -99,7 +99,7 @@ const popupHtml = u => {
 export function home(u, posts = []) {
   // 기존 홈페이지 메인 바로가기 6칸(원본 아이콘 main-nav1~6) · 요금표 카드 5장(원본 이미지 sec6-bg1~5) 그대로
   const quick = [['요금안내', 'rates/lift/'], ['강습안내', 'lesson/'], ['견적문의', 'quote/'], ['예약하기', 'reserve/'], ['갤러리', 'gallery/'], ['오시는 길', 'location/']];
-  const rateCards = [['용평리프트 요금표', 'rates/lift/#yongpyong'], ['알펜시아리프트 요금표', 'rates/lift/#alpensia'], ['장비 요금표', 'rates/rental/#gear'], ['의류 요금표', 'rates/rental/#wear'], ['보호장비 요금표', 'rates/rental/#safety']];
+  const rateLinks = ['rates/lift/#yongpyong', 'rates/lift/#alpensia', 'rates/rental/#yongpyong-gear', 'rates/rental/#yongpyong-wear', 'rates/rental/#yongpyong-safety'];
   const steps = [['날짜·스키장 선택', '이용 날짜와 용평·알펜시아 중 스키장, 이용타임(1·2·3타임)을 고릅니다.'], ['렌탈·강습 선택', '스키·보드 장비, 의류, 강습 종목·인원·시간을 함께 고릅니다.'], ['확인 연락', '접수 내용을 확인해 전화나 문자로 안내드립니다. 리프트권은 이용 1일 전까지 예약해야 할인됩니다.']];
   return popupHtml(u) + `
 <section class="hero" data-hero>
@@ -114,7 +114,7 @@ export function home(u, posts = []) {
   <div class="reveal">
     <p class="eyebrow">ABOUT PPODDEUDEUK</p>
     <h2 class="h2">뽀드득은 어떤 곳인가요?</h2>
-    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
+    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
     <ul class="facts">
       <li><b>리프트권</b>용평 4시간권 대인 ${won(79000)} → <em>${won(53000)}</em> <span class="tag33">1일 전 예약 33%</span></li>
       <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(15000)}</em>부터</li>
@@ -123,12 +123,12 @@ export function home(u, posts = []) {
     </ul>
     <a class="link-more" href="${u('about/')}">소개 및 내부전경 보기 ${ICON.arrow}</a>
   </div>
-  <div class="about-photos ap4 reveal">${ABOUT.homePhotos.map(([k, t], i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/${k}.webp`)}" data-lb-group="home-store" data-lb-cap="${esc(t)}">${phImg(u, `assets/img/${k}.webp`, `뽀드득 ${t}`, { sizes: '(max-width: 760px) 50vw, 22vw' })}</button>`).join('')}</div>
+  <div class="about-photos ap4 reveal">${HOME_PHOTOS.slice(0, 4).map((p, i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/${p.img}`)}" data-lb-group="home-store" data-lb-cap="${esc(p.title)}">${phImg(u, `assets/img/${p.img}`, `뽀드득 ${p.title}`, { sizes: '(max-width: 760px) 50vw, 22vw' })}</button>`).join('')}</div>
 </div></section>
 
 <section class="sec main-rates" id="rates">
   <div class="wrap m-tit reveal"><h2>뽀드득 요금표</h2><p>뽀드득에서만 만나볼 수 있는 <span class="t-red">전용 할인가</span>로 더욱 부담 없이 스키를 즐겨보세요.</p></div>
-  <div class="rate-cards reveal">${rateCards.map(([t, h], i) => `<div class="item"><a href="${u(h)}" style="background-image:url('${u(`assets/img/main/rate-${i + 1}.webp`)}')"><p>${t}</p></a></div>`).join('')}</div>
+  <div class="rate-cards reveal">${RATE_CARDS.slice(0, 5).map((c, i) => `<div class="item"><a href="${u(rateLinks[i])}" style="background-image:url('${u(`assets/img/${c.img}`)}')"><p>${esc(c.title)}</p></a></div>`).join('')}</div>
 </section>
 
 <section class="sec sec-gallery"><div class="wrap">
@@ -188,7 +188,7 @@ export function about(u) {
   return subHead(u, { eyebrow: 'ABOUT', title: '소개 및 내부전경', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개 및 내부전경']] })
     + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
     + `<section class="sec"><div class="wrap narrow">
-  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
+  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
   <div class="prose reveal">${ABOUT.paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
 </div></section>
 <section class="sec sec-tint"><div class="wrap">
@@ -305,6 +305,11 @@ export function stay(u, s) {
 
 // ── 강습안내 ──
 const lessonTabs = [['강습 요금', 'lesson/'], ['강사진 소개', 'lesson/instructors/'], ['강습 프로그램', 'lesson/program/']];
+// 강습 영상: 썸네일만 먼저 보이고 누르면 유튜브(쿠키 없는 주소)를 불러온다 — 어드민 「강습 영상」에서 등록
+export function lessonVideos() {
+  if (!LESSON_VIDEOS.length) return '';
+  return `<h2 class="h3">강습 영상</h2><div class="vgrid reveal">${LESSON_VIDEOS.map(v => `<figure class="vcard"><button type="button" class="vplay" data-yt="${esc(v.id)}" aria-label="${esc(v.title || '강습 영상')} 재생"><img src="https://i.ytimg.com/vi/${esc(v.id)}/hqdefault.jpg" alt="${esc(v.title || '뽀드득 강습 영상')}" loading="lazy" width="480" height="360"><span class="vbtn" aria-hidden="true">▶</span></button>${v.title ? `<figcaption>${esc(v.title)}</figcaption>` : ''}</figure>`).join('')}</div>`;
+}
 export function lessonFee(u) {
   return subHead(u, { eyebrow: 'LESSON', title: '강습 요금', lead: '1:1 개인 강습 · 2:1 소수 강습 · 스키와 보드 동일', bg: 'scene/carve.webp', crumbs: [['강습안내', 'lesson/'], ['강습 요금']] })
     + subTabs(u, lessonTabs, 'lesson/')
@@ -313,6 +318,7 @@ export function lessonFee(u) {
   <p class="callout reveal">${esc(LESSON_FEE.note)}</p>
   <div class="reveal">${lessonTable()}</div>
   <h2 class="h3">강습 운영 원칙</h2><ul class="check reveal">${LESSON_FEE.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+  ${lessonVideos()}
   <p class="center"><a class="btn btn-red btn-lg" href="${u('reserve/')}">${ICON.cal}강습 예약하기</a> <a class="btn btn-line btn-lg" href="${u('lesson/program/')}">강습 프로그램 보기</a></p>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('lesson')), true)}</div></section>`;
@@ -343,11 +349,11 @@ export const SIZE_GUIDE = [
   ['이름', '장비와 부츠에 이름표를 붙여 두어 도착하시면 신청하신 장비를 바로 찾으실 수 있습니다.'],
   ['발 사이즈', '부츠가 맞지 않을 때를 대비해 앞뒤 사이즈(예: 270이면 260·280) 여분을 같이 준비해 둡니다.'],
   ['길이', '원하시는 플레이트·데크 길이가 없으면 키에서 약 20cm 뺀 길이 전후로 세팅해 드립니다.'],
-  ['바인딩', '25/26 신형 살로몬 턴테이블 바인딩(6도 단위)입니다. 기본 12°/0°, 덕·전향은 원하시는 각도를 골라 주세요.'],
+  ['바인딩', '최신형 살로몬 턴테이블 바인딩(6도 단위)입니다. 기본 12°/0°, 덕·전향은 원하시는 각도를 골라 주세요.'],
+  ['스텝온', '최신형 버튼 스텝온 바인딩(3도 단위)입니다. 기본 12°/0°, 덕·전향은 원하시는 각도를 골라 주세요. 이번 시즌 새로 입고되었습니다.'],
 ];
 export function bookForm(u, type) {
   const isQ = type === 'quote';
-  const wearItems = RENTAL_ITEMS.wear.flatMap(([n, parts]) => [n, ...parts.map(p => `${n.replace(' 의류세트', '')} ${p}만`)]);
   const step = (kind, it) => `<div class="qty"><span class="qn">${esc(it)}</span><span class="qc"><button type="button" data-d="-1" aria-label="${esc(it)} 빼기">−</button><input type="number" data-kind="${kind}" data-item="${esc(it)}" value="0" min="0" max="30" inputmode="numeric" aria-label="${esc(it)} 수량"><button type="button" data-d="1" aria-label="${esc(it)} 더하기">+</button></span></div>`;
   const row = (th, td, o = {}) => `<div class="bk-row${o.cls ? ' ' + o.cls : ''}"><div class="bk-th">${th}${o.sub ? `<small>${o.sub}</small>` : ''}</div><div class="bk-td">${td}</div></div>`;
   const req = '<i>*</i>';
@@ -365,15 +371,14 @@ export function bookForm(u, type) {
     </div>
     ${row(`<span>스키장 선택 ${req}</span>`, `<div class="bk-resort">${RESORTS.map(r => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required><span>${r.name}</span></label>`).join('')}</div><p class="bk-note" data-grooming hidden></p>`, { sub: '선택하신 스키장에 따라 시간대가 달라집니다.' })}
     ${row(`<span>이용타임 ${req}</span>`, `<div class="bk-times" data-times>${Array.from({ length: Math.max(...RESORTS.map(r => r.times.length)) }, (_, i) => `<label class="tsel"><b>${i ? `${i + 1}타임` : '이용권'}</b><select data-tname="${i}" disabled aria-label="이용권 ${i + 1}"><option value="">스키장 먼저 선택</option></select></label>`).join('')}</div><input type="hidden" name="time">`, { sub: '이용권(타임)을 하나만 고르세요.' })}
-    ${row('스키장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.ski.map(it => step('ski', it)).join('')}</div>`)}
-    ${row('보드장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.board.map(it => step('board', it)).join('')}</div>`)}
-    ${row('의류 렌탈', `<div class="qgrid">${wearItems.map(it => step('wear', it)).join('')}</div>`)}
+    ${RENTAL_ITEMS.grades.map(([g, its]) => row(`${g} 장비`, `<div class="qgrid">${its.map(([k, it]) => step(k, it)).join('')}</div>`, { sub: '스키 · 보드', cls: 'bk-grade' })).join('')}
+    ${RENTAL_ITEMS.wear.map(([g, its]) => row(g, `<div class="qgrid">${its.map(it => step('wear', it)).join('')}</div>`, { sub: '100% 새 옷', cls: 'bk-grade' })).join('')}
     ${row('강습', `<div class="bk-lesson">
       <label><span>종목</span><select name="lesson"><option value="">선택 안 함</option><option>스키</option><option>보드</option></select></label>
       <label><span>인원</span><select name="lessonPeople" disabled><option value="">선택</option><option value="1명">1명 (1:1)</option><option value="2명">2명 (2:1)</option></select></label>
       <label><span>시간</span><select name="lessonHours" disabled><option value="">선택</option><option>2시간</option><option>3시간</option><option>4시간</option></select></label></div>`, { sub: '1:1·2:1만, 2·3·4시간' })}
-    ${row(`<span>사이즈표${isQ ? '' : ` ${req}`}</span>`, `<div class="sz-box">
-      <p class="sz-lead"><b>${isQ ? '사이즈표를 미리 적어 주시면 견적이 정확해집니다.' : '사이즈표를 보내 주셔야 예약이 완료됩니다.'}</b> 장비 수량을 고르면 한 분씩 입력칸이 생깁니다.</p>
+    ${isQ ? '' : row(`<span>사이즈표 ${req}</span>`, `<div class="sz-box">
+      <p class="sz-lead"><b>사이즈표를 보내 주셔야 예약이 완료됩니다.</b> 장비 수량을 고르면 한 분씩 입력칸이 생깁니다.</p>
       <div class="sz-why" role="note"><p class="sz-why-t"><span aria-hidden="true">!</span>나이·이름·사이즈를 꼭 받는 이유</p><ul>${SIZE_GUIDE.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ul><p class="sz-warn">장비와 부츠는 수량이 정해져 있어, <strong>사이즈표를 늦게 주시거나 주지 않으시면 예약이 취소되는 경우가 있습니다.</strong><br>예약을 완료해 주신 분을 가장 먼저 준비합니다.</p></div>
       <div class="sz-list" data-sizes><p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p></div></div>`, { cls: 'bk-size' })}
     ${row(`<label for="${type}-memo">요청사항</label>`, `<textarea id="${type}-memo" name="memo" rows="3" maxlength="1000" placeholder="예: 단체 이용, 헬멧·고글 필요, 도착 예정 시간 등"></textarea>`)}

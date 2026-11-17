@@ -241,7 +241,8 @@
     const E = form.elements, date = E.date, tel = E.phone;
     date.min = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
     const ghint = $('[data-grooming]', form), tsel = $$('[data-tname]', form), szBox = $('[data-sizes]', form);
-    const ANG = [30, 24, 18, 12, 6, 0, -6, -12, -18, -24, -30];
+    const ANG = [30, 24, 18, 12, 6, 0, -6, -12, -18, -24, -30];   // 살로몬 턴테이블 6도 단위
+    const ANG3 = Array.from({ length: 21 }, (_, i) => 30 - i * 3);   // 버튼 스텝온 3도 단위
     const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     // 수량(± 버튼)
     const qtys = $$('input[data-kind]', form);
@@ -254,9 +255,10 @@
     const picked = kind => qtys.filter(el => el.dataset.kind === kind && +el.value > 0).map(el => [el.dataset.item, +el.value]);
     // 이용자별 사이즈표: 스키·보드 1대마다 한 줄(입력한 값은 다시 그려도 유지)
     const keep = {};
-    const save = () => $$('.sz', szBox).forEach(r => { keep[r.dataset.key] = Object.fromEntries($$('[data-f]', r).map(x => [x.dataset.f, x.value])); });
+    const save = () => szBox && $$('.sz', szBox).forEach(r => { keep[r.dataset.key] = Object.fromEntries($$('[data-f]', r).map(x => [x.dataset.f, x.value])); });
     const EMPTY = '<p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p>';
     function sizes() {
+      if (!szBox) return;   // 견적문의에는 사이즈표가 없음
       save();
       const units = [...picked('ski').map(([n, c]) => ['ski', n, c]), ...picked('board').map(([n, c]) => ['board', n, c])]
         .flatMap(([k, n, c]) => Array.from({ length: c }, (_, i) => [k, n, i + 1, c]));
@@ -264,19 +266,19 @@
       const opt = (list, v, fmt = x => x) => list.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${fmt(x)}</option>`).join('');
       const deg = x => (x > 0 ? '+' : '') + x + '°';
       szBox.innerHTML = units.slice(0, 40).map(([k, n, i, c]) => {
-        const key = `${n}#${i}`, v = keep[key] || {}, board = k === 'board';
+        const key = `${n}#${i}`, v = keep[key] || {}, board = k === 'board', step = /스텝온/.test(n), A = step ? ANG3 : ANG;
         const f = (fld, ph, extra = '') => `<label class="sf sf-${fld}"><span>${ph}</span><input data-f="${fld}" value="${esc(v[fld])}" ${extra}></label>`;
         return `<div class="sz" data-key="${esc(key)}" data-kind="${k}" data-item="${esc(n)}"><b class="sz-h">${esc(n)}${c > 1 ? ` <em>${i}</em>` : ''}</b><div class="sz-f">`
           + f('name', '이름', 'maxlength="20" autocomplete="off"') + f('age', '나이', 'inputmode="numeric" maxlength="3"')
           + f('height', '키(cm)', 'inputmode="numeric" maxlength="3"') + f('foot', '발(mm)', 'inputmode="numeric" maxlength="3"')
           + f('len', board ? '데크 길이' : '플레이트 길이', 'inputmode="numeric" maxlength="3" placeholder="키-20"')
           + (board ? `<label class="sf sf-stance"><span>선행발</span><select data-f="stance">${opt(['', '왼발(레귤러)', '오른발(구피)'], v.stance, x => x || '선택')}</select></label>`
-            + `<label class="sf sf-ang"><span>바인딩 앞</span><select data-f="front">${opt(ANG, v.front ?? 12, deg)}</select></label>`
-            + `<label class="sf sf-ang"><span>바인딩 뒤</span><select data-f="back">${opt(ANG, v.back ?? 0, deg)}</select></label>` : '')
+            + `<label class="sf sf-ang"><span>바인딩 앞${step ? ' (3°)' : ''}</span><select data-f="front">${opt(A, v.front ?? 12, deg)}</select></label>`
+            + `<label class="sf sf-ang"><span>바인딩 뒤${step ? ' (3°)' : ''}</span><select data-f="back">${opt(A, v.back ?? 0, deg)}</select></label>` : '')
           + '</div></div>';
       }).join('') + (units.length > 40 ? '<p class="sz-empty">40명이 넘는 단체는 나머지 분들의 사이즈를 요청사항에 적거나 문자로 보내 주세요.</p>' : '');
     }
-    const sizeRows = () => $$('.sz', szBox).map(r => {
+    const sizeRows = () => !szBox ? [] : $$('.sz', szBox).map(r => {
       const g = f => (r.querySelector(`[data-f="${f}"]`) || {}).value || '';
       const board = r.dataset.kind === 'board';
       return { gear: r.dataset.item, kind: r.dataset.kind, name: g('name').trim(), age: g('age').trim(), height: g('height').trim(), foot: g('foot').trim(), len: g('len').trim(), ...(board ? { stance: g('stance'), angle: `${g('front')}/${g('back')}` } : {}) };
@@ -315,7 +317,7 @@
       if (!E.time.value) return bad($('[data-times]', form), '이용타임을 하나 선택해 주세요');
       if (E.lesson.value && !E.lessonPeople.value) return bad(E.lessonPeople, '강습 인원을 선택해 주세요');
       if (E.lesson.value && !E.lessonHours.value) return bad(E.lessonHours, '강습 시간을 선택해 주세요');
-      if (isR) for (const r of $$('.sz', szBox)) for (const [f, n] of [['name', '이름'], ['age', '나이'], ['height', '키'], ['foot', '발 사이즈']]) {
+      if (isR && szBox) for (const r of $$('.sz', szBox)) for (const [f, n] of [['name', '이름'], ['age', '나이'], ['height', '키'], ['foot', '발 사이즈']]) {
         const el = r.querySelector(`[data-f="${f}"]`); if (!el.value.trim()) return bad(el, `사이즈표: ${r.dataset.item}의 ${n}을(를) 입력해 주세요`);
       }
       if (!E.agree.checked) return bad(E.agree, '개인정보 수집 및 이용에 동의해 주세요');
@@ -342,7 +344,7 @@
     };
     $('[data-copy-summary]', form).addEventListener('click', () => copy($('[data-summary]', form).textContent, '접수 내용을 복사했습니다'));
     $('[data-restart]', form).addEventListener('click', () => {
-      form.reset(); qtys.forEach(clamp); Object.keys(keep).forEach(k => delete keep[k]); szBox.innerHTML = EMPTY;
+      form.reset(); qtys.forEach(clamp); Object.keys(keep).forEach(k => delete keep[k]); if (szBox) szBox.innerHTML = EMPTY;
       tsel.forEach((sel, i) => { sel.disabled = true; sel.innerHTML = '<option value="">스키장 먼저 선택</option>'; sel.closest('.tsel').hidden = false; sel.closest('.tsel').querySelector('b').textContent = i ? `${i + 1}타임` : '이용권'; }); ghint.hidden = true;
       ['lessonPeople', 'lessonHours'].forEach(n => { E[n].disabled = true; });
       done.hidden = true; main.hidden = false; form.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
@@ -363,5 +365,14 @@
       } catch { toast('접수 서버에 연결하지 못했습니다. 문자나 전화로 보내 주세요.'); finish(text, false); }
       finally { btn.disabled = false; btn.textContent = type === 'quote' ? '견적 요청하기' : '예약 접수하기'; }
     });
+  });
+  /* 강습 영상: 썸네일 → 누르면 유튜브(쿠키 없는 주소) */
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-yt]'); if (!b) return;
+    const id = b.dataset.yt; if (!/^[\w-]{6,20}$/.test(id)) return;
+    const f = document.createElement('iframe');
+    f.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`; f.title = b.getAttribute('aria-label') || '강습 영상';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.className = 'vframe';
+    b.replaceWith(f);
   });
 })();
