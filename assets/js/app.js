@@ -287,9 +287,12 @@
       const t = e.target;
       if (t.name === 'resort') {
         const r = RES[t.value]; ghint.hidden = false; ghint.textContent = `${r.name} 정설시간 ${r.g}`;
+        // 스키장마다 이용권 구성이 다름(용평: 4·6·8시간권 한 칸 / 알펜시아: 1타임·2타임 두 칸) — 칸 이름을 바꾸고 남는 칸은 숨김
         tsel.forEach(sel => {
-          const grp = r.t.find(([n]) => n === sel.dataset.tname); sel.disabled = !grp;
-          sel.innerHTML = '<option value="">선택</option>' + (grp ? grp[1].map(([o, h]) => `<option value="${sel.dataset.tname} ${o} ${h}">${o} ${h}</option>`).join('') : '');
+          const grp = r.t[+sel.dataset.tname], box = sel.closest('.tsel'); sel.disabled = !grp; box.hidden = !grp;
+          if (!grp) { sel.innerHTML = ''; return; }
+          box.querySelector('b').textContent = grp[0];
+          sel.innerHTML = '<option value="">선택</option>' + grp[1].map(([o, h]) => `<option value="${[grp[0] !== '이용권' && grp[0], o, h].filter(Boolean).join(' ')}">${o}${h ? ' ' + h : ''}</option>`).join('');
         });
         E.time.value = '';
       }
@@ -340,7 +343,7 @@
     $('[data-copy-summary]', form).addEventListener('click', () => copy($('[data-summary]', form).textContent, '접수 내용을 복사했습니다'));
     $('[data-restart]', form).addEventListener('click', () => {
       form.reset(); qtys.forEach(clamp); Object.keys(keep).forEach(k => delete keep[k]); szBox.innerHTML = EMPTY;
-      tsel.forEach(sel => { sel.disabled = true; sel.innerHTML = '<option value="">스키장 먼저 선택</option>'; }); ghint.hidden = true;
+      tsel.forEach((sel, i) => { sel.disabled = true; sel.innerHTML = '<option value="">스키장 먼저 선택</option>'; sel.closest('.tsel').hidden = false; sel.closest('.tsel').querySelector('b').textContent = i ? `${i + 1}타임` : '이용권'; }); ghint.hidden = true;
       ['lessonPeople', 'lessonHours'].forEach(n => { E[n].disabled = true; });
       done.hidden = true; main.hidden = false; form.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     });

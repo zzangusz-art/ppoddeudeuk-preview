@@ -16,7 +16,7 @@ const OUT = path.resolve(ROOT, opt('--out') || 'dist');
 
 const D = await import('./src/data.mjs');
 const { loadPosts } = await import('./tools/blog/lib.mjs');
-const { SITE, FAQ, STAY, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, SCALE, KEYWORDS, NOTICES, USED } = D;
+const { SITE, FAQ, STAY, LIFT, RENTALS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, SCALE, KEYWORDS, NOTICES, USED } = D;
 const { makeUrl, pageUrl, won } = await import('./src/lib.mjs');
 const S = await import('./src/schema.mjs');
 const { page } = await import('./src/layout.mjs');
@@ -54,7 +54,7 @@ function emit({ out, title, description, body, section = '', pri = '0.7', type, 
 // ── 홈 ──
 emit({ out: 'index.html', pri: '1.0', bodyClass: 'home',
   title: '용평렌탈샵 뽀드득 | 용평리조트·용평스키장 렌탈샵, 알펜시아렌탈샵',
-  description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 리프트권 할인 예약(용평 1타임 대인 ${won(34000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
+  description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 용평 리프트권 1일 전 예약 33% 특별할인(4시간권 대인 ${won(53000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
   keywords: [...MAIN_KW, '모나 용평 렌탈', '용평 스키복 렌탈'], faq: faqOf('home'),
   body: u => P.home(u, POSTS) });
 
@@ -99,11 +99,11 @@ emit({ out: 'secondhand/index.html', section: 'secondhand', pri: '0.4', crumbs: 
 
 // ── 요금 ──
 emit({ out: 'rates/lift/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['리프트 요금', 'rates/lift/']], faq: faqOf('lift'),
-  title: `용평·알펜시아 리프트권 할인 ${SITE.season} 요금표 | 뽀드득`, description: `용평리조트 1타임 대인 ${won(68000)} → 뽀드득 예약가 ${won(34000)}, 2타임 ${won(96000)} → ${won(48000)}. 사전 예약 시 약 40%(알펜시아 45%) 할인, 이용 1일 전까지 전화 예약 필수.`,
+  title: `용평 리프트권 33% 특별할인 ${SITE.season} 요금표 | 뽀드득`, description: `용평리조트 리프트권 이용 1일 전까지 예약 시 33% 특별할인가. 4시간권 대인 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}.`,
   keywords: ['용평 리프트권 할인', '알펜시아 리프트권 할인', '용평 리프트권 가격', '모나 용평 리프트권'],
   body: u => P.lift(u) });
 emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']], faq: faqOf('rental'),
-  title: `용평스키장 렌탈 요금 ${SITE.season} — 장비·스키복·보호장비 | 용평렌탈샵 뽀드득`, description: `프리미엄 초급자 스키·보드 1타임 예약가 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드 ${won(40000)}~. 스키복 ${won(20000)}~(어반그레이 등 하이엔드 ${won(30000)}), 헬멧·고글·보호대 ${won(5000)}.`,
+  title: `용평·알펜시아 렌탈 요금 ${SITE.season} — 장비·스키복·보호장비 | 용평렌탈샵 뽀드득`, description: `100% 새제품 장비·의류. 용평 4시간권 예약할인가 초급자 스키·보드 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드·버튼 스텝온 ${won(40000)}~. 의류 ${won(20000)}~, 헬멧·고글·보호대 ${won(5000)}~. 알펜시아 요금표 포함.`,
   keywords: ['용평스키장 렌탈 가격', '용평리조트 렌탈 요금', '알펜시아 렌탈 요금', '용평 스키복 렌탈', '어반그레이 렌탈', '용평 보드 렌탈'],
   body: u => P.rental(u) });
 
@@ -152,8 +152,8 @@ write('robots.txt', PREVIEW ? 'User-agent: *\nDisallow: /\n'
     ...['Googlebot', 'Bingbot', 'Yeti', 'Daumoa', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot', 'Applebot-Extended'].flatMap(b => [`User-agent: ${b}`, 'Allow: /', '']),
     `Sitemap: ${SITE.url}sitemap.xml`, ''].join('\n'));
 
-const liftLines = LIFT.map(l => `### ${l.title}\n- ${l.note}\n${l.rows.map(r => `- ${r.time}(${r.detail.join(', ')}): 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join('\n')}`).join('\n\n');
-const rentalLines = RENTAL.map(g => `### ${g.group}\n${g.items.map(it => `- ${it.name}${it.sub ? `(${it.sub})` : ''}: ${RENTAL_COLS.map((c, i) => { const v = it.p[i]; return g.flat ? `${c} ${v ? won(v) : '문의'}` : `${c} ${v[1] ? `${won(v[1])}(정상가 ${won(v[0])})` : '문의'}`; }).join(' / ')}`).join('\n')}`).join('\n\n');
+const liftLines = LIFT.map(l => `### ${l.title}\n- ${l.note}${l.pending ? '' : '\n' + l.rows.map(r => `- ${r.time}${r.detail.length ? `(${r.detail.join(', ')})` : ''}: 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join('\n')}`).join('\n\n');
+const rentalLines = RENTALS.map(R => `### ${R.title}\n${R.data.groups.map(g => g.items.map(it => `- [${g.group}] ${it.name}${it.sub ? `(${it.sub})` : ''}: ${R.data.cols.map((c, i) => { const v = it.p[i]; return `${c} ${v[1] ? `${won(v[1])}(정상가 ${won(v[0])})` : '문의'}`; }).join(' / ')}`).join('\n')).join('\n')}`).join('\n\n');
 const llms = `# ${SITE.name} (${SITE.nameEn}) — 용평·알펜시아 스키 렌탈·강습
 
 > 뽀드득은 ${SITE.address.full}에 있는 스키·스노보드 렌탈과 강습 전문점이다. ${SITE.near}. 리프트권 할인 예약, 장비·스키복 렌탈, 1:1·2:1 스키·보드 강습을 운영한다. 이전 이름은 겨울바라기(겨울바라기 AC)이며 25/26 시즌 뽀드득으로 단장했다.
@@ -171,10 +171,10 @@ const llms = `# ${SITE.name} (${SITE.nameEn}) — 용평·알펜시아 스키 �
 ## 리프트권
 ${liftLines}
 
-## 스키장별 이용타임(예약 기준)
-${RESORTS.map(r => `- ${r.name}: ${r.times.map(t => `${t.name} ${t.opts.map(([n, h]) => `${n} ${h}`).join(' 또는 ')}`).join(' / ')} / 정설시간 ${r.grooming}(${r.groomingNote})`).join('\n')}
+## 스키장별 이용권(예약 기준)·정설시간
+${RESORTS.map(r => `- ${r.name}: ${r.times.map(t => `${t.name} ${t.opts.map(([n, h]) => [n, h].filter(Boolean).join(' ')).join(' 또는 ')}`).join(' / ')} / 정설시간 ${r.grooming}(${r.groomingNote})`).join('\n')}
 
-## 렌탈 요금 (용평리조트, 예약 할인가)
+## 렌탈 요금 (스키장별, 예약 할인가 · 100% 새제품)
 ${rentalLines}
 
 ## 강습 요금

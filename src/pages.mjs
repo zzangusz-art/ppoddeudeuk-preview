@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTAL, RENTAL_COLS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTALS, RENTAL_ITEMS, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -29,34 +29,37 @@ const ctaBand = u => `<section class="cta-band"><div class="wrap cta-in reveal">
 
 // ── 요금표 ──
 export function liftTable(l) {
-  const two = l.seasons.length === 2;
-  const head = two
-    ? `<thead><tr><th scope="col" colspan="2" rowspan="2">구분</th>${l.seasons.map(s => `<th scope="colgroup" colspan="3">${esc(s)}</th>`).join('')}</tr><tr>${l.seasons.map(() => `<th scope="col"></th><th scope="col">${esc(l.resort)} 정상가</th><th scope="col" class="hl">뽀드득 예약 할인가</th>`).join('')}</tr></thead>`
-    : `<thead><tr><th scope="col" colspan="3">구분</th><th scope="col">${esc(l.resort)} 정상가</th><th scope="col" class="hl">뽀드득 할인가${l.extra ? `<small>${esc(l.extra)}</small>` : ''}</th></tr></thead>`;
-  const body = l.rows.map(r => {
-    const cells = who => (two ? [0, 1] : [0]).map(si => `<th scope="row" class="who">${who === 'adult' ? '대인' : '소인'}</th><td>${won(r[who][si][0])}</td><td class="hl"><strong>${won(r[who][si][1])}</strong></td>`).join('');
-    return `<tr><th scope="rowgroup" rowspan="2" class="t">${r.time}</th><td rowspan="2" class="det">${r.detail.map(esc).join('<br>')}</td>${cells('adult')}</tr><tr>${cells('child')}</tr>`;
-  }).join('');
+  const head = `<thead><tr><th scope="col">이용권</th><th scope="col">구분</th><th scope="col">${esc(l.resort)} 정상가</th><th scope="col" class="hl">${esc(l.seasons[0])}</th><th scope="col">할인 금액</th></tr></thead>`;
+  const body = l.rows.map(r => ['adult', 'child'].map((w, k) => { const [a, b] = r[w][0];
+    return `<tr>${k === 0 ? `<th scope="rowgroup" rowspan="2" class="t">${esc(r.time)}${r.detail.length ? `<small>${r.detail.map(esc).join('<br>')}</small>` : ''}</th>` : ''}<th scope="row" class="who">${w === 'adult' ? '대인' : '소인'}</th><td class="was"><s>${price(a)}</s></td><td class="hl big"><strong>${price(b)}</strong></td><td class="save">${a && b ? `<b>${won(a - b)}</b> 할인` : ''}</td></tr>`; }).join('')).join('');
   return `<div class="tbl-wrap"><table class="tbl tbl-lift"><caption>${esc(l.title)} 요금표</caption>${head}<tbody>${body}</tbody></table></div>`;
 }
 // 휴대폰용 카드형 리프트 요금
 export function liftCards(l) {
-  return `<div class="pcards">${l.rows.map(r => `<div class="pcard"><div class="pcard-hd"><strong>${r.time}</strong><span>${r.detail.map(esc).join(' · ')}</span></div>
-  ${['adult', 'child'].map(w => `<div class="pcard-row"><span class="who">${w === 'adult' ? '대인' : '소인'}</span><span class="was">${won(r[w][0][0])}</span><span class="now">${won(r[w][0][1])}</span><span class="off">-${pct(r[w][0][0], r[w][0][1])}%</span></div>`).join('')}</div>`).join('')}</div>`;
+  return `<div class="pcards">${l.rows.map(r => `<div class="pcard"><div class="pcard-hd"><strong>${esc(r.time)}</strong>${r.detail.length ? `<span>${r.detail.map(esc).join(' · ')}</span>` : ''}</div>
+  ${['adult', 'child'].map(w => { const [a, b] = r[w][0]; return `<div class="pcard-row"><span class="who">${w === 'adult' ? '대인' : '소인'}</span><span class="was">${won(a)}</span><span class="now">${won(b)}</span>${a && b ? `<span class="off">-${pct(a, b)}%</span>` : ''}</div>`; }).join('')}</div>`).join('')}</div>`;
 }
-export function rentalTable() {
-  const head = `<thead><tr><th scope="col" colspan="2" rowspan="2">구분</th>${RENTAL_COLS.map(c => `<th scope="colgroup" colspan="2">${esc(c)}</th>`).join('')}</tr><tr>${RENTAL_COLS.map(() => '<th scope="col">정상가</th><th scope="col" class="hl">예약 할인가</th>').join('')}</tr></thead>`;
-  const body = RENTAL.map(g => g.items.map((it, i) => {
+// 리프트 특별할인 강조 배너(이용 1일 전까지 예약 + 33%)
+export function liftPromo(l, u) {
+  return `<div class="lift-promo reveal"><div class="lp-badge" aria-hidden="true"><b>${esc(l.badge)}</b><span>특별할인</span></div>
+  <div class="lp-body"><p class="lp-k">뽀드득 예약 특별할인가 · ${esc(l.resort)}</p><p class="lp-h"><em>이용 1일 전까지</em> 예약하시면<br>리프트권 <em class="pct">${esc(l.badge)}</em> 특별할인</p>
+  <p class="lp-s">${esc(l.note)} 대인 4시간권 기준 <s>${won(l.rows[0].adult[0][0])}</s> → <strong>${won(l.rows[0].adult[0][1])}</strong></p></div>
+  <div class="lp-cta"><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}전화로 예약</a>${u ? `<a class="btn btn-line" href="${u('reserve/')}">${ICON.cal}온라인 예약</a>` : ''}<small>당일 예약은 특별할인가가 적용되지 않을 수 있습니다</small></div></div>`;
+}
+const rentalCell = ([a, b]) => `<td class="was">${a ? `<s>${won(a)}</s>` : ''}</td><td class="hl">${b ? `<strong>${won(b)}</strong>` : price(0)}</td>`;
+export function rentalTable(R) {
+  const d = R.data;
+  const head = `<thead><tr><th scope="col" colspan="2" rowspan="2">구분</th>${d.cols.map((c, i) => `<th scope="colgroup" colspan="2">${esc(c)}${d.colNotes ? `<small>${esc(d.colNotes[i])}</small>` : ''}</th>`).join('')}</tr><tr>${d.cols.map(() => '<th scope="col">정상가</th><th scope="col" class="hl">예약 할인가</th>').join('')}</tr></thead>`;
+  const body = d.groups.map(g => g.items.map((it, i) => {
     const name = `<td class="nm"><strong>${esc(it.name)}</strong>${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</td>`;
-    const cells = g.flat ? it.p.map(p => `<td colspan="2" class="hl">${price(p)}</td>`).join('') : it.p.map(([a, b]) => `<td>${price(a)}</td><td class="hl">${b ? `<strong>${won(b)}</strong>` : price(0)}</td>`).join('');
-    return `<tr${i === 0 ? ` data-anchor="${g.key}"` : ''}>${i === 0 ? `<th scope="rowgroup" rowspan="${g.items.length}" class="t">${g.group}</th>` : ''}${name}${cells}</tr>`;
+    return `<tr${i === 0 ? ` data-anchor="${R.id}-${g.key}"` : ''}>${i === 0 ? `<th scope="rowgroup" rowspan="${g.items.length}" class="t">${esc(g.group)}</th>` : ''}${name}${it.p.map(rentalCell).join('')}</tr>`;
   }).join('')).join('');
-  return `<div class="tbl-wrap"><table class="tbl tbl-rental"><caption>25-26시즌 용평리조트 렌탈 요금표</caption>${head}<tbody>${body}</tbody></table></div>`;
+  return `<div class="tbl-wrap"><table class="tbl tbl-rental"><caption>${esc(R.title)}</caption>${head}<tbody>${body}</tbody></table></div>`;
 }
-export function rentalCards(key) {
-  const g = RENTAL.find(x => x.key === key);
+export function rentalCards(R, key) {
+  const d = R.data, g = d.groups.find(x => x.key === key);
   return `<div class="pcards">${g.items.map(it => `<div class="pcard"><div class="pcard-hd"><strong>${esc(it.name)}</strong>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}</div>
-  ${RENTAL_COLS.map((c, i) => { const v = it.p[i]; if (g.flat) return `<div class="pcard-row"><span class="who">${esc(c)}</span><span class="now">${price(v)}</span></div>`; return `<div class="pcard-row"><span class="who">${esc(c)}</span>${v[0] ? `<span class="was">${won(v[0])}</span><span class="now">${won(v[1])}</span>` : `<span class="now">${price(0)}</span>`}</div>`; }).join('')}</div>`).join('')}</div>`;
+  ${d.cols.map((c, i) => { const v = it.p[i]; return `<div class="pcard-row"><span class="who">${esc(c)}</span>${v[0] ? `<span class="was">${won(v[0])}</span><span class="now">${won(v[1])}</span>` : `<span class="now">${price(v[1])}</span>`}</div>`; }).join('')}</div>`).join('')}</div>`;
 }
 export function lessonTable() {
   return `<div class="tbl-wrap"><table class="tbl tbl-lesson"><caption>강습 요금(스키·보드 동일)</caption><thead><tr><th scope="col">구분</th>${LESSON_FEE.hours.map(h => `<th scope="col">${h}시간</th>`).join('')}</tr></thead><tbody>${LESSON_FEE.rows.map(r => `<tr><th scope="row">${r.name}</th>${r.p.map(p => `<td><strong>${man(p)}</strong></td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
@@ -113,8 +116,8 @@ export function home(u, posts = []) {
     <h2 class="h2">뽀드득은 어떤 곳인가요?</h2>
     <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
     <ul class="facts">
-      <li><b>리프트권</b>용평 1타임 대인 ${won(68000)} → <em>${won(34000)}</em></li>
-      <li><b>장비 렌탈</b>초급자 스키·보드 1타임 <em>${won(15000)}</em>부터</li>
+      <li><b>리프트권</b>용평 4시간권 대인 ${won(79000)} → <em>${won(53000)}</em> <span class="tag33">1일 전 예약 33%</span></li>
+      <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(15000)}</em>부터</li>
       <li><b>강습</b>1:1 2시간 <em>${man(200000)}</em>, 스키·보드 동일</li>
       <li><b>위치</b>${esc(SITE.near)}</li>
     </ul>
@@ -243,28 +246,36 @@ export function secondhand(u) {
 // ── 요금안내 ──
 const rateTabs = [['리프트 요금', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']];
 export function lift(u) {
-  return subHead(u, { eyebrow: 'LIFT', title: '리프트 요금', lead: `${SITE.season} 용평리조트·알펜시아리조트 리프트권 뽀드득 예약 할인가`, bg: 'scene/lineup.webp', crumbs: [['요금안내', 'rates/lift/'], ['리프트 요금']] })
+  const Y = LIFT.find(l => l.id === 'yongpyong') || LIFT[0];
+  return subHead(u, { eyebrow: 'LIFT', title: '리프트 요금', lead: `${SITE.season} 용평리조트 리프트권 — 이용 1일 전까지 예약 시 ${Y.badge || ''} 특별할인가`, bg: 'scene/lineup.webp', crumbs: [['요금안내', 'rates/lift/'], ['리프트 요금']] })
     + subTabs(u, rateTabs, 'rates/lift/')
     + `<section class="sec"><div class="wrap">
-  ${answer('용평·알펜시아 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>용평리조트 1타임 대인 리프트권은 정상가 ${won(68000)}에서 뽀드득 예약가 ${won(34000)}, 2타임 대인은 ${won(96000)}에서 ${won(48000)}입니다.</strong> 이용 1일 전까지 전화 예약이 필수이며, 용평은 사전 예약 시 약 40%·당일 약 35%, 알펜시아는 사전 예약 시 약 45%·당일 약 40% 할인가가 적용됩니다.`)}
-  ${LIFT.map(l => `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}</h2><p class="callout">${esc(l.note)}</p><div class="only-pc">${liftTable(l)}</div><div class="only-m">${liftCards(l)}</div></div>`).join('')}
-  <h2 class="h3">스키장별 이용타임과 정설시간</h2>
+  ${answer('용평 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>이용 1일 전까지 뽀드득에 예약하시면 용평리조트 리프트권을 정상가 대비 약 33% 특별할인가로 이용하실 수 있습니다.</strong> 대인 4시간권 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}입니다. 알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.`)}
+  ${Y.badge ? liftPromo(Y, u) : ''}
+  ${LIFT.map(l => l.pending
+    ? `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}</h2><div class="pending-box"><b>요금 공지 전</b><p>${esc(l.note)}</p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></div></div>`
+    : `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}${l.cond ? ` <span class="cond">${esc(l.cond)} ${esc(l.badge || '')} 특별할인</span>` : ''}</h2><div class="only-pc">${liftTable(l)}</div><div class="only-m">${liftCards(l)}</div></div>`).join('')}
+  <h2 class="h3">스키장별 이용권과 정설시간</h2>
   ${timeTable()}
-  <p class="note">요금과 할인율은 ${SITE.season} 기준이며 리조트 사정에 따라 바뀔 수 있습니다. 예약 시 최종 금액을 안내드립니다.</p>
+  <p class="note">요금은 ${SITE.season} 기준이며 리조트 사정에 따라 바뀔 수 있습니다. 예약 시 최종 금액을 안내드립니다.</p>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('lift')), true)}</div></section>` + ctaBand(u);
 }
 export function timeTable() {
-  return `<div class="tbl-wrap reveal"><table class="tbl tbl-time"><caption>스키장별 이용타임(예약 기준)</caption><thead><tr><th scope="col">구분</th>${RESORTS.map(r => `<th scope="col">${r.name}</th>`).join('')}</tr></thead><tbody>${RESORTS[0].times.map((t, ti) => `<tr><th scope="row">${t.name}</th>${RESORTS.map(r => `<td>${r.times[ti].opts.map(([n, h]) => `<span class="tt"><b>${n}</b> ${h}</span>`).join('')}</td>`).join('')}</tr>`).join('')}<tr><th scope="row">정설시간</th>${RESORTS.map(r => `<td><span class="tt"><b>${r.grooming}</b> ${r.groomingNote}</span></td>`).join('')}</tr></tbody></table></div>`;
+  return `<div class="tbl-wrap reveal"><table class="tbl tbl-time"><caption>스키장별 이용권(예약 기준)과 정설시간</caption><thead><tr><th scope="col">구분</th>${RESORTS.map(r => `<th scope="col">${r.name}</th>`).join('')}</tr></thead><tbody>
+  <tr><th scope="row">이용권</th>${RESORTS.map(r => `<td>${r.times.map(t => `<span class="tt"><b>${t.name === '이용권' ? t.opts.map(o => o[0]).join(' · ') : t.name}</b>${t.name === '이용권' ? '' : ' ' + t.opts.map(([n, h]) => `${n} ${h}`).join(' · ') + ' 중 택1'}</span>`).join('')}</td>`).join('')}</tr>
+  <tr><th scope="row">정설시간</th>${RESORTS.map(r => `<td><span class="tt"><b>${r.grooming}</b> ${r.groomingNote}</span></td>`).join('')}</tr></tbody></table></div>`;
 }
 export function rental(u) {
-  return subHead(u, { eyebrow: 'RENTAL', title: '렌탈 요금', lead: `${SITE.season} 용평리조트 렌탈 요금표 · 장비 · 의류 · 안전장비`, bg: 'scene/spray.webp', crumbs: [['요금안내', 'rates/lift/'], ['렌탈 요금']] })
+  return subHead(u, { eyebrow: 'RENTAL', title: '렌탈 요금', lead: `${SITE.season} 용평·알펜시아 렌탈 요금표 · 100% 새제품 장비 · 의류 · 안전장비`, bg: 'scene/spray.webp', crumbs: [['요금안내', 'rates/lift/'], ['렌탈 요금']] })
     + subTabs(u, rateTabs, 'rates/rental/')
     + `<section class="sec"><div class="wrap">
-  ${answer('용평 스키 장비·스키복 렌탈은 얼마인가요?', `<strong>프리미엄 초급자 스키·보드는 1타임(오전·오후·야간 중 택1) 예약가 ${won(15000)}, 2타임(주간·오후야간 중 택1) ${won(20000)}입니다.</strong> 중급자·숏스키·블레이드는 1타임 ${won(25000)}, 하이엔드 상급자 ${won(40000)}, 최상급자 ${won(70000)}입니다. 스키복은 프리미엄 고급의류 ${won(20000)}, 하이엔드 최고급의류 ${won(30000)}(1타임 예약가)이고 헬멧·고글·보호대는 ${won(5000)}입니다.`)}
-  <div class="only-pc reveal">${rentalTable()}</div>
-  <div class="only-m">${RENTAL.map(g => `<h2 class="h3" data-anchor="${g.key}">${g.group}</h2>${rentalCards(g.key)}`).join('')}</div>
-  <p class="note">‘문의’는 기존 요금표에 금액이 정해지지 않은 항목입니다. 전화로 안내드립니다. 보유 브랜드와 모델은 시즌마다 바뀔 수 있습니다.</p>
+  ${answer('용평 스키 장비·스키복 렌탈은 얼마인가요?', `<strong>용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 ${won(15000)}, 6시간권 ${won(20000)}, 8시간권 ${won(25000)}입니다.</strong> 중급자·숏스키·블레이드는 4시간권 ${won(25000)}, 하이엔드 상급자·버튼 스텝온 ${won(40000)}, 최상급자 ${won(60000)}부터입니다. 의류는 프리미엄 ${won(20000)}, 하이엔드 ${won(30000)}, 헬멧·고글·보호대는 단품 ${won(5000)}부터입니다. 모든 장비·의류는 100% 새제품입니다.`)}
+  <nav class="rental-jump" aria-label="스키장별 렌탈 요금">${RENTALS.map(R => `<a href="#${R.id}">${esc(R.resort)} <small>정설 ${esc((RESORTS.find(r => r.id === R.id) || {}).grooming || '')}</small></a>`).join('')}</nav>
+  ${RENTALS.map(R => { const g = RESORTS.find(r => r.id === R.id) || {}; return `<div class="rate-block reveal" id="${R.id}"><h2 class="h3">${esc(R.title)} <span class="cond grey">정설시간 ${esc(g.grooming || '')}</span></h2>
+    <div class="only-pc">${rentalTable(R)}</div>
+    <div class="only-m">${R.data.groups.map(gr => `<h3 class="h4" data-anchor="${R.id}-${gr.key}">${esc(gr.group)}</h3>${rentalCards(R, gr.key)}`).join('')}</div></div>`; }).join('')}
+  <p class="note">‘문의’는 요금이 정해지지 않은 항목입니다. 전화로 안내드립니다. 보유 브랜드와 모델은 시즌마다 바뀔 수 있습니다.</p>
   <figure class="wide-photo reveal">${img(u, 'assets/img/gallery/gear-volkl.webp', '매장에 진열된 뵐클 중급자 스키', { sizes: '(max-width: 760px) 100vw, 1100px' })}<figcaption>새로 입고된 뵐클 중급자 스키</figcaption></figure>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('rental')), true)}</div></section>` + ctaBand(u);
@@ -353,7 +364,7 @@ export function bookForm(u, type) {
       <div class="bk-th"><label for="${type}-people">이용 인원</label></div><div class="bk-td"><input type="number" id="${type}-people" name="people" min="1" max="99" inputmode="numeric" placeholder="예: 4"></div>
     </div>
     ${row(`<span>스키장 선택 ${req}</span>`, `<div class="bk-resort">${RESORTS.map(r => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required><span>${r.name}</span></label>`).join('')}</div><p class="bk-note" data-grooming hidden></p>`, { sub: '선택하신 스키장에 따라 시간대가 달라집니다.' })}
-    ${row(`<span>이용타임 ${req}</span>`, `<div class="bk-times" data-times>${RESORTS[0].times.map(t => `<label class="tsel"><b>${t.name}</b><select data-tname="${t.name}" disabled aria-label="${t.name}"><option value="">스키장 먼저 선택</option></select></label>`).join('')}</div><input type="hidden" name="time">`, { sub: '1·2·3타임 중 하나만 고르세요.' })}
+    ${row(`<span>이용타임 ${req}</span>`, `<div class="bk-times" data-times>${Array.from({ length: Math.max(...RESORTS.map(r => r.times.length)) }, (_, i) => `<label class="tsel"><b>${i ? `${i + 1}타임` : '이용권'}</b><select data-tname="${i}" disabled aria-label="이용권 ${i + 1}"><option value="">스키장 먼저 선택</option></select></label>`).join('')}</div><input type="hidden" name="time">`, { sub: '이용권(타임)을 하나만 고르세요.' })}
     ${row('스키장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.ski.map(it => step('ski', it)).join('')}</div>`)}
     ${row('보드장비 렌탈', `<div class="qgrid">${RENTAL_ITEMS.board.map(it => step('board', it)).join('')}</div>`)}
     ${row('의류 렌탈', `<div class="qgrid">${wearItems.map(it => step('wear', it)).join('')}</div>`)}
@@ -389,7 +400,7 @@ export function book(u, type) {
   <div>${bookForm(u, type)}</div>
   <aside class="book-aside">
     <div class="aside-card" id="check"><h2 class="h4">${isQ ? '견적확인' : '예약확인'}</h2><p>접수하신 ${isQ ? '견적' : '예약'}은 남겨 주신 연락처로 <b>문자 또는 전화</b>로 확인해 드립니다.</p>${SITE.api != null ? `<form class="check-form" data-check novalidate><label><span>이름</span><input name="name" autocomplete="name" required maxlength="20"></label><label><span>연락처</span><input name="phone" inputmode="tel" autocomplete="tel" required maxlength="13" placeholder="010-0000-0000"></label><button class="btn btn-red btn-sm" type="submit">접수 내역 확인</button><div class="check-out" aria-live="polite"></div></form>` : ''}<p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
-    <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>리프트권 할인은 <b>이용 1일 전까지 유선 예약</b>이 필수입니다.</p></div>
+    <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>용평 리프트권 <b>33% 특별할인가</b>는 <b>이용 1일 전까지 예약</b> 시 적용됩니다.</p></div>
     <div class="aside-card"><h2 class="h4">스키장별 정설시간</h2><ul>${RESORTS.map(r => `<li><b>${r.short}</b> ${r.grooming} (${r.groomingNote})</li>`).join('')}</ul></div>
     <div class="aside-card"><h2 class="h4">개인정보 안내</h2><p>${esc(PRIVACY.short)}</p></div>
   </aside>

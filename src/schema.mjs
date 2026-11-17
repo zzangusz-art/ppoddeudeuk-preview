@@ -1,18 +1,18 @@
 // 구조화 데이터(JSON-LD). 원시 HTML에 그대로 들어가므로 AI 크롤러가 바로 읽는다.
-import { SITE, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE } from './data.mjs';
+import { SITE, LIFT, RENTALS, LESSON_FEE } from './data.mjs';
 
 const ID = { org: SITE.url + '#business', site: SITE.url + '#website' };
 const krw = (price, name, extra = {}) => ({ '@type': 'Offer', name, price, priceCurrency: 'KRW', ...extra });
 
 export function business() {
   const offers = [];
-  for (const l of LIFT) for (const r of l.rows) {
-    offers.push(krw(r.adult[0][1], `${l.resort} 리프트권 ${r.time} 대인(뽀드득 예약가)`, { priceSpecification: { '@type': 'UnitPriceSpecification', price: r.adult[0][1], priceCurrency: 'KRW', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: r.time } } }));
-    offers.push(krw(r.child[0][1], `${l.resort} 리프트권 ${r.time} 소인(뽀드득 예약가)`));
+  for (const l of LIFT.filter(l => !l.pending)) for (const r of l.rows) {
+    offers.push(krw(r.adult[0][1], `${l.resort} 리프트권 ${r.time} 대인(뽀드득 예약 특별할인가)`, { priceSpecification: { '@type': 'UnitPriceSpecification', price: r.adult[0][1], priceCurrency: 'KRW', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: r.time } } }));
+    offers.push(krw(r.child[0][1], `${l.resort} 리프트권 ${r.time} 소인(뽀드득 예약 특별할인가)`));
   }
-  for (const g of RENTAL) for (const it of g.items) {
-    const p = g.flat ? it.p[0] : it.p[0][1];
-    if (p) offers.push(krw(p, `${it.name} 렌탈 (${RENTAL_COLS[0]}, 예약가)`));
+  for (const R of RENTALS) for (const g of R.data.groups) for (const it of g.items) {
+    const p = it.p[0][1];
+    if (p) offers.push(krw(p, `${R.resort} ${it.name} 렌탈 (${R.data.cols[0]}, 예약 할인가)`));
   }
   for (const r of LESSON_FEE.rows) LESSON_FEE.hours.forEach((h, i) => offers.push(krw(r.p[i], `스키·보드 ${r.name} ${h}시간`)));
   return {

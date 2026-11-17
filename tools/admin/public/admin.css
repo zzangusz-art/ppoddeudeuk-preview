@@ -282,3 +282,5 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
   #printSheet{display:block!important}
   #printSheet .ps-team{break-after:page}#printSheet .ps-team:last-child{break-after:auto}#printSheet .ps-team+.ps-team{margin-top:0}
 }
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:640px){.row2{grid-template-columns:1fr}}
+.ptbl th small{display:block;font-weight:500;color:var(--sub);font-size:11.5px}

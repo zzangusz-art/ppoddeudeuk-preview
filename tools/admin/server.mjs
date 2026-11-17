@@ -115,22 +115,18 @@ const SECTIONS = {
     const base = DEFAULTS.lift; need(Array.isArray(v) && v.length === base.length, 400, '형식 오류');
     return base.map((b, i) => { const x = v[i] || {};
       const pair = (arr, ref) => ref.map((r, k) => [int((arr || [])[k]?.[0]), int((arr || [])[k]?.[1])]);
+      const pending = !!x.pending;
       const rows = b.rows.map((r, k) => { const y = (x.rows || [])[k] || {}; const o = { ...r, detail: (Array.isArray(y.detail) ? y.detail : r.detail).map(s => oneLine(s, 40)).filter(Boolean), adult: pair(y.adult, r.adult), child: pair(y.child, r.child) };
-        for (const [n, arr] of [['대인', o.adult], ['소인', o.child]]) for (const [a, d] of arr) need(!a || d <= a, 400, `${b.resort} ${r.time} ${n}: 할인가가 정상가보다 큽니다`);
+        if (!pending) for (const [n, arr] of [['대인', o.adult], ['소인', o.child]]) for (const [a, d] of arr) { need(a && d, 400, `${b.resort} ${r.time} ${n}: 정상가와 할인가를 입력해 주세요(공지 전이면 '공지 전' 체크)`); need(d <= a, 400, `${b.resort} ${r.time} ${n}: 할인가가 정상가보다 큽니다`); }
         return o; });
-      return { ...b, title: oneLine(x.title, 60) || b.title, note: text(x.note, 300) || b.note, seasons: (Array.isArray(x.seasons) ? x.seasons : b.seasons).map(s => oneLine(s, 30)).slice(0, b.seasons.length), rows };
+      const o = { ...b, title: oneLine(x.title, 60) || b.title, note: text(x.note, 300) || b.note, seasons: (Array.isArray(x.seasons) ? x.seasons : b.seasons).map(s => oneLine(s, 30)).slice(0, b.seasons.length), rows };
+      if (pending) o.pending = true; else delete o.pending;
+      if (b.badge != null) { o.badge = oneLine(x.badge ?? b.badge, 8); o.cond = oneLine(x.cond ?? b.cond, 30); }
+      return o;
     });
   } },
-  rental: { name: '렌탈 요금', clean: v => {
-    const base = DEFAULTS.rental; need(Array.isArray(v) && v.length === base.length, 400, '형식 오류');
-    return base.map((g, i) => { const items = (v[i] && Array.isArray(v[i].items) ? v[i].items : []).slice(0, 30).map((it, k) => {
-      const name = oneLine(it.name, 50); need(name, 400, `${g.group} ${k + 1}번째: 품목 이름을 입력해 주세요`);
-      const p = g.flat ? [0, 1, 2].map(j => int((it.p || [])[j])) : [0, 1, 2].map(j => [int((it.p || [])[j]?.[0]), int((it.p || [])[j]?.[1])]);
-      if (!g.flat) p.forEach(([a, b], j) => need(!a || b <= a, 400, `「${name}」 ${j + 1}타임: 예약가가 정상가보다 큽니다`));
-      const o = { name, p }; const sub = oneLine(it.sub, 80); if (sub) o.sub = sub; return o; });
-      need(items.length, 400, `${g.group}: 품목이 한 개는 있어야 합니다`);
-      return { ...g, items }; });
-  } },
+  rental: { name: '렌탈 요금(용평)', clean: v => cleanRental(v, DEFAULTS.rental) },
+  rentalAlp: { name: '렌탈 요금(알펜시아)', clean: v => cleanRental(v, DEFAULTS.rentalAlp) },
   lesson: { name: '강습 요금', clean: v => {
     const b = DEFAULTS.lesson; const rows = (Array.isArray(v.rows) ? v.rows : []).slice(0, 6).map((r, i) => { const name = oneLine(r.name, 20); need(name, 400, `${i + 1}번째 강습: 이름을 입력해 주세요`); return { name, p: b.hours.map((_, k) => int((r.p || [])[k])) }; });
     need(rows.length, 400, '강습 요금이 한 줄은 있어야 합니다');
@@ -138,6 +134,19 @@ const SECTIONS = {
   } },
 };
 
+// 렌탈 요금(스키장별): { cols, groups:[{ group, key, items:[{ name, sub, p:[[정상가, 예약할인가] × 구간] }] }] } — 구간·그룹은 기본값 그대로, 품목은 추가·삭제 가능
+function cleanRental(v, base) {
+  need(v && Array.isArray(v.groups) && v.groups.length === base.groups.length, 400, '형식 오류');
+  const n = base.cols.length;
+  const groups = base.groups.map((g, i) => { const items = (Array.isArray(v.groups[i].items) ? v.groups[i].items : []).slice(0, 30).map((it, k) => {
+    const name = oneLine(it.name, 50); need(name, 400, `${g.group} ${k + 1}번째: 품목 이름을 입력해 주세요`);
+    const p = Array.from({ length: n }, (_, j) => [int((it.p || [])[j]?.[0]), int((it.p || [])[j]?.[1])]);
+    p.forEach(([a, b2], j) => need(!a || b2 <= a, 400, `「${name}」 ${base.cols[j]}: 예약할인가가 정상가보다 큽니다`));
+    const o = { name, p }; const sub = oneLine(it.sub, 80); if (sub) o.sub = sub; return o; });
+    need(items.length, 400, `${g.group}: 품목이 한 개는 있어야 합니다`);
+    return { ...g, items }; });
+  return { ...base, groups };
+}
 async function readSiteJson() { const f = await store.read('content/site.json'); try { return f ? JSON.parse(f.text) : {}; } catch { return {}; } }
 
 // ── 화면 파일

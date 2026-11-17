@@ -483,16 +483,17 @@
   async function prices() {
     const tab = qs().get('t') || 'rental';
     const v = shell('요금 관리', { desc: '요금표 페이지·메인 요금 카드·예약 안내·검색엔진 구조화 데이터(가격)가 같이 바뀝니다. 0원은 홈페이지에 「문의」로 보입니다.', content: true,
-      tool: `<div class="seg">${[['rental', '렌탈 요금'], ['lift', '리프트 요금'], ['lesson', '강습 요금']].map(([k, n]) => `<a href="#/prices?t=${k}" class="${tab === k ? 'on' : ''}">${n}</a>`).join('')}</div>` });
+      tool: `<div class="seg">${[['rental', '렌탈(용평)'], ['rentalAlp', '렌탈(알펜시아)'], ['lift', '리프트 요금'], ['lesson', '강습 요금']].map(([k, n]) => `<a href="#/prices?t=${k}" class="${tab === k ? 'on' : ''}">${n}</a>`).join('')}</div>` });
     const d = await api('GET', `/api/admin/content/${tab}`); let val = clone(d.value);
     const draw = () => {
       let body = '';
-      if (tab === 'rental') body = val.map((g, gi) => `<section class="card"><div class="card-h"><h2>${h(g.group)}</h2><button class="btn sm" data-addrow="${gi}">${ico('plus')}품목 추가</button></div><div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>품목 · 설명</th>${g.flat ? ['1타임', '2타임', '3타임'].map(t => `<th>${t}</th>`).join('') : ['1타임', '2타임', '3타임'].map(t => `<th colspan="2">${t} 정상가 / 예약가</th>`).join('')}<th></th></tr></thead><tbody>
+      if (tab === 'rental' || tab === 'rentalAlp') body = val.groups.map((g, gi) => `<section class="card"><div class="card-h"><h2>${h(g.group)}</h2><button class="btn sm" data-addrow="${gi}">${ico('plus')}품목 추가</button></div><div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>품목 · 설명</th>${val.cols.map(t => `<th colspan="2">${h(t)}<small>정상가 / 예약할인가</small></th>`).join('')}<th></th></tr></thead><tbody>
           ${g.items.map((it, ii) => `<tr data-g="${gi}" data-r="${ii}"><td style="min-width:220px"><input class="in" data-k="name" value="${h(it.name)}" placeholder="품목 이름"><input class="in" data-k="sub" value="${h(it.sub || '')}" placeholder="설명(선택)" style="margin-top:6px;font-size:13px;height:36px"></td>
-            ${g.flat ? it.p.map((x, j) => `<td>${nin(x, `data-p="${j}"`)}</td>`).join('') : it.p.map((pp, j) => `<td>${nin(pp[0], `data-p="${j}" data-q="0"`)}</td><td>${nin(pp[1], `data-p="${j}" data-q="1"`)}</td>`).join('')}
+            ${it.p.map((pp, j) => `<td>${nin(pp[0], `data-p="${j}" data-q="0"`)}</td><td>${nin(pp[1], `data-p="${j}" data-q="1"`)}</td>`).join('')}
             <td style="white-space:nowrap"><button class="btn xs ghost" data-rmrow title="삭제">${ico('trash')}</button></td></tr>`).join('')}</tbody></table></div></section>`).join('');
-      if (tab === 'lift') body = val.map((r, ri) => `<section class="card"><div class="card-h"><h2>${h(r.resort)}</h2></div>
-          <div class="form-stack" style="margin-bottom:14px"><label class="fld"><span>표 제목</span><input class="in" data-top="${ri}" data-k="title" value="${h(r.title)}"></label><label class="fld"><span>안내 문구</span><textarea class="in" data-top="${ri}" data-k="note">${h(r.note)}</textarea></label></div>
+      if (tab === 'lift') body = val.map((r, ri) => `<section class="card"><div class="card-h"><h2>${h(r.resort)}</h2><label class="chk" style="margin:0"><input type="checkbox" data-pending="${ri}" ${r.pending ? 'checked' : ''}> 요금 공지 전(표 대신 안내 문구만)</label></div>
+          <div class="form-stack" style="margin-bottom:14px"><label class="fld"><span>표 제목</span><input class="in" data-top="${ri}" data-k="title" value="${h(r.title)}"></label><label class="fld"><span>안내 문구</span><textarea class="in" data-top="${ri}" data-k="note">${h(r.note)}</textarea></label>
+          ${r.badge != null ? `<div class="row2"><label class="fld"><span>강조 할인율 <small>배너의 큰 숫자</small></span><input class="in" data-top="${ri}" data-k="badge" value="${h(r.badge)}" placeholder="33%"></label><label class="fld"><span>적용 조건 <small>배너·표 제목 옆</small></span><input class="in" data-top="${ri}" data-k="cond" value="${h(r.cond || '')}" placeholder="이용 1일 전까지 예약 시"></label></div>` : ''}</div>
           <div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>구분</th><th>시간 안내(줄마다)</th>${r.seasons.map((s, si) => `<th colspan="2"><input class="in" data-season="${ri}:${si}" value="${h(s)}" style="height:32px;font-size:12.5px;text-align:center"><small>대인 정상 / 할인</small></th><th colspan="2"><small>소인 정상 / 할인</small></th>`).join('')}</tr></thead><tbody>
           ${r.rows.map((row, k) => `<tr data-lr="${ri}:${k}"><td><b>${h(row.time)}</b></td><td style="min-width:180px"><textarea class="in" data-detail style="min-height:80px;font-size:13px">${h(row.detail.join('\n'))}</textarea></td>
             ${row.adult.map((a, si) => `<td>${nin(a[0], `data-age="adult" data-s="${si}" data-q="0"`)}</td><td>${nin(a[1], `data-age="adult" data-s="${si}" data-q="1"`)}</td><td>${nin(row.child[si][0], `data-age="child" data-s="${si}" data-q="0"`)}</td><td>${nin(row.child[si][1], `data-age="child" data-s="${si}" data-q="1"`)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`).join('');
@@ -509,10 +510,11 @@
     const n = el => +String(el.value).replace(/\D/g, '') || 0;
     v.addEventListener('input', e => {
       const t = e.target;
-      if (tab === 'rental') { const tr = t.closest('[data-g]'); if (!tr) return; const it = val[+tr.dataset.g].items[+tr.dataset.r];
-        if (t.dataset.k) it[t.dataset.k] = t.value; else if (t.dataset.q != null) it.p[+t.dataset.p][+t.dataset.q] = n(t); else if (t.dataset.p != null) it.p[+t.dataset.p] = n(t); }
+      if (tab === 'rental' || tab === 'rentalAlp') { const tr = t.closest('[data-g]'); if (!tr) return; const it = val.groups[+tr.dataset.g].items[+tr.dataset.r];
+        if (t.dataset.k) it[t.dataset.k] = t.value; else if (t.dataset.q != null) it.p[+t.dataset.p][+t.dataset.q] = n(t); }
       if (tab === 'lift') {
-        if (t.dataset.top != null) val[+t.dataset.top][t.dataset.k] = t.value;
+        if (t.dataset.pending != null) val[+t.dataset.pending].pending = t.checked;
+        else if (t.dataset.top != null) val[+t.dataset.top][t.dataset.k] = t.value;
         else if (t.dataset.season) { const [a, b] = t.dataset.season.split(':'); val[+a].seasons[+b] = t.value; }
         else { const tr = t.closest('[data-lr]'); if (!tr) return; const [a, k] = tr.dataset.lr.split(':').map(Number), row = val[a].rows[k];
           if (t.dataset.detail != null) row.detail = t.value.split('\n'); else row[t.dataset.age][+t.dataset.s][+t.dataset.q] = n(t); }
@@ -523,8 +525,8 @@
     });
     v.addEventListener('click', async e => {
       const b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.addrow != null) { const g = val[+b.dataset.addrow]; g.items.push({ name: '', p: g.flat ? [0, 0, 0] : [[0, 0], [0, 0], [0, 0]] }); markDirty(); draw(); return; }
-      if (b.dataset.rmrow != null) { const tr = b.closest('[data-g]'); if (!confirm('이 품목을 지울까요?')) return; val[+tr.dataset.g].items.splice(+tr.dataset.r, 1); markDirty(); draw(); return; }
+      if (b.dataset.addrow != null) { const g = val.groups[+b.dataset.addrow]; g.items.push({ name: '', p: val.cols.map(() => [0, 0]) }); markDirty(); draw(); return; }
+      if (b.dataset.rmrow != null) { const tr = b.closest('[data-g]'); if (!confirm('이 품목을 지울까요?')) return; val.groups[+tr.dataset.g].items.splice(+tr.dataset.r, 1); markDirty(); draw(); return; }
       if (b.dataset.addles != null) { val.rows.push({ name: '', p: val.hours.map(() => 0) }); markDirty(); draw(); return; }
       if (b.dataset.rmles != null) { val.rows.splice(+b.closest('[data-les]').dataset.les, 1); markDirty(); draw(); return; }
       if (b.dataset.save != null) { b.disabled = true; try { const r = await api('POST', `/api/admin/content/${tab}`, { value: val }); val = clone(r.value); d.changed = true; saved(r, '요금'); draw(); } catch (err) { fail(err); b.disabled = false; } return; }
@@ -539,7 +541,7 @@
     const prev = () => `<div class="popprev">${p.img ? `<img src="${h(imgSrc(p.img))}" alt="">` : ''}${p.title || p.body ? `<div class="b">${p.title ? `<h3>${h(p.title)}</h3>` : ''}${p.body ? `<p>${h(p.body)}</p>` : ''}${p.link && p.linkText ? `<span class="btn pri sm">${h(p.linkText)}</span>` : ''}</div>` : ''}<div class="f"><span>오늘 하루 보지 않기</span><span>닫기</span></div></div>`;
     v.innerHTML = `<div class="cols"><section class="card"><div class="form-stack">
       <label class="toggle"><input type="checkbox" data-k="on"${p.on ? ' checked' : ''}>팝업 띄우기</label>
-      <label class="fld"><span>제목</span><input class="in" data-k="title" value="${h(p.title)}" maxlength="40" placeholder="예: 25/26 시즌 사전 예약 오픈"></label>
+      <label class="fld"><span>제목</span><input class="in" data-k="title" value="${h(p.title)}" maxlength="40" placeholder="예: 26/27 시즌 사전 예약 오픈"></label>
       <label class="fld"><span>내용</span><textarea class="in" data-k="body" maxlength="300" placeholder="예: 리프트권 사전 예약 시 최대 50% 할인">${h(p.body)}</textarea></label>
       <div class="fld"><span>사진 <small>선택</small></span><div style="display:flex;gap:8px"><button class="btn sm" data-pic>${ico('cam')}${p.img ? '사진 바꾸기' : '사진 올리기'}</button>${p.img ? '<button class="btn sm ghost danger" data-nopic>사진 빼기</button>' : ''}</div></div>
       <div class="grid2"><label class="fld"><span>버튼 연결 주소 <small>선택</small></span><input class="in" data-k="link" value="${h(p.link)}" placeholder="/reserve/ 또는 https://…"></label><label class="fld"><span>버튼 글자</span><input class="in" data-k="linkText" value="${h(p.linkText)}" placeholder="예약하기"></label></div>

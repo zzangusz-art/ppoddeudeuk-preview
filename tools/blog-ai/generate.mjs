@@ -29,19 +29,19 @@ const man = n => n % 10000 === 0 ? `${(n / 10000).toLocaleString('ko-KR')}만원
 
 // ── 사실 목록: 사이트 데이터(src/data.mjs, 어드민에서 고친 요금 포함)에서만 만든다. 순서를 고정해 프롬프트 캐시가 유지되게 한다
 function factSheet() {
-  const { SITE: S, SCALE, LIFT, RENTAL, RENTAL_COLS, LESSON_FEE, PROGRAM, RESORTS, STAY, INSTRUCTORS } = D;
+  const { SITE: S, SCALE, LIFT, RENTALS, LESSON_FEE, PROGRAM, RESORTS, STAY, INSTRUCTORS } = D;
   const L = [];
   L.push(`[업체] ${S.name}(${S.nameEn}, 이전 이름 겨울바라기·겨울바라기 AC). 대표 ${S.ceo}. 스키·스노보드 렌탈과 강습 전문점. 주소 ${S.address.full}(지번 ${S.address.old}). ${S.near}. 대표전화 ${S.phone}. 영업시간 ${S.hours}.`);
   L.push(`[매장 규모] ${SCALE.gear}, ${SCALE.wear}, ${SCALE.staff}(업체 제공). 다른 지점은 안내하지 않는다.`);
   L.push('[서비스] 리프트권 할인 예약 대행, 스키·보드 장비 렌탈, 스키복(의류) 렌탈, 헬멧·고글·보호대 렌탈, 1:1·2:1 스키·보드 강습, 용평리조트 콘도(타워·빌라·그린피아) 숙박 안내. 고객의 목적과 실력에 맞춰 장비를 추천하고, 매 시즌 장비 컨디션을 점검한다.');
-  for (const l of LIFT) L.push(`[리프트권 ${l.resort}, ${S.season}] ${l.note} ${l.rows.map(r => `${r.time}(${r.detail.join(', ')}): 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join(' / ')}${l.extra ? ` (${l.extra})` : ''}.`);
-  for (const r of RESORTS) L.push(`[이용타임 ${r.name}] ${r.times.map(t => `${t.name}: ${t.opts.map(([n, h]) => `${n} ${h}`).join(' 또는 ')}`).join(' / ')}. 정설시간 ${r.grooming}(${r.groomingNote}).`);
-  for (const g of RENTAL) L.push(`[렌탈 ${g.group}, 용평리조트 ${S.season}, 1·2·3타임 = ${RENTAL_COLS.join(' / ')}] ${g.items.map(it => `${it.name}${it.sub ? `(${it.sub})` : ''}: ${it.p.map((v, i) => g.flat ? `${i + 1}타임 ${v ? won(v) : '문의'}` : `${i + 1}타임 ${v[1] ? `예약가 ${won(v[1])}(정상가 ${won(v[0])})` : '문의'}`).join(', ')}`).join(' / ')}.`);
+  for (const l of LIFT) L.push(l.pending ? `[리프트권 ${l.resort}, ${S.season}] ${l.note} 금액은 쓰지 않는다.` : `[리프트권 ${l.resort}, ${S.season}] ${l.note} ${l.cond ? `조건: ${l.cond}, ${l.badge} 특별할인가. ` : ''}${l.rows.map(r => `${r.time}: 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join(' / ')}.`);
+  for (const r of RESORTS) L.push(`[이용권 ${r.name}] ${r.times.map(t => `${t.name}: ${t.opts.map(([n, h]) => [n, h].filter(Boolean).join(' ')).join(' 또는 ')}`).join(' / ')}. 정설시간 ${r.grooming}(${r.groomingNote}).`);
+  for (const R of RENTALS) for (const g of R.data.groups) L.push(`[렌탈 ${g.group}, ${R.resort} ${S.season}, 구간 = ${R.data.cols.join(' / ')}] ${g.items.map(it => `${it.name}${it.sub ? `(${it.sub})` : ''}: ${it.p.map((v, i) => `${R.data.cols[i]} ${v[1] ? `예약할인가 ${won(v[1])}(정상가 ${won(v[0])})` : '문의'}`).join(', ')}`).join(' / ')}.`);
   L.push(`[강습 요금] ${LESSON_FEE.rows.map(r => `${r.name} ${LESSON_FEE.hours.map((h, i) => `${h}시간 ${man(r.p[i])}`).join(', ')}`).join(' / ')}. ${LESSON_FEE.rules.join(' ')}`);
   for (const p of PROGRAM) L.push(`[강습 프로그램 ${p.name}] ${p.lead} 배우는 내용: ${[...new Set(p.rows.flatMap(r => r.learn || []))].join(', ')}.`);
   L.push(`[강사진] ${INSTRUCTORS.map(t => [t.name, t.cred].filter(Boolean).join(' ')).join(', ')}. 강사 개인의 경력·실적은 사실 목록에 없으면 쓰지 않는다.`);
   for (const s of STAY) L.push(`[숙박 ${s.name}(용평리조트)] ${s.lead} 객실: ${s.types.flatMap(t => t.rooms.map(r => `${r[1]}(${r[3]}, 투숙 ${r[4]})`)).join(', ')}. 비품: ${s.amenity.appliance}.`);
-  L.push('[예약 방법] 홈페이지 예약하기·견적문의(/reserve/, /quote/)에서 날짜·스키장·이용타임·장비·강습을 고르거나 전화. 리프트권 할인은 이용 1일 전까지 전화 예약 필수. 접수 후 문자 또는 전화로 확인 연락.');
+  L.push('[예약 방법] 홈페이지 예약하기·견적문의(/reserve/, /quote/)에서 날짜·스키장·이용타임·장비·강습을 고르거나 전화. 용평 리프트권 33% 특별할인가는 이용 1일 전까지 예약 시 적용. 접수 후 문자 또는 전화로 확인 연락.');
   return L.join('\n');
 }
 function allowedNumbers(sheet) {

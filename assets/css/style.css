@@ -700,3 +700,30 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .about-photos.ap4 .ap-0{grid-column:auto}
 .about-photos.ap4 .ap img,.about-photos.ap4 .ap-0 img{aspect-ratio:4/5;object-position:center 35%}
 @media (max-width:760px){.about-photos.ap4{gap:8px}}
+
+/* 예약 폼 이용권: 스키장마다 칸 수가 다름 */
+.bk-times{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tsel[hidden]{display:none!important}
+
+/* 리프트 33% 특별할인 강조 */
+.lift-promo{display:grid;grid-template-columns:auto 1fr auto;gap:clamp(16px,2.4vw,32px);align-items:center;margin:0 0 clamp(28px,3vw,40px);padding:clamp(20px,2.6vw,32px);border-radius:var(--r-lg);background:linear-gradient(120deg,#0e1a2b 0%,#1d3557 100%);color:#fff;box-shadow:var(--sh-lg);position:relative;overflow:hidden}
+.lift-promo::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(227,16,26,.18)}
+.lp-badge{width:clamp(108px,11vw,136px);aspect-ratio:1;border-radius:50%;background:var(--red);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(255,255,255,.12);flex:none;z-index:1}
+.lp-badge b{font-size:clamp(36px,4vw,48px);font-weight:900;line-height:1;letter-spacing:-.03em}.lp-badge span{font-size:14px;font-weight:800;margin-top:4px}
+.lp-body{z-index:1;min-width:0}
+.lp-k{margin:0 0 6px;font-size:14px;font-weight:700;color:#9fc3ff;letter-spacing:.02em}
+.lp-h{margin:0;font-size:clamp(22px,2.6vw,32px);font-weight:900;line-height:1.3;letter-spacing:-.02em}
+.lp-h em{font-style:normal;color:#ffd84d;box-shadow:inset 0 -.32em 0 rgba(255,216,77,.22)}.lp-h em.pct{color:#ff6b6b;font-size:1.25em;box-shadow:none}
+.lp-s{margin:10px 0 0;font-size:15px;color:#d6e2f3;line-height:1.6}.lp-s s{opacity:.7}.lp-s strong{color:#fff;font-size:1.1em}
+.lp-cta{display:flex;flex-direction:column;gap:8px;z-index:1;min-width:190px}.lp-cta .btn{justify-content:center}.lp-cta .btn-line{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}.lp-cta small{font-size:12px;color:#aebdd3;text-align:center}
+.rate-block .h3 .cond{display:inline-block;vertical-align:middle;margin-left:10px;font-size:14px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:4px 12px;letter-spacing:0}
+.rate-block .h3 .cond.grey{background:var(--snow2);color:var(--ink2)}
+.tbl-lift td.was s{color:var(--muted)}.tbl-lift td.big strong{font-size:1.25em;color:var(--red)}.tbl-lift td.save{font-size:14px;color:var(--ink2)}.tbl-lift td.save b{color:var(--red)}
+.tbl-lift th.t small{display:block;font-weight:500;font-size:12.5px;color:var(--muted);margin-top:4px}
+.pending-box{border:2px dashed var(--line);border-radius:var(--r-lg);padding:22px 24px;background:var(--snow);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}.pending-box b{font-size:16px;color:var(--ink)}.pending-box p{margin:0;flex:1 1 320px;color:var(--ink2)}
+.tbl-rental td.was s{color:var(--muted)}.tbl-rental thead small{display:block;font-weight:500;font-size:12px;color:var(--muted);margin-top:3px}
+.rental-jump{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}.rental-jump a{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);font-weight:800;background:#fff}.rental-jump a small{font-weight:600;color:var(--muted)}.rental-jump a:hover{border-color:var(--ink)}
+.tag33{display:inline-block;margin-left:6px;font-size:12px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:2px 8px;vertical-align:middle}
+@media (max-width:860px){.lift-promo{grid-template-columns:auto 1fr}.lp-cta{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0}.lp-cta .btn{flex:1 1 140px}.lp-cta small{width:100%}}
+@media (max-width:560px){.lift-promo{grid-template-columns:1fr;text-align:center}.lp-badge{margin:0 auto}.rate-block .h3 .cond{display:block;width:fit-content;margin:8px 0 0}}
+@media (max-width:560px){.tbl-time{font-size:13.5px}.tbl-time th{white-space:nowrap;min-width:52px}.tbl-time .tt{display:block}}
