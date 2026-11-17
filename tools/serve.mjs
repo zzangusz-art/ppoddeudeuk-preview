@@ -4,7 +4,8 @@
 //   환경변수
 //     DATA_DIR=/data            Railway 볼륨 — 접수 DB(ppoddeudeuk.db)·계정·방문 집계 저장(없으면 재배포 때 사라짐)
 //     SESSION_SECRET, ADMIN_USERS  어드민 로그인(tools/admin/make-users.mjs 가 만들어 줌)
-//     GITHUB_TOKEN              어드민에서 고친 사이트 내용을 저장소에 커밋(→ 자동 재배포)
+//     (기본) 어드민에서 고친 사이트 내용·사진은 DATA_DIR 볼륨에 저장 → 서버가 바로 다시 빌드(tools/admin/store.mjs)
+//     ADMIN_STORE=github + GITHUB_TOKEN  예전 방식: 저장소에 커밋(→ 자동 재배포)
 //     ALLOW_ORIGINS             다른 주소의 홈페이지가 접수를 보낼 수 있게(기본 https://zzangusz-art.github.io)
 //     SITE_NOINDEX=1            미리보기로 쓸 때: 모든 응답 noindex, robots 전체 차단
 //     CANONICAL_HOST=도메인     다른 호스트로 온 요청을 https://도메인 으로 301(도메인 연결 뒤)

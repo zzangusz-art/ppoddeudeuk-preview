@@ -33,16 +33,17 @@
     clearInterval(watcher);
     if (ME.store === 'demo') { setDeploy('pending', '데모 — 실제로 저장되지 않습니다'); return; }
     if (!sha || String(sha).startsWith('local')) { setDeploy('success', '저장됨(로컬 시험)'); return; }
-    setDeploy('pending', '사이트 반영 중… (약 1~2분)'); let n = 0;
+    const vol = String(sha).startsWith('vol-');
+    setDeploy('pending', vol ? '사이트 반영 중… (몇 초)' : '사이트 반영 중… (약 1~2분)'); let n = 0;
     watcher = setInterval(async () => {
       n++;
       try { const s = await api('GET', `/api/admin/status/${sha}`);
         if (s.state === 'success') { setDeploy('success', '사이트 반영 완료'); clearInterval(watcher); }
         else if (s.state === 'failure') { setDeploy('failure', '사이트 반영 실패 — 관리자에게 알려 주세요'); clearInterval(watcher); } } catch { /* 다음에 */ }
       if (n > 30) { clearInterval(watcher); setDeploy('', ''); }
-    }, 12000);
+    }, vol ? 2500 : 12000);
   }
-  const saved = (r, what) => { dirty = false; toast(ME.store === 'demo' ? `데모 화면이라 ${what}은(는) 실제로 저장되지 않습니다` : `${what} 저장했습니다. ${ME.store === 'local' ? '' : '약 1~2분 뒤 홈페이지에 반영됩니다.'}`); watchDeploy(r.commit); };
+  const saved = (r, what) => { dirty = false; toast(ME.store === 'demo' ? `데모 화면이라 ${what}은(는) 실제로 저장되지 않습니다` : `${what} 저장했습니다. ${ME.store === 'local' ? '' : ME.store === 'volume' ? '몇 초 뒤 홈페이지에 반영됩니다.' : '약 1~2분 뒤 홈페이지에 반영됩니다.'}`); watchDeploy(r.commit); };
 
   // ── 사진: 큰 사진은 줄여서(WebP, 안 되면 JPEG) 올린다
   const previews = {};   // 방금 올린 사진 경로 → 미리보기(배포 전에도 보이게)

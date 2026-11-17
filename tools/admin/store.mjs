@@ -5,10 +5,87 @@
 //   접수(이름·연락처)는 여기가 아니라 db.mjs(SQLite)에 — 저장소에는 개인정보를 넣지 않는다
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 
+//   볼륨(운영 기본): DATA_DIR 이 있으면 Railway 볼륨에 저장하고 서버가 바로 다시 빌드(수 초). GitHub 토큰 불필요.
+//     재배포(코드 변경)로 컨테이너가 새로 떠도 시작할 때 볼륨 내용을 다시 덮어써서 담당자가 올린 내용이 남는다.
+//     ADMIN_STORE=github 로 예전 방식(커밋 → 자동 재배포)을 강제할 수 있다.
 export function makeStore(root) {
-  return process.env.ADMIN_STORE === 'local' ? localStore(process.env.ADMIN_LOCAL_ROOT || root) : githubStore();
+  const mode = process.env.ADMIN_STORE || (process.env.DATA_DIR ? 'volume' : 'github');
+  if (mode === 'local') return localStore(process.env.ADMIN_LOCAL_ROOT || root);
+  if (mode === 'volume' && process.env.DATA_DIR) return volumeStore(root, path.join(process.env.DATA_DIR, 'content-store'));
+  return githubStore();
+}
+
+// ── 볼륨 저장소
+//   overlay/site-overrides.json : content/site.json 중 저장소(배포본)와 다른 항목만(키 단위) → 코드 쪽 site.json 변경과 섞여도 안 덮어씀
+//   overlay/files/assets/img/up/… : 담당자가 올린 사진
+//   저장 = 볼륨에 기록 + 실행 중인 폴더에 반영 → build.mjs 를 dist-next 에 돌려 dist 와 바꿔치기(중단 없이)
+function volumeStore(root, dir) {
+  const OV = path.join(dir, 'site-overrides.json'), FILES = path.join(dir, 'files'), LOG = path.join(dir, 'log.txt');
+  const SITE = path.join(root, 'content', 'site.json');
+  const DIST = path.resolve(root, process.env.DIST || 'dist'), NEXT = DIST + '-next', OLD = DIST + '-old';
+  const ALLOW = /^(content\/site\.json|assets\/img\/up\/[\w.\-/]+)$/;
+  const readJson = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return {}; } };
+  const repoSite = readJson(SITE);   // 배포본(코드) 기준값 — 시작 시점에 한 번
+  const abs = (base, p) => { const a = path.resolve(base, p); if (!a.startsWith(path.resolve(base) + path.sep)) throw new Error('경로 오류'); return a; };
+  const merge = ov => { const s = { ...repoSite }; for (const [k, v] of Object.entries(ov)) { if (v && v.__deleted) delete s[k]; else s[k] = v; } return s; };
+  const walk = d => fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]) : [];
+
+  let seq = 0, built = 0, failed = 0, building = null, again = false;
+  async function rebuild() {
+    if (building) { again = true; return building; }
+    const n = seq;
+    building = (async () => {
+      try {
+        if (!fs.existsSync(NEXT) && fs.existsSync(OLD)) fs.renameSync(OLD, NEXT);
+        await new Promise((ok, no) => execFile(process.execPath, ['build.mjs', '--out', path.relative(root, NEXT)], { cwd: root, env: process.env, timeout: 120000 }, (e, so, se) => e ? no(new Error((se || e.message).slice(-400))) : ok()));
+        fs.rmSync(OLD, { recursive: true, force: true });
+        fs.renameSync(DIST, OLD); fs.renameSync(NEXT, DIST); fs.renameSync(OLD, NEXT);   // 다음 빌드는 자원 복사 없이 빠르게
+        built = Math.max(built, n);
+      } catch (e) { failed = n; console.error('사이트 다시 만들기 실패:', e.message); }
+      finally { building = null; if (again) { again = false; rebuild(); } }
+    })();
+    return building;
+  }
+
+  // 시작: 볼륨 내용을 실행 폴더에 덮어쓰고, 있으면 한 번 다시 빌드
+  fs.mkdirSync(FILES, { recursive: true });
+  const ov0 = readJson(OV), up0 = walk(FILES);
+  for (const f of up0) { const rel = path.relative(FILES, f); fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.copyFileSync(f, path.join(root, rel)); }
+  if (Object.keys(ov0).length || up0.length) { fs.writeFileSync(SITE, JSON.stringify(merge(ov0), null, 1) + '\n'); seq++; rebuild(); }
+
+  return {
+    kind: 'volume', ready: () => true,
+    async read(p) { const a = abs(root, p); return fs.existsSync(a) ? { text: fs.readFileSync(a, 'utf8'), sha: String(fs.statSync(a).mtimeMs) } : null; },
+    async commit(files, message) {
+      for (const f of files) if (!ALLOW.test(f.path)) throw Object.assign(new Error('이 항목은 볼륨 저장소에서 바꿀 수 없습니다(관리자에게 요청)'), { status: 400 });
+      for (const f of files) {
+        if (f.path === 'content/site.json') {
+          const next = JSON.parse(f.text), ov = {};
+          for (const k of new Set([...Object.keys(repoSite), ...Object.keys(next)])) {
+            if (!(k in next)) ov[k] = { __deleted: true };
+            else if (JSON.stringify(next[k]) !== JSON.stringify(repoSite[k])) ov[k] = next[k];
+          }
+          fs.writeFileSync(OV + '.tmp', JSON.stringify(ov, null, 1)); fs.renameSync(OV + '.tmp', OV);
+          fs.writeFileSync(SITE, JSON.stringify(merge(ov), null, 1) + '\n');
+          continue;
+        }
+        const v = abs(FILES, f.path), r = abs(root, f.path);
+        if (f.delete) { fs.rmSync(v, { force: true }); fs.rmSync(r, { force: true }); continue; }
+        const buf = f.base64 != null ? Buffer.from(f.base64, 'base64') : Buffer.from(f.text);
+        for (const a of [v, r]) { fs.mkdirSync(path.dirname(a), { recursive: true }); fs.writeFileSync(a, buf); }
+      }
+      fs.appendFileSync(LOG, `${new Date().toISOString()}\t${message.split('\n')[0].replace(/\t/g, ' ')}\t${files.length}\n`);
+      const n = ++seq; rebuild();
+      return { sha: 'vol-' + n };
+    },
+    async recent(n = 20) {
+      try { return fs.readFileSync(LOG, 'utf8').trim().split('\n').slice(-n).reverse().map(l => { const [date, message] = l.split('\t'); return { sha: 'volume', message, author: '어드민', date }; }); }
+      catch { return []; }
+    },
+    async status(sha) { const n = +String(sha).replace(/^vol-/, '') || 0; return { state: built >= n ? 'success' : failed >= n ? 'failure' : 'pending' }; },
+  };
 }
 
 function githubStore() {
