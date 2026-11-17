@@ -120,7 +120,7 @@ export function home(u, posts = []) {
     </ul>
     <a class="link-more" href="${u('about/')}">소개 및 내부전경 보기 ${ICON.arrow}</a>
   </div>
-  <div class="about-photos reveal">${['interior-5', 'interior-1', 'interior-3'].map((k, i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/store/${k}.webp`)}" data-lb-group="home-store" data-lb-cap="${esc(ABOUT.interior.find(x => x[0] === k)[1])}">${phImg(u, `assets/img/store/${k}.webp`, ABOUT.interior.find(x => x[0] === k)[1], { sizes: '(max-width: 760px) 50vw, 25vw' })}</button>`).join('')}</div>
+  <div class="about-photos ap4 reveal">${ABOUT.homePhotos.map(([k, t], i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/${k}.webp`)}" data-lb-group="home-store" data-lb-cap="${esc(t)}">${phImg(u, `assets/img/${k}.webp`, `뽀드득 ${t}`, { sizes: '(max-width: 760px) 50vw, 22vw' })}</button>`).join('')}</div>
 </div></section>
 
 <section class="sec main-rates" id="rates">

@@ -695,3 +695,8 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .sz-why li b{color:var(--ink);font-weight:800;background:#fff;border:1px solid #f3c4c6;border-radius:6px;text-align:center;padding:1px 0;height:fit-content}
 .sz-warn{margin:12px 0 0;padding:11px 14px;background:#e3f3ff;border:2px solid #4cb4ee;color:#0b3a5c;border-radius:8px;line-height:1.65}.sz-warn strong{font-weight:900;color:#0a6aa8}
 @media (max-width:760px){.sz-why{padding:14px}.sz-why li{grid-template-columns:1fr;gap:3px}.sz-why li b{width:fit-content;padding:1px 10px}}
+
+/* 메인 소개 옆 사진 2×2(세로 사진) */
+.about-photos.ap4 .ap-0{grid-column:auto}
+.about-photos.ap4 .ap img,.about-photos.ap4 .ap-0 img{aspect-ratio:4/5;object-position:center 35%}
+@media (max-width:760px){.about-photos.ap4{gap:8px}}
