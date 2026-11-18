@@ -42,13 +42,12 @@ function volumeStore(root, dir) {
     building = (async () => {
       const t0 = Date.now(); let stepName = 'prepare';
       try {
-        if (!fs.existsSync(NEXT) && fs.existsSync(OLD)) fs.renameSync(OLD, NEXT);
         stepName = 'build';
         await new Promise((ok, no) => execFile(process.execPath, ['build.mjs', '--out', path.relative(root, NEXT)], { cwd: root, env: process.env, timeout: 240000, maxBuffer: 8 * 1024 * 1024 }, (e, so, se) => e ? no(new Error(`${e.code ?? ''} ${e.signal ?? ''} ${(se || '').slice(-600)} ${(so || '').slice(-300)}`.trim() || e.message)) : ok()));
-        stepName = 'swap';
-        fs.rmSync(OLD, { recursive: true, force: true });
-        fs.renameSync(DIST, OLD); fs.renameSync(NEXT, DIST); fs.renameSync(OLD, NEXT);   // 다음 빌드는 자원 복사 없이 빠르게
-        built = Math.max(built, n); record({ ok: true, ms: Date.now() - t0 });
+        // 폴더 통째 바꿔치기는 Railway(컨테이너 이미지 층)에서 EXDEV 로 실패 → 바뀐 파일만 dist 에 덮어쓰고, 없어진 파일은 지운다
+        stepName = 'sync';
+        const changed = syncDir(NEXT, DIST);
+        built = Math.max(built, n); record({ ok: true, ms: Date.now() - t0, changed });
       } catch (e) { failed = n; console.error('사이트 다시 만들기 실패:', stepName, e.message); record({ ok: false, step: stepName, ms: Date.now() - t0, error: String(e.message || e).replaceAll(root, '.').slice(0, 900) }); }
       finally { building = null; if (again) { again = false; rebuild(); } }
     })();
@@ -61,6 +60,15 @@ function volumeStore(root, dir) {
   for (const f of up0) { const rel = path.relative(FILES, f); fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.copyFileSync(f, path.join(root, rel)); }
   if (Object.keys(ov0).length || up0.length) { fs.writeFileSync(SITE, JSON.stringify(merge(ov0), null, 1) + '\n'); seq++; rebuild(); }
 
+  // src 의 파일을 dst 에 맞춘다(크기·내용이 다른 파일만 복사, src 에 없는 파일은 삭제). 큰 파일(영상 등)은 크기·수정시각으로만 비교
+  function syncDir(src, dst) {
+    let n = 0;
+    const same = (a, b) => { const x = fs.statSync(a), y = fs.statSync(b, { throwIfNoEntry: false }); if (!y || x.size !== y.size) return false; if (x.size > 2 * 1024 * 1024) return y.mtimeMs >= x.mtimeMs; return fs.readFileSync(a).equals(fs.readFileSync(b)); };
+    const srcFiles = new Set();
+    for (const f of walk(src)) { const rel = path.relative(src, f), t = path.join(dst, rel); srcFiles.add(rel); if (same(f, t)) continue; fs.mkdirSync(path.dirname(t), { recursive: true }); fs.copyFileSync(f, t + '.tmp'); fs.renameSync(t + '.tmp', t); n++; }
+    for (const f of walk(dst)) { const rel = path.relative(dst, f); if (!srcFiles.has(rel)) { fs.rmSync(f, { force: true }); n++; } }
+    return n;
+  }
   return {
     kind: 'volume', ready: () => true,
     async read(p) { const a = abs(root, p); return fs.existsSync(a) ? { text: fs.readFileSync(a, 'utf8'), sha: String(fs.statSync(a).mtimeMs) } : null; },
