@@ -230,7 +230,7 @@ export function faqPage(u) {
 export function gallery(u) {
   return subHead(u, { eyebrow: 'GALLERY', title: '갤러리', lead: '의류 · 장비 · 장비관리 · 강습', bg: 'scene/duo.webp', crumbs: [['갤러리']] })
     + `<section class="sec"><div class="wrap">
-  ${tabsBar('gal', [['all', '전체'], ...GALLERY_CATS.map(c => [c, c + ' 갤러리'])])}
+  ${tabsBar('gal', [['all', '전체'], ...GALLERY_CATS.map(c => [c, c])])}
   <div class="gal-grid" data-filter-grid="gal">${galleryItems(u, GALLERY, 'gal')}<p class="gal-empty" hidden>등록된 사진을 준비하고 있습니다.</p></div>
   <p class="note">중고장비 직거래 사진은 <a href="${u('secondhand/')}">중고장비 직거래장터</a>에서 볼 수 있습니다.</p>
 </div></section>`;

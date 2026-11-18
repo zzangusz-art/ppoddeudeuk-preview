@@ -6,7 +6,7 @@ import { esc, jsonld } from './lib.mjs';
 export const NAV = [
   // 기존 홈페이지 전체 메뉴 그대로(soon = 기존에도 '준비중'이던 항목: 누르면 안내)
   { name: '뽀드득 안내', href: 'about/', sec: ['about', 'location', 'notice', 'faq', 'blog'], sub: [['공지사항', 'notice/'], ['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['자주 묻는 질문', 'faq/'], ['블로그', 'blog/']] },
-  { name: '갤러리', href: 'gallery/', sec: ['gallery'], sub: [['의류 갤러리', 'gallery/#의류'], ['장비 갤러리', 'gallery/#장비'], ['장비관리 갤러리', 'gallery/#장비관리'], ['강습 갤러리', 'gallery/#강습'], ['중고장비 직거래 갤러리', 'secondhand/']] },
+  { name: '갤러리', href: 'gallery/', sec: ['gallery'], sub: [['의류', 'gallery/#의류'], ['장비', 'gallery/#장비'], ['장비관리', 'gallery/#장비관리'], ['강습', 'gallery/#강습'], ['중고장비 직거래', 'secondhand/']] },
   { name: '요금안내', href: 'rates/lift/', sec: ['rates'], sub: [['리프트 요금', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']] },
   { name: '숙박안내', href: 'stay/tower/', sec: ['stay'], sub: [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/'], ['알펜시아 콘도', 'soon']] },
   { name: '강습안내', href: 'lesson/', sec: ['lesson'], sub: [['강습 요금', 'lesson/'], ['강사진 소개', 'lesson/instructors/'], ['강습 프로그램', 'lesson/program/']] },

@@ -738,3 +738,5 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .vbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:46px;border-radius:12px;background:var(--red);color:#fff;font-size:22px;display:grid;place-items:center}
 .vframe{display:block;width:100%;aspect-ratio:16/9;border:0}
 .vcard figcaption{background:#fff;padding:10px 14px;font-weight:700;font-size:14.5px}
+/* 리프트 배너 뒷배경: 스키장 사진 위에 남색을 덮어 글씨가 잘 보이게 */
+.lift-promo{background:linear-gradient(100deg,rgba(14,26,43,.94) 0%,rgba(14,26,43,.84) 45%,rgba(29,53,87,.62) 100%),url('../img/scene/group.webp') center 60%/cover no-repeat}
