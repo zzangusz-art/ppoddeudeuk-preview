@@ -740,3 +740,10 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .vcard figcaption{background:#fff;padding:10px 14px;font-weight:700;font-size:14.5px}
 /* 리프트 배너 뒷배경: 스키장 사진 위에 남색을 덮어 글씨가 잘 보이게 */
 .lift-promo{background:linear-gradient(100deg,rgba(14,26,43,.94) 0%,rgba(14,26,43,.84) 45%,rgba(29,53,87,.62) 100%),url('../img/scene/group.webp') center 60%/cover no-repeat}
+/* 예약 폼 등급 줄: PC 에서 품목 5개가 한 줄에 */
+@media (min-width:1101px){
+  .bk-grade .qgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .bk-grade .qty{padding:6px 6px 6px 10px;gap:6px}
+  .bk-grade .qn{font-size:13px;letter-spacing:-.02em}
+  .bk-grade .qc button{width:24px}.bk-grade .qc input{width:26px}
+}
