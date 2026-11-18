@@ -220,6 +220,9 @@ route('POST', '/api/admin/content/:key', 'client', async ({ params, data, user }
   return { ok: true, commit: c.sha, value: site[params.key] ?? DEFAULTS[params.key] };
 });
 route('GET', '/api/admin/status/:sha', 'client', async ({ params }) => store.status(params.sha));
+// 사이트 다시 만들기 상태(공개: 성공 여부·시각만, 오류 문구는 로그인한 관리자에게) · 관리자 수동 다시 만들기
+route('GET', '/api/admin/build', null, async ({ user }) => { const i = store.info ? store.info() : { kind: store.kind }; const l = i.last || null; return { kind: i.kind, building: !!i.building, last: l && (user ? l : { ok: l.ok, at: l.at, step: l.step, ms: l.ms }) }; });
+route('POST', '/api/admin/build', 'client', async ({ user }) => { need(store.rebuildNow, 400, '이 저장 방식에서는 쓸 수 없습니다'); await store.rebuildNow(); DB.audit(user.name, '사이트 다시 만들기'); return store.info(); });
 
 // 블로그(매일 09·13·18시 자동 발행) — 글은 저장소 content/blog, 이 서버에 배포된 것 기준으로 보여 준다
 route('GET', '/api/admin/blog', 'owner', async () => {

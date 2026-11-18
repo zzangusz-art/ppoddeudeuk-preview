@@ -32,18 +32,24 @@ function volumeStore(root, dir) {
   const merge = ov => { const s = { ...repoSite }; for (const [k, v] of Object.entries(ov)) { if (v && v.__deleted) delete s[k]; else s[k] = v; } return s; };
   const walk = d => fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]) : [];
 
+  const STATUS_FILE = path.join(dir, 'build-status.json');
   let seq = 0, built = 0, failed = 0, building = null, again = false;
+  let last = (() => { try { return JSON.parse(fs.readFileSync(STATUS_FILE, 'utf8')); } catch { return null; } })();
+  const record = o => { last = { ...o, at: new Date().toISOString() }; try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(STATUS_FILE, JSON.stringify(last)); } catch { /* 기록 실패는 무시 */ } };
   async function rebuild() {
     if (building) { again = true; return building; }
     const n = seq;
     building = (async () => {
+      const t0 = Date.now(); let stepName = 'prepare';
       try {
         if (!fs.existsSync(NEXT) && fs.existsSync(OLD)) fs.renameSync(OLD, NEXT);
-        await new Promise((ok, no) => execFile(process.execPath, ['build.mjs', '--out', path.relative(root, NEXT)], { cwd: root, env: process.env, timeout: 120000 }, (e, so, se) => e ? no(new Error((se || e.message).slice(-400))) : ok()));
+        stepName = 'build';
+        await new Promise((ok, no) => execFile(process.execPath, ['build.mjs', '--out', path.relative(root, NEXT)], { cwd: root, env: process.env, timeout: 240000, maxBuffer: 8 * 1024 * 1024 }, (e, so, se) => e ? no(new Error(`${e.code ?? ''} ${e.signal ?? ''} ${(se || '').slice(-600)} ${(so || '').slice(-300)}`.trim() || e.message)) : ok()));
+        stepName = 'swap';
         fs.rmSync(OLD, { recursive: true, force: true });
         fs.renameSync(DIST, OLD); fs.renameSync(NEXT, DIST); fs.renameSync(OLD, NEXT);   // 다음 빌드는 자원 복사 없이 빠르게
-        built = Math.max(built, n);
-      } catch (e) { failed = n; console.error('사이트 다시 만들기 실패:', e.message); }
+        built = Math.max(built, n); record({ ok: true, ms: Date.now() - t0 });
+      } catch (e) { failed = n; console.error('사이트 다시 만들기 실패:', stepName, e.message); record({ ok: false, step: stepName, ms: Date.now() - t0, error: String(e.message || e).replaceAll(root, '.').slice(0, 900) }); }
       finally { building = null; if (again) { again = false; rebuild(); } }
     })();
     return building;
@@ -84,7 +90,9 @@ function volumeStore(root, dir) {
       try { return fs.readFileSync(LOG, 'utf8').trim().split('\n').slice(-n).reverse().map(l => { const [date, message] = l.split('\t'); return { sha: 'volume', message, author: '어드민', date }; }); }
       catch { return []; }
     },
-    async status(sha) { const n = +String(sha).replace(/^vol-/, '') || 0; return { state: built >= n ? 'success' : failed >= n ? 'failure' : 'pending' }; },
+    async status(sha) { const n = +String(sha).replace(/^vol-/, '') || 0; return { state: built >= n ? 'success' : failed >= n ? 'failure' : 'pending', ...(failed >= n && last && !last.ok ? { error: last.error } : {}) }; },
+    info: () => ({ kind: 'volume', building: !!building, last }),
+    rebuildNow: () => { seq++; return rebuild(); },
   };
 }
 

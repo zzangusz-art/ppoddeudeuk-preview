@@ -39,7 +39,7 @@
       n++;
       try { const s = await api('GET', `/api/admin/status/${sha}`);
         if (s.state === 'success') { setDeploy('success', '사이트 반영 완료'); clearInterval(watcher); }
-        else if (s.state === 'failure') { setDeploy('failure', '사이트 반영 실패 — 관리자에게 알려 주세요'); clearInterval(watcher); } } catch { /* 다음에 */ }
+        else if (s.state === 'failure') { setDeploy('failure', '사이트 반영 실패 — 대시보드에서 다시 시도해 주세요'); if (s.error) console.warn('사이트 반영 실패:', s.error); clearInterval(watcher); } } catch { /* 다음에 */ }
       if (n > 30) { clearInterval(watcher); setDeploy('', ''); }
     }, vol ? 2500 : 12000);
   }
@@ -179,13 +179,14 @@
   // ── 대시보드
   async function dashboard() {
     const v = shell('대시보드', { desc: `${h(ME.user.name)}님, 오늘 들어온 접수와 홈페이지 방문을 한눈에 확인하세요.`, tool: `<a class="btn sm" href="${BASE}" target="_blank" rel="noopener">${ico('out')}홈페이지</a>` });
-    const d = await api('GET', '/api/admin/dashboard');
+    const [d, bs] = await Promise.all([api('GET', '/api/admin/dashboard'), api('GET', '/api/admin/build').catch(() => null)]);
     const c = d.counts, warn = [];
+    const buildBad = bs && bs.last && bs.last.ok === false;
     if (ME.user.weakPw) warn.push('비밀번호가 짧아(4자리 등) 남이 맞히기 쉽습니다. 고객 연락처가 담긴 화면이니 왼쪽 아래 「내 계정」에서 10자 이상(영문+숫자)으로 바꿔 주세요.');
     if (!ME.dbPersistent) warn.push('접수 DB가 서버 볼륨(DATA_DIR)에 연결되어 있지 않아 다시 배포하면 접수 기록이 사라질 수 있습니다. 관리자에게 알려 주세요.');
     if (!d.statsPersistent && ME.user.role === 'owner') warn.push('방문 집계 저장소(DATA_DIR)가 없어 서버를 다시 시작하면 통계가 초기화됩니다.');
     const uv7 = d.visits.slice(-7).reduce((a, b) => a + b.uv, 0);
-    v.innerHTML = `${warn.map(w => `<div class="box warn">${h(w)}</div>`).join('')}
+    v.innerHTML = `${buildBad ? `<div class="box bad"><b>홈페이지 반영이 실패했습니다</b> (${h(String(bs.last.at || '').slice(0, 16).replace('T', ' '))}) — 저장한 내용·사진은 남아 있습니다. <button class="btn sm" id="rebuild">다시 반영하기</button>${bs.last.error ? `<details style="margin-top:6px"><summary>오류 내용(관리자 전달용)</summary><pre style="white-space:pre-wrap;font-size:12px">${h(bs.last.error)}</pre></details>` : ''}</div>` : ''}${warn.map(w => `<div class="box warn">${h(w)}</div>`).join('')}
       <div class="kpis">
         <a class="kpi hot" href="#/leads?status=new"><span>${ico('bell')}확인할 새 접수</span><b>${num(c.byStatus.new)}건</b><small>아직 연락하지 않은 접수</small></a>
         <a class="kpi" href="#/leads"><span>오늘 접수</span><b>${num(c.today)}건</b><small>이번 달 ${num(c.month)}건 · 전체 ${num(c.total)}건</small></a>
@@ -202,6 +203,7 @@
         <a href="#/notices">${ico('notice')}공지 쓰기</a><a href="#/gallery">${ico('photo')}갤러리 사진 올리기</a><a href="#/prices">${ico('won')}요금 수정</a><a href="#/popup">${ico('pop')}팝업 띄우기</a></div>
         ${'Notification' in window && Notification.permission === 'default' ? `<p class="help" style="margin-top:14px"><button class="btn sm" id="notiOn">${ico('bell')}새 접수 알림 켜기</button> 이 화면을 열어 두면 새 접수가 들어올 때 알려 드립니다.</p>` : ''}</section>`;
     v.addEventListener('click', e => { const li = e.target.closest('[data-lead]'); if (li) openLead(li.dataset.lead); });
+    const rb = $('#rebuild'); if (rb) rb.onclick = async () => { rb.disabled = true; rb.textContent = '반영 중…'; try { const r = await api('POST', '/api/admin/build'); toast(r.last && r.last.ok ? '홈페이지에 반영했습니다' : '다시 실패했습니다. 오류 내용을 관리자에게 보내 주세요'); dashboard(); } catch (e) { fail(e); rb.disabled = false; } };
     const nb = $('#notiOn'); if (nb) nb.onclick = async () => { const p = await Notification.requestPermission(); toast(p === 'granted' ? '새 접수 알림을 켰습니다' : '알림이 허용되지 않았습니다'); nb.parentElement.remove(); };
   }
 

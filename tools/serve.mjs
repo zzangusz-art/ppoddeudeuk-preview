@@ -26,8 +26,11 @@ const TEXT = /^(text\/|application\/(json|xml)|image\/svg)/;
 const cacheFor = type => /^text\/(html|plain)|application\/(xml|json)/.test(type) ? 'no-cache' : /javascript|text\/css/.test(type) ? 'public, max-age=3600' : 'public, max-age=604800';
 if (!fs.existsSync(path.join(ROOT, 'index.html'))) { console.error(`${ROOT}/index.html 없음 — 먼저 node build.mjs`); process.exit(1); }
 
+// 어드민에서 올린 사진: 사이트를 다시 만들기 전이라도 볼륨에서 바로 내보낸다(어드민 미리보기·홈페이지 공통)
+const UPLOADS = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'content-store', 'files') : null;
 function resolve(urlPath) {
   let p; try { p = decodeURIComponent(urlPath); } catch { return null; }
+  if (UPLOADS && p.startsWith('/assets/img/up/')) { const a = path.join(UPLOADS, p); if (a.startsWith(UPLOADS + path.sep)) { const st = fs.statSync(a, { throwIfNoEntry: false }); if (st && st.isFile()) return { abs: a, st }; } }
   const abs = path.join(ROOT, p);
   if (abs !== ROOT && !abs.startsWith(ROOT + path.sep)) return null;
   for (const cand of [abs, path.join(abs, 'index.html')]) { const st = fs.statSync(cand, { throwIfNoEntry: false }); if (st && st.isFile()) return { abs: cand, st }; }
