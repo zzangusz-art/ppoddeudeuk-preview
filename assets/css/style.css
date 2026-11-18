@@ -747,3 +747,5 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
   .bk-grade .qn{font-size:13px;letter-spacing:-.02em}
   .bk-grade .qc button{width:24px}.bk-grade .qc input{width:26px}
 }
+/* PC 에서만 줄바꿈 */
+br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}

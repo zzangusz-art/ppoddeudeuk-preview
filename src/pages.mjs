@@ -114,7 +114,7 @@ export function home(u, posts = []) {
   <div class="reveal">
     <p class="eyebrow">ABOUT PPODDEUDEUK</p>
     <h2 class="h2">뽀드득은 어떤 곳인가요?</h2>
-    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
+    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고,<br class="br-pc"> 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중<br class="br-pc"> 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
     <ul class="facts">
       <li><b>리프트권</b>용평 4시간권 대인 ${won(79000)} → <em>${won(53000)}</em> <span class="tag33">1일 전 예약 33%</span></li>
       <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(15000)}</em>부터</li>
@@ -188,7 +188,7 @@ export function about(u) {
   return subHead(u, { eyebrow: 'ABOUT', title: '소개 및 내부전경', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개 및 내부전경']] })
     + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
     + `<section class="sec"><div class="wrap narrow">
-  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고, 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
+  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고,<br class="br-pc"> 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중<br class="br-pc"> 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
   <div class="prose reveal">${ABOUT.paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
 </div></section>
 <section class="sec sec-tint"><div class="wrap">
@@ -250,7 +250,7 @@ export function lift(u) {
   return subHead(u, { eyebrow: 'LIFT', title: '리프트 요금', lead: `${SITE.season} 용평리조트 리프트권 — 이용 1일 전까지 예약 시 ${Y.badge || ''} 특별할인가`, bg: 'scene/lineup.webp', crumbs: [['요금안내', 'rates/lift/'], ['리프트 요금']] })
     + subTabs(u, rateTabs, 'rates/lift/')
     + `<section class="sec"><div class="wrap">
-  ${answer('용평 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>이용 1일 전까지 뽀드득에 예약하시면 용평리조트 리프트권을 정상가 대비 약 33% 특별할인가로 이용하실 수 있습니다.</strong> 대인 4시간권 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}입니다. 알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.`)}
+  ${answer('용평 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>이용 1일 전까지 뽀드득에 예약하시면 용평리조트 리프트권을 정상가 대비 약 33% 특별할인가로 이용하실 수 있습니다.</strong><br>대인 4시간권 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}입니다.<br>알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.`)}
   ${Y.badge ? liftPromo(Y, u) : ''}
   ${LIFT.map(l => l.pending
     ? `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}</h2><div class="pending-box"><b>요금 공지 전</b><p>${esc(l.note)}</p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></div></div>`
