@@ -65,7 +65,7 @@
 
   /* 히어로 영상: 화면 크기별 파일, 문구 없이 바로 재생 */
   const hero = $('[data-hero]');
-  if (hero) {
+  if (hero && $('video.hero-v', hero)) {   // 첫 화면이 사진(어드민 설정)이면 영상 처리 없음
     const v = $('.hero-v', hero);
     // 영상 파일은 HTML <source>(휴대폰 hero-m / PC hero-1920)에 있어 페이지를 읽는 즉시 받기 시작하고 autoplay 로 바로 재생.
     // 포스터 = 영상 첫 프레임이라 영상으로 넘어갈 때 화면이 튀지 않는다.

@@ -173,7 +173,9 @@ export const RATE_CARDS = ov('rateCards', [
   { title: '용평리프트 요금표', img: 'main/rate-1.webp' }, { title: '알펜시아리프트 요금표', img: 'main/rate-2.webp' },
   { title: '장비 요금표', img: 'main/rate-3.webp' }, { title: '의류 요금표', img: 'main/rate-4.webp' }, { title: '보호장비 요금표', img: 'main/rate-5.webp' },
 ]);
-export const LESSON_VIDEOS = ov('lessonVideos', []);   // [{ id: 유튜브 영상 ID, title }]
+export const LESSON_VIDEOS = ov('lessonVideos', []);
+// 메인 첫 화면(히어로): 기본 영상 / 사진(PC 가로 + 휴대폰 세로 선택) — 어드민 「메인 화면 → 첫 화면(영상·사진)」
+export const HERO = ov('hero', { mode: 'video', img: '', imgM: '', alt: '' });   // [{ id: 유튜브 영상 ID, title }]
 
 // ── 강습 ──
 export const LESSON_FEE = ov('lesson', {

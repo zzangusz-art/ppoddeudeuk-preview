@@ -749,3 +749,5 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 }
 /* PC 에서만 줄바꿈 */
 br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
+/* 히어로 사진(어드민에서 영상 대신) */
+.hero-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}

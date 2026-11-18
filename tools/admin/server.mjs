@@ -111,6 +111,12 @@ const SECTIONS = {
     return v.map((t, i) => { const o = { img: imageField(t.img, 'instructor', files, i), name: oneLine(t.name, 20), cred: oneLine(t.cred, 60), career: oneLine(t.career, 120) };
       need(o.name || o.cred, 400, `${i + 1}번째 강사: 이름이나 자격을 입력해 주세요`); for (const k of ['name', 'career']) if (!o[k]) delete o[k]; return o; });
   } },
+  hero: { name: '메인 첫 화면', clean: (v, files) => {
+    const mode = v.mode === 'photo' ? 'photo' : 'video';
+    const o = { mode, img: imageField(v.img, 'hero', files, 0, false), imgM: imageField(v.imgM, 'hero-m', files, 1, false), alt: oneLine(v.alt, 60) };
+    need(mode === 'video' || o.img, 400, '사진으로 바꾸려면 PC용 사진을 올려 주세요');
+    return o;
+  } },
   homePhotos: { name: '메인 소개 사진', clean: (v, files) => {
     need(Array.isArray(v) && v.length >= 1 && v.length <= 4, 400, '사진은 1~4장입니다');
     return v.map((g, i) => ({ img: imageField(g.img, 'home', files, i), title: oneLine(g.title, 40) || '뽀드득 매장' }));

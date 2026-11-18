@@ -91,7 +91,7 @@
   const NAV = [
     ['현황', [['', '대시보드', 'home'], ['leads', '접수 관리', 'inbox', 'badge'], ['stats', '접속 통계', 'chart']]],
     ['게시판', [['blog', '블로그', 'pen'], ['notices', '공지사항', 'notice'], ['gallery', '갤러리', 'photo'], ['used', '중고장비', 'tag'], ['faq', '자주 묻는 질문', 'faq']]],
-    ['메인 화면', [['homePhotos', '메인 소개 사진', 'photo'], ['rateCards', '메인 요금표 카드', 'won'], ['lessonVideos', '강습 영상', 'pen']]],
+    ['메인 화면', [['hero', '첫 화면(영상·사진)', 'cam'], ['homePhotos', '메인 소개 사진', 'photo'], ['rateCards', '메인 요금표 카드', 'won'], ['lessonVideos', '강습 영상', 'pen']]],
     ['운영 정보', [['instructors', '강사진', 'coach'], ['prices', '요금 관리', 'won'], ['popup', '팝업', 'pop'], ['site', '기본정보', 'info']]],
   ];
   const OWNER_ONLY = ['blog'];   // 게시판 안에 있지만 관리자(세느루)에게만 보이는 메뉴
@@ -577,6 +577,33 @@
     });
   }
 
+  // ── 메인 첫 화면(히어로): 영상 / 사진
+  async function hero() {
+    const v = shell('첫 화면(영상·사진)', { desc: '홈페이지에 들어오면 가장 먼저 보이는 큰 화면입니다. 기본 영상을 쓰거나, 사진으로 바꿀 수 있습니다. 「기본 영상」을 고르면 언제든 원래 영상으로 돌아갑니다.', content: true });
+    const d = await api('GET', '/api/admin/content/hero'); const p = clone(d.value);
+    const pic = (k, label, tip) => `<div class="fld"><span>${label} <small>${tip}</small></span><div class="hero-up">${p[k] ? `<img src="${h(imgSrc(p[k]))}" alt="">` : '<span class="ph0">사진 없음</span>'}<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-pic="${k}">${ico('cam')}${p[k] ? '사진 바꾸기' : '사진 올리기'}</button>${p[k] ? `<button class="btn sm ghost" data-nopic="${k}">빼기</button>` : ''}</div></div></div>`;
+    const draw = () => {
+      v.innerHTML = `<section class="card"><div class="form-stack">
+        <div class="fld"><span>첫 화면에 보일 것</span><div class="seg">${[['video', '기본 영상'], ['photo', '사진']].map(([k, n]) => `<a href="#" data-mode="${k}" class="${p.mode === k ? 'on' : ''}">${n}</a>`).join('')}</div></div>
+        ${p.mode === 'photo' ? `${photoHint(['가로 촬영', '16:9', '1920×1080px', '화면 크기에 따라 위아래·양옆이 잘리니 중요한 것은 가운데에. 글씨가 큰 사진은 피해 주세요'])}
+        <div class="grid2">${pic('img', 'PC용 사진', '필수 · 가로 16:9 · 1920×1080px 이상')}${pic('imgM', '휴대폰용 사진', '선택 · 세로 9:16 · 1080×1920px — 없으면 PC 사진 가운데를 잘라 씁니다')}</div>
+        <label class="fld"><span>사진 설명 <small>검색엔진·화면 낭독용</small></span><input class="in" data-k="alt" value="${h(p.alt || '')}" maxlength="60" placeholder="예: 용평 슬로프를 내려오는 스키어"></label>` : '<p class="help">지금은 기본 영상(슬로프 영상, 소리 켜기·다시 보기 버튼 포함)이 나옵니다.</p>'}
+      </div></section>
+      <div class="savebar"><button class="btn pri" data-save>저장하고 홈페이지에 반영</button>${d.changed ? '<button class="btn ghost sm" data-reset>기본 영상으로 되돌리기</button>' : ''}<span class="dirty" ${dirty ? '' : 'hidden'}>저장하지 않은 변경이 있습니다</span></div>`;
+    };
+    const md = () => { dirty = true; const x = $('.dirty', v); if (x) x.hidden = false; };
+    draw();
+    v.addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; p[k] = e.target.value; md(); });
+    v.addEventListener('click', async e => {
+      const a = e.target.closest('[data-mode]'); if (a) { e.preventDefault(); p.mode = a.dataset.mode; md(); draw(); return; }
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.pic) { const f = await pickFile(); if (!f) return; try { b.disabled = true; p[b.dataset.pic] = await prepImage(f, b.dataset.pic === 'img' ? 2200 : 1200); md(); draw(); } catch (err) { fail(err); b.disabled = false; } return; }
+      if (b.dataset.nopic) { p[b.dataset.nopic] = ''; md(); draw(); return; }
+      if (b.dataset.save != null) { b.disabled = true; try { const ups = { img: typeof p.img === 'object' ? p.img.data : null, imgM: typeof p.imgM === 'object' ? p.imgM.data : null }; const r = await api('POST', '/api/admin/content/hero', { value: p }); for (const k of ['img', 'imgM']) if (ups[k] && r.value[k]) previews[r.value[k]] = ups[k]; Object.assign(p, r.value); d.changed = true; saved(r, '첫 화면'); draw(); } catch (err) { fail(err); b.disabled = false; } return; }
+      if (b.dataset.reset != null) { if (!confirm('기본 영상으로 되돌릴까요?')) return; try { const r = await api('POST', '/api/admin/content/hero', { reset: true }); Object.assign(p, r.value); d.changed = false; saved(r, '첫 화면'); draw(); } catch (err) { fail(err); } }
+    });
+  }
+
   // ── 기본정보 / 추적 코드(한 화면 형식)
   async function simpleForm(key, title, desc, fields) {
     const v = shell(title, { desc, content: true });
@@ -662,7 +689,7 @@
     if (own.includes(r) && ME.user.role !== 'owner') { location.hash = '#/'; return; }
     const views = {
       '': dashboard, leads, stats, prices, popup, me, log, users, blog,
-      notices: () => listEditor('notices'), gallery: () => listEditor('gallery'), used: () => listEditor('used'), faq: () => listEditor('faq'), instructors: () => listEditor('instructors'), homePhotos: () => listEditor('homePhotos'), rateCards: () => listEditor('rateCards'), lessonVideos: () => listEditor('lessonVideos'),
+      notices: () => listEditor('notices'), gallery: () => listEditor('gallery'), used: () => listEditor('used'), faq: () => listEditor('faq'), instructors: () => listEditor('instructors'), hero, homePhotos: () => listEditor('homePhotos'), rateCards: () => listEditor('rateCards'), lessonVideos: () => listEditor('lessonVideos'),
       site: () => simpleForm('site', '기본정보', '홈페이지 전체(머리말·바닥글·전화 버튼·예약 안내·구조화 데이터)에 들어가는 연락처입니다.', [['phone', '대표전화', '033-336-9884'], ['sms', '문자 받을 휴대폰', '010-0000-0000', '접수 서버가 안 될 때 손님이 문자로 보내는 번호'], ['hours', '영업시간', '시즌 중 매일 08:00~23:00']]),
       tags: () => simpleForm('tags', '추적 코드', '검색엔진 소유확인·방문 분석 코드입니다. 운영 도메인 연결 뒤 넣으세요(미리보기 주소에는 분석 태그가 들어가지 않습니다).', [['ga4', 'GA4 측정 ID', 'G-XXXXXXXXXX'], ['naverWa', '네이버 애널리틱스 ID', ''], ['naverVerify', '네이버 서치어드바이저 소유확인', 'naver-site-verification 값(여러 개는 쉼표로)'], ['googleVerify', '구글 서치콘솔 소유확인', 'google-site-verification 값(여러 개는 쉼표로)']]),
     };
