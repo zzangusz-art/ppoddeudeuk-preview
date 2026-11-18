@@ -427,22 +427,6 @@
     "note": "사람이 작성(Claude) — 한 달치 예약 공개"
   },
   {
-    "id": "jumpsuit-rental",
-    "title": "스키 점프슈트 렌탈 고를 때",
-    "angle": "점프슈트세트와 상하의 세트 차이, 하이엔드 의류(픽고 점프슈트 등)",
-    "keywords": [
-      "점프슈트 렌탈",
-      "스키 점프슈트",
-      "스키복 점프슈트"
-    ],
-    "category": "렌탈 가이드",
-    "status": "done",
-    "slug": "jumpsuit-rental",
-    "date": "2026-11-19",
-    "time": "09:00",
-    "note": "사람이 작성(Claude) — 한 달치 예약 공개"
-  },
-  {
     "id": "couple-ski-lesson",
     "title": "커플·친구 2:1 스키 강습 장단점",
     "angle": "2:1 강습 요금과 1:1 비교, 실력 차이가 날 때",

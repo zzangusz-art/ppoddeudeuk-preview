@@ -59,7 +59,8 @@
     return { data };
   }
   const pickFile = () => new Promise(ok => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => ok(i.files[0]); i.click(); });
-  const imgSrc = v => !v ? '' : typeof v === 'object' ? v.data : previews[v] || BASE + 'assets/img/' + v;
+  // 올린 사진(up/)은 주소 뒤에 버전을 붙인다 — 예전에 브라우저가 기억한 '없음(404)'을 건너뛰고 새로 받게(2026-11-18)
+  const imgSrc = v => !v ? '' : typeof v === 'object' ? v.data : previews[v] || BASE + 'assets/img/' + v + (String(v).startsWith('up/') ? '?v=1118' : '');
 
   // ── 아이콘
   const ICON = {

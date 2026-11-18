@@ -52,7 +52,8 @@ http.createServer(async (req, res) => {
   }
   if (NOINDEX && url.pathname === '/robots.txt') { res.writeHead(200, { 'Content-Type': TYPES['.txt'] }); res.end('User-agent: *\nDisallow: /\n'); return; }
   const f = resolve(url.pathname);
-  if (!f) { res.writeHead(404, { 'Content-Type': TYPES['.html'] }); fs.createReadStream(path.join(ROOT, '404.html')).pipe(res); return; }
+  // 없는 파일 응답은 캐시 금지 — Cloudflare 가 404 에 4시간 캐시를 붙여, 나중에 생긴 사진(어드민 업로드)이 브라우저에서 계속 깨져 보였음
+  if (!f) { res.writeHead(404, { 'Content-Type': TYPES['.html'], 'Cache-Control': 'no-store' }); fs.createReadStream(path.join(ROOT, '404.html')).pipe(res); return; }
   const type = TYPES[path.extname(f.abs).toLowerCase()] || 'application/octet-stream';
   if (type.startsWith('text/html') && req.method === 'GET') countBot(req);
   const headers = { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Cache-Control': cacheFor(type), 'Last-Modified': f.st.mtime.toUTCString(), 'X-Content-Type-Options': 'nosniff' };
