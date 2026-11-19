@@ -769,3 +769,5 @@ br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
 /* 요금표 카드: 밝은 사진에서도 흰 글씨가 보이게 어두운 덮개 */
 .rate-cards .item a::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,20,34,.55),rgba(10,20,34,.3));border-radius:inherit;pointer-events:none}
 .rate-cards .item a p{position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+/* 휴대폰: 서브 탭 바로 아래 첫 섹션 위 여백 줄이기(예약·요금·안내 페이지 첫 화면에 내용이 더 보이게) */
+@media (max-width:760px){.sub-tabs + .sec,.sub-tabs + section{padding-top:32px}}

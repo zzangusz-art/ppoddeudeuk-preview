@@ -181,7 +181,7 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
   .navbtn{display:inline-flex;margin-left:auto;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:700;position:relative}
   .navbtn .badge{position:absolute;top:-6px;right:-6px}
   .side nav,.side .who{display:none}
-  .side.open nav{display:flex;width:100%;max-height:calc(100vh - 70px);overflow:auto;padding-top:8px}
+  .side.open nav{display:flex;flex:0 0 100%;width:100%;max-height:calc(100vh - 70px);overflow:auto;padding-top:8px}
   .main{padding:18px 16px 90px}
   .top h1{font-size:22px}
   .in,select.in,textarea.in{font-size:16px}
@@ -289,3 +289,26 @@ textarea.in{height:auto;min-height:96px;padding:10px 12px;line-height:1.6;resize
 .phint{display:block;margin:6px 0 0;font-size:12px;color:var(--sub)}
 .thumb.r-45 img{aspect-ratio:4/5!important;height:auto!important;object-fit:cover}.thumb.r-11 img{aspect-ratio:1/1!important;height:auto!important;object-fit:cover}
 .hero-up{display:grid;gap:8px}.hero-up img{width:100%;max-height:260px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.hero-up .ph0{display:grid;place-items:center;height:140px;border:1.5px dashed var(--line);border-radius:10px;color:var(--sub);font-size:13px}
+
+/* 휴대폰: 요금 표를 품목마다 카드로(옆으로 밀지 않고 칸마다 이름표) · 최근 접수 2줄 */
+@media (max-width:640px){
+  .ptbl-wrap{overflow:visible;margin:0;padding:0}
+  .ptbl,.ptbl tbody{display:block;width:100%}
+  .ptbl thead:not(:has(input)){display:none}
+  .ptbl thead tr{display:block;padding:0;border:0}.ptbl thead th{display:none}
+  .ptbl thead th:has(input){display:block;background:none;padding:0 0 8px;text-align:left}
+  .ptbl thead th:has(input)::before{content:'요금 구분 이름';display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+  .ptbl thead th:has(input) .in{width:100%;text-align:left!important;height:40px!important;font-size:15px!important}
+  .ptbl thead th:has(input) small{display:none}
+  .ptbl tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:14px 0;border-top:1px solid var(--line2)}
+  .ptbl td{padding:0;min-width:0!important}
+  .ptbl td:first-child,.ptbl td.full{grid-column:1/-1}
+  .ptbl td.rowname b{font-size:15.5px}
+  .ptbl td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--sub);font-weight:600;margin:0 0 4px}
+  .ptbl td.del{grid-column:1/-1;justify-self:end}
+  .ptbl .in.num{min-width:0;width:100%}
+  .recent li{flex-wrap:wrap;row-gap:4px}
+  .recent .nm{white-space:nowrap}
+  .recent .meta{flex-basis:100%;margin-left:0}
+  .utbl th,.utbl td{padding:10px 8px}
+}
