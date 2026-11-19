@@ -59,6 +59,8 @@ export const ABOUT = {
 };
 
 // ── 스키장·타임(6월 18일 수정요청 엑셀 = 예약 폼 기준) ──
+// 매장 방문 시간(예약 폼 필수) — 영업시간 08:00~23:00 안에서 30분 단위
+export const VISIT_TIMES = Array.from({ length: 30 }, (_, i) => `${String(8 + Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
 export const RESORTS = [
   { id: 'yongpyong', name: '용평스키장', short: '용평', grooming: '16:30~18:00', groomingNote: '1시간 30분 슬로프 사용 불가',
     times: [
@@ -153,10 +155,10 @@ export const RENTALS = [
 export const RENTAL_ITEMS = {
   // 예약 폼: 세로 = 등급, 가로 = 품목([종류(ski|board) — 사이즈표 줄 구분용, 품목명]) — 업체 수정사항(2026-11-16)
   grades: [
-    ['초급자', [['ski', '초급자 스키'], ['board', '초급자 보드']]],
-    ['중급자', [['ski', '중급자 스키'], ['ski', '중급자 블레이드'], ['ski', '중급자 숏스키'], ['ski', '중급자 인라인스키'], ['board', '중급자 보드']]],
-    ['상급자', [['ski', '상급자 데모스키'], ['ski', '상급자 대회전스키'], ['ski', '상급자 파우더스키'], ['board', '상급자 보드'], ['board', '상급자 우드해머']]],
-    ['최상급자', [['ski', '최상급자 월드컵스키'], ['ski', '최상급자 FIS선수용스키'], ['board', '최상급자 보드'], ['board', '최상급자 카본해머'], ['board', '최상급자 스텝온']]],
+    ['초급자 프리미엄 신상 장비', [['ski', '초급자 스키'], ['board', '초급자 보드']]],
+    ['중급자 프리미엄 신상 장비', [['ski', '중급자 스키'], ['ski', '중급자 블레이드'], ['ski', '중급자 숏스키'], ['ski', '중급자 인라인스키'], ['board', '중급자 보드']]],
+    ['하이엔드 상급자 장비', [['ski', '상급자 데모스키'], ['ski', '상급자 대회전스키'], ['ski', '상급자 파우더스키'], ['board', '상급자 보드'], ['board', '상급자 우드해머']]],
+    ['하이엔드 최상급자 장비', [['ski', '최상급자 월드컵스키'], ['ski', '최상급자 FIS선수용스키'], ['board', '최상급자 보드'], ['board', '최상급자 카본해머'], ['board', '최상급자 스텝온']]],
   ],
   wear: [['프리미엄 의류', ['프리미엄 의류세트', '프리미엄 상의만', '프리미엄 하의만']], ['하이엔드 의류', ['하이엔드 의류세트', '하이엔드 상의만', '하이엔드 하의만']]],
 };
@@ -170,8 +172,9 @@ export const HOME_PHOTOS = ov('homePhotos', [
   { img: 'about/skis.webp', title: '스키 장비 진열(뵐클·엘란)' }, { img: 'about/boards.webp', title: '스노보드 장비(살로몬)' },
 ]);
 export const RATE_CARDS = ov('rateCards', [
-  { title: '용평리프트 요금표', img: 'main/rate-1.webp' }, { title: '알펜시아리프트 요금표', img: 'main/rate-2.webp' },
-  { title: '장비 요금표', img: 'main/rate-3.webp' }, { title: '의류 요금표', img: 'main/rate-4.webp' }, { title: '보호장비 요금표', img: 'main/rate-5.webp' },
+  // 용평·알펜시아 사진: Wikimedia Commons CC BY-SA 2.0(출처는 리프트 요금 페이지 맨 아래) / 장비·의류: 업체 제공 사진(2026-11-19 요청)
+  { title: '용평리프트 요금표', img: 'main/rate-yongpyong.webp' }, { title: '알펜시아리프트 요금표', img: 'main/rate-alpensia.webp' },
+  { title: '장비 요금표', img: 'about/skis.webp' }, { title: '의류 요금표', img: 'about/urbangray.webp' }, { title: '보호장비 요금표', img: 'main/rate-5.webp' },
 ]);
 export const LESSON_VIDEOS = ov('lessonVideos', []);
 // 메인 첫 화면(히어로): 기본 영상 / 사진(PC 가로 + 휴대폰 세로 선택) — 어드민 「메인 화면 → 첫 화면(영상·사진)」

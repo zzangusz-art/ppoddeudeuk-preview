@@ -751,3 +751,21 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
 /* 히어로 사진(어드민에서 영상 대신) */
 .hero-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+
+/* 예약 폼: 스키장 선택 옆 매장 방문시간 */
+.bk-resort-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.bk-resort-row .bk-resort{flex:1 1 360px}
+.bk-visit{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.bk-visit span{font-size:14.5px;font-weight:800;white-space:nowrap}.bk-visit span i{color:var(--red);font-style:normal}
+.bk .bk-visit select{width:130px}
+@media (max-width:760px){.bk-visit{width:100%}.bk .bk-visit select{flex:1;width:auto}}
+/* 예약 폼 등급 줄: 스키 줄 / 보드 줄 */
+.bk-grade .bk-td{gap:6px}
+/* 갤러리 사진 설명: 무조건 한 줄(길면 글자를 줄이고, 그래도 넘치면 …) */
+.gi figcaption{align-items:center}
+.gi figcaption strong{display:block;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.credit{margin:18px 0 0;font-size:11.5px;color:var(--muted)}.credit a{text-decoration:underline}
+/* 요금표 카드: 밝은 사진에서도 흰 글씨가 보이게 어두운 덮개 */
+.rate-cards .item a::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,20,34,.55),rgba(10,20,34,.3));border-radius:inherit;pointer-events:none}
+.rate-cards .item a p{position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.35)}

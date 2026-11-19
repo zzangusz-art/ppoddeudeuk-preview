@@ -314,6 +314,7 @@
       if (!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(tel.value)) return bad(tel, '전화번호를 확인해 주세요');
       if (!date.value) return bad(date, '이용날짜를 선택해 주세요');
       if (!form.querySelector('[name=resort]:checked')) return bad($('.bk-resort', form), '스키장을 선택해 주세요');
+      if (!E.visit.value) return bad(E.visit, '뽀드득 렌탈샵 방문시간을 선택해 주세요');
       if (!E.time.value) return bad($('[data-times]', form), '이용타임을 하나 선택해 주세요');
       if (E.lesson.value && !E.lessonPeople.value) return bad(E.lessonPeople, '강습 인원을 선택해 주세요');
       if (E.lesson.value && !E.lessonHours.value) return bad(E.lessonHours, '강습 시간을 선택해 주세요');
@@ -327,6 +328,7 @@
     const summary = () => {
       const r = RES[form.querySelector('[name=resort]:checked').value];
       const L = [`[뽀드득 ${label}]`, `이름: ${E.name.value.trim()}`, `연락처: ${tel.value}`, `이용날짜: ${date.value}`, `스키장: ${r.name}`, `이용타임: ${E.time.value}`];
+      L.push(`매장 방문시간: ${E.visit.value}`);
       if (E.people.value) L.push(`이용 인원: ${E.people.value}명`);
       [['ski', '스키장비'], ['board', '보드장비'], ['wear', '의류']].forEach(([k, t]) => { const v = items(k); if (v.length) L.push(`${t}: ${v.join(', ')}`); });
       if (E.lesson.value) L.push(`강습: ${E.lesson.value} ${E.lessonPeople.value} ${E.lessonHours.value}`);
@@ -375,4 +377,11 @@
     f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.className = 'vframe';
     b.replaceWith(f);
   });
+  /* 갤러리 사진 설명 한 줄 맞춤: 넘치면 글자를 조금씩 줄임(최소 11px), 전체 문구는 마우스를 올리면 보임 */
+  const fitCaps = () => $$('.gi figcaption strong').forEach(el => {
+    el.style.fontSize = ''; if (!el.title) el.title = el.textContent;
+    let fs = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth + 1 && fs > 11) { fs -= .5; el.style.fontSize = fs + 'px'; }
+  });
+  fitCaps(); addEventListener('load', fitCaps); let fitT; addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fitCaps, 150); });
 })();

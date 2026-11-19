@@ -336,12 +336,13 @@
     const lessons = live.filter(l => (l.detail || {}).lesson).length, missing = live.filter(needSizes).length;
     const prep = [...KINDS.map(([k, t]) => [t, tally(live, k)]), ['부츠(발 mm)', feetOf(live).map(([f, c]) => [String(f), c])]].filter(([, p]) => p.length);
     const groups = []; for (const l of items) { const key = `${l.resort || '스키장 미정'}|${l.time || '타임 미정'}`; let g = groups.find(x => x.key === key); if (!g) groups.push(g = { key, list: [] }); g.list.push(l); }
+    for (const g of groups) g.list.sort((a, b) => String((a.detail || {}).visit || '99').localeCompare(String((b.detail || {}).visit || '99')));
     let no = 0;
     const row = l => { const d = l.detail || {}, z = d.sizes || [];
       const gear = KINDS.map(([k, t]) => [t, itemsOf(d[k])]).filter(([, v]) => v.length).map(([t, v]) => `<div><i>${t}</i>${v.map(([n, c]) => `${h(n)} <b>×${c}</b>`).join(', ')}</div>`).join('');
       const size = z.length ? z.map(x => `<div><b>${h(x.name || '-')}</b> ${h([x.age || '-', x.height || '-', x.foot || '-'].join('/'))}${extraOf(x) ? ` <small>${h(extraOf(x))}</small>` : ''}</div>`).join('')
         : needSizes(l) ? '<span class="warn">사이즈표 미접수</span>' : h(legacySize(d));
-      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${++no}</td><td class="nm">${h(l.name)}<small>${h(l.phone)}</small>${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
+      return `<tr class="${l.status === 'cancel' ? 'cx' : ''}"><td class="c">${++no}</td><td class="nm">${h(l.name)}<small>${h(l.phone)}</small>${d.visit ? `<small class="visit">방문 ${h(d.visit)}</small>` : ''}${l.type !== 'reserve' ? `<small>${h(l.typeName)}</small>` : ''}</td><td class="c">${h(l.people ? l.people + '명' : '')}</td>
         <td class="gear">${gear || '<span class="mute">—</span>'}</td><td>${h(lessonText(d)) || '<span class="mute">—</span>'}</td><td class="sz">${size || '<span class="mute">—</span>'}</td>
         <td class="memo">${h(l.memo || '')}${l.admin_memo ? `<em>메모: ${h(l.admin_memo)}</em>` : ''}</td><td class="c st st-${l.status}">${h(l.statusName)}</td><td class="ck"></td><td class="ck"></td></tr>`; };
     const html = `<div class="ps-in ps-day"><header><div><b class="ps-brand">뽀드득 · 예약자 명단</b><h1>${h(dayName(date))}</h1></div>
@@ -362,7 +363,7 @@
     const spare = f => { const n = parseInt(f, 10); return n >= 150 && n <= 350 ? `${n - 10} · ${n + 10}` : ''; };
     const lenOf = x => x.len ? h(x.len) : parseInt(x.height, 10) > 90 ? `<span class="auto">${parseInt(x.height, 10) - 20} 전후</span>` : '';
     const page = l => { const d = l.detail || {}, z = d.sizes || [], board = z.some(x => x.kind === 'board');
-      const info = [['연락처', l.phone], ['인원', l.people && l.people + '명'], ['강습', lessonText(d) || '없음'], ['상태', l.statusName], ['접수', `${l.typeName} #${l.id} · ${l.created.slice(0, 16)}`], ['처리', l.handled_by && `${l.handled_by} · ${l.updated.slice(5, 16)}`]].filter(r => r[1]);
+      const info = [['연락처', l.phone], ['매장 방문', d.visit], ['인원', l.people && l.people + '명'], ['강습', lessonText(d) || '없음'], ['상태', l.statusName], ['접수', `${l.typeName} #${l.id} · ${l.created.slice(0, 16)}`], ['처리', l.handled_by && `${l.handled_by} · ${l.updated.slice(5, 16)}`]].filter(r => r[1]);
       const gearRows = KINDS.flatMap(([k, t]) => itemsOf(d[k]).map(([n, c]) => [t, n, c]));
       const feet = feetOf([l]);
       const lenHead = board && z.every(x => x.kind === 'board') ? '데크 길이' : board ? '플레이트·데크 길이' : '플레이트 길이';
@@ -382,7 +383,7 @@
     const over = doPrint(list.map(page).join(''), list.length === 1 ? `뽀드득_${first.name}_${first.use_date || ''}` : `뽀드득_팀별출력_${first.use_date || ''}_${list.length}팀`, 8);
     if (over) toast(`${over}팀은 인원이 많아 2장 이상으로 나뉩니다`, 6000);
   }
-  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', qty: '장비 수량', height: '키', foot: '발 사이즈', sizes: '사이즈표' };
+  const DETAIL_NAMES = { topic: '문의 항목', ski: '스키 장비', board: '보드 장비', wear: '의류', lesson: '강습', lessonPeople: '강습 인원', lessonHours: '강습 시간', visit: '매장 방문시간', qty: '장비 수량', height: '키', foot: '발 사이즈', sizes: '사이즈표' };
   const leadBrief = l => [l.time, ...Object.entries(l.detail || {}).map(([k, x]) => k === 'sizes' ? `사이즈표 ${x.length}명` : Array.isArray(x) ? x.join(', ') : x), l.memo].filter(Boolean).join(' · ');
   async function openLead(id) {
     let l; try { l = (await api('GET', `/api/admin/leads/${id}`)).lead; } catch (e) { return fail(e); }

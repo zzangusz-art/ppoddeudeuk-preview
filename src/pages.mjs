@@ -1,5 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
-import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, LIFT, RENTALS, RENTAL_ITEMS, HOME_PHOTOS, RATE_CARDS, LESSON_VIDEOS, HERO, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
+import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, VISIT_TIMES, LIFT, RENTALS, RENTAL_ITEMS, HOME_PHOTOS, RATE_CARDS, LESSON_VIDEOS, HERO, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
@@ -121,7 +121,7 @@ export function home(u, posts = []) {
       <li><b>강습</b>1:1 2시간 <em>${man(200000)}</em>, 스키·보드 동일</li>
       <li><b>위치</b>${esc(SITE.near)}</li>
     </ul>
-    <a class="link-more" href="${u('about/')}">소개 및 내부전경 보기 ${ICON.arrow}</a>
+    <a class="link-more" href="${u('about/')}">뽀드득 소개 보기 ${ICON.arrow}</a>
   </div>
   <div class="about-photos ap4 reveal">${HOME_PHOTOS.slice(0, 4).map((p, i) => `<button type="button" class="ap ap-${i}" data-lb="${u(`assets/img/${p.img}`)}" data-lb-group="home-store" data-lb-cap="${esc(p.title)}">${phImg(u, `assets/img/${p.img}`, `뽀드득 ${p.title}`, { sizes: '(max-width: 760px) 50vw, 22vw' })}</button>`).join('')}</div>
 </div></section>
@@ -185,22 +185,18 @@ ${homeBlog(u, posts)}
 
 // ── 뽀드득 안내 ──
 export function about(u) {
-  return subHead(u, { eyebrow: 'ABOUT', title: '소개 및 내부전경', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개 및 내부전경']] })
-    + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
+  return subHead(u, { eyebrow: 'ABOUT', title: '소개', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개']] })
+    + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
     + `<section class="sec"><div class="wrap narrow">
   ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고,<br class="br-pc"> 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중<br class="br-pc"> 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
   <div class="prose reveal">${ABOUT.paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
-</div></section>
-<section class="sec sec-tint"><div class="wrap">
-  <div class="sec-hd reveal"><p class="eyebrow">INTERIOR</p><h2 class="h2">내부전경</h2><p>현장 방문 전, 내부 전경을 미리 확인해보세요.</p></div>
-  <div class="gal-grid g3">${ABOUT.interior.map(([k, t]) => `<figure class="gi reveal"><button type="button" class="gi-btn" data-lb="${u(`assets/img/store/${k}.webp`)}" data-lb-group="interior" data-lb-cap="${esc(t)}">${phImg(u, `assets/img/store/${k}.webp`, t, { sizes: '(max-width: 760px) 50vw, 33vw' })}</button><figcaption><strong>${esc(t)}</strong></figcaption></figure>`).join('')}</div>
 </div></section>` + ctaBand(u);
 }
 
 export function location(u) {
   const rows = [['도로명 주소', SITE.address.full], ['지번 주소', SITE.address.old], ['대표전화', `<a href="${SITE.phoneHref}">${SITE.phone}</a>`], ['영업시간', esc(SITE.hours)], ['가까운 스키장', esc(SITE.near)]];
   return subHead(u, { eyebrow: 'LOCATION', title: '오시는 길', lead: '주소 및 연락처 안내', bg: 'scene/crew.webp', crumbs: [['뽀드득 안내', 'about/'], ['오시는 길']] })
-    + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'location/')
+    + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'location/')
     + `<section class="sec"><div class="wrap loc-grid">
   <div class="reveal">
     ${answer('뽀드득은 어디에 있나요?', `<strong>${esc(SITE.address.full)}</strong>(지번 ${esc(SITE.address.old)})에 있습니다. ${esc(SITE.near)} 거리입니다.`)}
@@ -213,7 +209,7 @@ export function location(u) {
 
 export function notice(u) {
   return subHead(u, { eyebrow: 'NOTICE', title: '공지사항', bg: 'scene/group.webp', crumbs: [['뽀드득 안내', 'about/'], ['공지사항']] })
-    + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'notice/')
+    + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'notice/')
     + `<section class="sec"><div class="wrap narrow">
   <p class="count">전체 <b>${NOTICES.length}</b>건</p>
   <div class="board">${NOTICES.map((n, i) => `<details class="acc post" id="${n.id}"${i === 0 ? ' open' : ''}><summary><span class="no">${NOTICES.length - i}</span><h2>${esc(n.title)}</h2><time datetime="${n.date}">${kdate(n.date)}</time>${ICON.chev}</summary><div class="acc-body">${n.body.map(p => `<p>${esc(p)}</p>`).join('')}</div></details>`).join('')}</div>
@@ -222,7 +218,7 @@ export function notice(u) {
 
 export function faqPage(u) {
   return subHead(u, { eyebrow: 'FAQ', title: '자주 묻는 질문', lead: '리프트권·렌탈·강습·예약에 대해 가장 많이 묻는 질문입니다.', bg: 'scene/spray.webp', crumbs: [['뽀드득 안내', 'about/'], ['자주 묻는 질문']] })
-    + subTabs(u, [['소개 및 내부전경', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'faq/')
+    + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'faq/')
     + `<section class="sec"><div class="wrap narrow">${faqList(FAQ, true)}</div></section>` + ctaBand(u);
 }
 
@@ -258,6 +254,7 @@ export function lift(u) {
   <h2 class="h3">스키장별 이용권과 정설시간</h2>
   ${timeTable()}
   <p class="note">요금은 ${SITE.season} 기준이며 리조트 사정에 따라 바뀔 수 있습니다. 예약 시 최종 금액을 안내드립니다.</p>
+  <p class="credit">메인 요금표 카드 사진: 용평 돔 — Korea.net / Korean Culture and Information Service, 알펜시아 스키점프대 — Republic of Korea (Wikimedia Commons, <a href="https://creativecommons.org/licenses/by-sa/2.0/" rel="license noopener" target="_blank">CC BY-SA 2.0</a>)</p>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('lift')), true)}</div></section>` + ctaBand(u);
 }
@@ -369,9 +366,11 @@ export function bookForm(u, type) {
       <div class="bk-th"><label for="${type}-date">이용날짜 ${req}</label></div><div class="bk-td"><input type="date" id="${type}-date" name="date" required></div>
       <div class="bk-th"><label for="${type}-people">이용 인원</label></div><div class="bk-td"><input type="number" id="${type}-people" name="people" min="1" max="99" inputmode="numeric" placeholder="예: 4"></div>
     </div>
-    ${row(`<span>스키장 선택 ${req}</span>`, `<div class="bk-resort">${RESORTS.map(r => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required><span>${r.name}</span></label>`).join('')}</div><p class="bk-note" data-grooming hidden></p>`, { sub: '선택하신 스키장에 따라 시간대가 달라집니다.' })}
+    ${row(`<span>스키장 선택 ${req}</span>`, `<div class="bk-resort-row"><div class="bk-resort">${RESORTS.map(r => `<label class="seg-it"><input type="radio" name="resort" value="${r.id}" required><span>${r.name}</span></label>`).join('')}</div><label class="bk-visit"><span>뽀드득 렌탈샵 방문시간 ${req}</span><select name="visit" required><option value="">선택</option>${VISIT_TIMES.map(t => `<option>${t}</option>`).join('')}</select></label></div><p class="bk-note" data-grooming hidden></p>`, { sub: '선택하신 스키장에 따라 시간대가 달라집니다.' })}
     ${row(`<span>이용타임 ${req}</span>`, `<div class="bk-times" data-times>${Array.from({ length: Math.max(...RESORTS.map(r => r.times.length)) }, (_, i) => `<label class="tsel"><b>${i ? `${i + 1}타임` : '이용권'}</b><select data-tname="${i}" disabled aria-label="이용권 ${i + 1}"><option value="">스키장 먼저 선택</option></select></label>`).join('')}</div><input type="hidden" name="time">`, { sub: '이용권(타임)을 하나만 고르세요.' })}
-    ${RENTAL_ITEMS.grades.map(([g, its]) => row(`${g} 장비`, `<div class="qgrid">${its.map(([k, it]) => step(k, it)).join('')}</div>`, { sub: '스키 · 보드', cls: 'bk-grade' })).join('')}
+    ${RENTAL_ITEMS.grades.map(([g, its]) => { const ski = its.filter(([k]) => k === 'ski'), board = its.filter(([k]) => k === 'board');
+      const lines = ski.length > 1 && board.length ? [ski, board] : [its];   // 같은 보드 라인은 아래 줄로
+      return row(g, lines.map(l => `<div class="qgrid">${l.map(([k, it]) => step(k, it)).join('')}</div>`).join(''), { cls: 'bk-grade' }); }).join('')}
     ${RENTAL_ITEMS.wear.map(([g, its]) => row(g, `<div class="qgrid">${its.map(it => step('wear', it)).join('')}</div>`, { sub: '100% 새 옷', cls: 'bk-grade' })).join('')}
     ${row('강습', `<div class="bk-lesson">
       <label><span>종목</span><select name="lesson"><option value="">선택 안 함</option><option>스키</option><option>보드</option></select></label>
@@ -381,7 +380,7 @@ export function bookForm(u, type) {
       <p class="sz-lead"><b>사이즈표를 보내 주셔야 예약이 완료됩니다.</b> 장비 수량을 고르면 한 분씩 입력칸이 생깁니다.</p>
       <div class="sz-why" role="note"><p class="sz-why-t"><span aria-hidden="true">!</span>나이·이름·사이즈를 꼭 받는 이유</p><ul>${SIZE_GUIDE.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ul><p class="sz-warn">장비와 부츠는 수량이 정해져 있어, <strong>사이즈표를 늦게 주시거나 주지 않으시면 예약이 취소되는 경우가 있습니다.</strong><br>예약을 완료해 주신 분을 가장 먼저 준비합니다.</p></div>
       <div class="sz-list" data-sizes><p class="sz-empty">위에서 스키·보드 장비 수량을 고르면 이용자별 입력칸이 여기에 생깁니다.</p></div></div>`, { cls: 'bk-size' })}
-    ${row(`<label for="${type}-memo">요청사항</label>`, `<textarea id="${type}-memo" name="memo" rows="3" maxlength="1000" placeholder="예: 단체 이용, 헬멧·고글 필요, 도착 예정 시간 등"></textarea>`)}
+    ${row(`<label for="${type}-memo">단체이용 및 문의사항</label>`, `<textarea id="${type}-memo" name="memo" rows="3" maxlength="1000" placeholder="예: 회사 단체 20명, 헬멧·고글 필요, 도착 예정 시간 등"></textarea>`)}
   </div>
   <details class="agree-box"><summary>개인정보 수집 및 이용에 대한 안내 ${ICON.chev}</summary><p>${esc(PRIVACY.short)}</p><dl>${PRIVACY.items.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   <label class="agree"><input type="checkbox" name="agree" required><span>개인정보 수집 및 이용에 동의합니다. ${req}</span></label>

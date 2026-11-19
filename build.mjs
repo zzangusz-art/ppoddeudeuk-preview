@@ -74,8 +74,8 @@ emit({ out: 'blog/index.html', section: 'blog', pri: '0.7', type: 'CollectionPag
   body: u => P.blogIndex(u, POSTS) });
 
 // ── 뽀드득 안내 ──
-emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['홈', ''], ['소개 및 내부전경', 'about/']], faq: faqOf('about'),
-  title: '뽀드득 소개 및 내부전경 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. ${SCALE.gear}·${SCALE.wear}·${SCALE.staff}. 매장 내부 사진.`,
+emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['홈', ''], ['소개', 'about/']], faq: faqOf('about'),
+  title: '뽀드득 소개 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. ${SCALE.gear}·${SCALE.wear}·${SCALE.staff}.`,
   body: u => P.about(u) });
 emit({ out: 'location/index.html', section: 'location', crumbs: [['홈', ''], ['오시는 길', 'location/']], faq: faqOf('location'),
   title: '용평렌탈샵 뽀드득 오시는 길 — 평창 대관령면 올림픽로 238 (용평·알펜시아 5분)', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
