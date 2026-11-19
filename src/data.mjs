@@ -10,7 +10,7 @@ const ov = (k, def) => { D[k] = def; return OVERRIDES[k] ?? def; };
 export const SITE = {
   name: '뽀드득',
   nameEn: 'PPODDEUDEUK',
-  alt: ['겨울바라기', '겨울바라기 AC', '뽀드득 렌탈샵', '뽀드득 스키'],
+  alt: ['용평 뽀드득', '용평렌탈샵 뽀드득', '뽀드득 렌탈샵', '겨울바라기', '겨울바라기 AC', '뽀드득 스키'],
   operator: '겨울바라기 AC',          // 2026-10-30 확약서 회사명
   ceo: '이건무',
   bizNo: '623-01-01018',
@@ -25,10 +25,14 @@ export const SITE = {
     region: '강원특별자치도', locality: '평창군 대관령면', street: '올림픽로 238', postal: '25342',
   },
   near: '용평리조트(모나 용평)·알펜시아 스키장까지 차로 약 5분',
+  geo: { lat: 37.6651048, lng: 128.7047838 },              // 카카오맵 장소 2016256650 좌표(2026-11-19 확인)
+  // 업체 공식 프로필(구조화 데이터 sameAs) — 같은 이름의 다른 '뽀드득'과 구분하는 근거. 네이버 플레이스·인스타그램 주소를 받으면 여기에 추가
+  profiles: ['https://place.map.kakao.com/2016256650'],
   url: process.env.SITE_URL || 'https://bboski.co.kr/', // 운영 도메인(2026-11-16 연결)
   tagline: "눈밭 위 '뽀드득' 소리와 함께, 당신의 겨울이 시작됩니다",
   maps: {
-    kakao: 'https://place.map.kakao.com/298093176',          // 기존 사이트 '카카오 지도 크게 보기'와 같은 장소
+    // 2026-11-19 수정: 예전 298093176 은 이천 '지산리조트 뽀드득 렌탈샵'(031-637-1141)이었다 — 같은 이름 다른 업체
+    kakao: 'https://place.map.kakao.com/2016256650',         // 카카오맵 '뽀드득 렌탈샵' 평창 올림픽로 238 · 033-336-9884
     naver: 'https://map.naver.com/p/search/' + encodeURIComponent('강원 평창군 대관령면 올림픽로 238'),
     roughmap: { timestamp: '1774262744025', key: 'jtuqah69r4n' }, // 기존 사이트 카카오 지도 퍼가기 값
   },

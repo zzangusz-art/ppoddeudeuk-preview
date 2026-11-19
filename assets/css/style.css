@@ -570,7 +570,7 @@ p.center,.btn-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .pcard-cover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px 22px;color:#fff;font-weight:900;font-size:clamp(18px,1.6vw,22px);line-height:1.35;letter-spacing:-.03em;text-shadow:0 2px 14px rgba(0,0,0,.4);word-break:keep-all}
 .pcard-b{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
 .pcard-b .chip{align-self:flex-start;font-size:12px;font-weight:800;color:var(--red);background:#fdeceb;border-radius:999px;padding:3px 10px}
-.pcard-b h3{font-size:17px;line-height:1.45;margin:0;font-weight:800;word-break:keep-all}
+.pcard-b h2,.pcard-b h3{font-size:17px;line-height:1.45;margin:0;font-weight:800;word-break:keep-all}
 .pcard-b p{margin:0;color:var(--ink2);font-size:14.5px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pcard-b time{margin-top:auto;font-size:13px;color:#8a94a3}
 .sec-blog .pgrid+.center{margin-top:clamp(28px,4vw,44px)}

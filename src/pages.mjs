@@ -21,7 +21,7 @@ export function subHead(u, { eyebrow, title, lead, bg = 'scene/carve.webp', crum
 }
 const subTabs = (u, items, cur) => `<nav class="sub-tabs" aria-label="하위 메뉴"><div class="wrap">${items.map(([t, h]) => `<a href="${u(h)}"${h === cur ? ' aria-current="page" class="is-on"' : ''}>${esc(t)}</a>`).join('')}</div></nav>`;
 const answer = (q, a) => `<div class="answer reveal"><h2 class="answer-q">${esc(q)}</h2><p>${a}</p></div>`;
-export const faqList = (faqs, openFirst = true) => `<div class="faq">${faqs.map((f, i) => `<details class="acc"${openFirst && i === 0 ? ' open' : ''}><summary><span class="q">Q</span><h3>${esc(f.q)}</h3>${ICON.chev}</summary><div class="acc-body"><p>${esc(f.a)}</p></div></details>`).join('')}</div>`;
+export const faqList = (faqs, openFirst = true, hl = 'h3') => `<div class="faq">${faqs.map((f, i) => `<details class="acc"${openFirst && i === 0 ? ' open' : ''}><summary><span class="q">Q</span><${hl}>${esc(f.q)}</${hl}>${ICON.chev}</summary><div class="acc-body"><p>${esc(f.a)}</p></div></details>`).join('')}</div>`;
 const ctaBand = u => `<section class="cta-band"><div class="wrap cta-in reveal">
   <div><h2>이용 날짜와 스키장만 알려 주세요</h2><p>리프트권·장비·의류·강습을 한 번에 견적 내 드립니다. 리프트권 할인은 이용 1일 전까지 예약이 필요합니다.</p></div>
   <div class="cta-btns"><a class="btn btn-red btn-lg" href="${u('reserve/')}">${ICON.cal}예약하기</a><a class="btn btn-ghost btn-lg" href="${u('quote/')}">${ICON.doc}견적문의</a><a class="btn btn-ghost btn-lg" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></div>
@@ -219,7 +219,7 @@ export function notice(u) {
 export function faqPage(u) {
   return subHead(u, { eyebrow: 'FAQ', title: '자주 묻는 질문', lead: '리프트권·렌탈·강습·예약에 대해 가장 많이 묻는 질문입니다.', bg: 'scene/spray.webp', crumbs: [['뽀드득 안내', 'about/'], ['자주 묻는 질문']] })
     + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'faq/')
-    + `<section class="sec"><div class="wrap narrow">${faqList(FAQ, true)}</div></section>` + ctaBand(u);
+    + `<section class="sec"><div class="wrap narrow">${faqList(FAQ, true, 'h2')}</div></section>` + ctaBand(u);
 }
 
 // ── 갤러리 ──
@@ -429,9 +429,9 @@ export function notFound(u) {
 
 // ── 블로그 ──
 const coverOf = p => p.image || BLOG.covers[[...p.slug].reduce((a, c) => a + c.charCodeAt(0), 0) % BLOG.covers.length];
-export const postCard = (u, p, cls = '') => `<article class="pcard reveal ${cls}"><a href="${u('blog/' + p.slug + '/')}">
+export const postCard = (u, p, cls = '', hl = 'h3') => `<article class="pcard reveal ${cls}"><a href="${u('blog/' + p.slug + '/')}">
   <div class="pcard-img">${img(u, 'assets/img/' + coverOf(p), '', { sizes: '(max-width: 760px) 100vw, 33vw' })}<span class="pcard-cover">${esc(p.cover || p.title)}</span></div>
-  <div class="pcard-b"><span class="chip">${esc(p.category)}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><time datetime="${p.date}">${kdate(p.date)}</time></div></a></article>`;
+  <div class="pcard-b"><span class="chip">${esc(p.category)}</span><${hl}>${esc(p.title)}</${hl}><p>${esc(p.description)}</p><time datetime="${p.date}">${kdate(p.date)}</time></div></a></article>`;
 export function homeBlog(u, posts) {
   if (!posts.length) return '';
   return `<section class="sec sec-blog"><div class="wrap">
@@ -444,7 +444,7 @@ export function blogIndex(u, posts) {
   return subHead(u, { eyebrow: 'BLOG', title: BLOG.name, lead: BLOG.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['블로그']] })
   + `<section class="sec"><div class="wrap">
   ${posts.length ? `${cats.length > 1 ? tabsBar('blog', [['all', '전체'], ...cats.map(c => [c, c])]) : ''}
-  <div class="pgrid" data-filter-grid="blog">${posts.map(p => postCard(u, p, 'gi').replace('<article class="pcard', `<article data-cat="${esc(p.category)}" class="pcard`)).join('')}</div>` : '<div class="empty-card"><h2 class="h3">첫 글을 준비하고 있습니다</h2></div>'}
+  <div class="pgrid" data-filter-grid="blog">${posts.map(p => postCard(u, p, 'gi', 'h2').replace('<article class="pcard', `<article data-cat="${esc(p.category)}" class="pcard`)).join('')}</div>` : '<div class="empty-card"><h2 class="h3">첫 글을 준비하고 있습니다</h2></div>'}
   </div></section>` + ctaBand(u);
 }
 export function blogPost(u, p, related) {

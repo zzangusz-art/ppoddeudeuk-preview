@@ -53,7 +53,7 @@ function emit({ out, title, description, body, section = '', pri = '0.7', type, 
 
 // ── 홈 ──
 emit({ out: 'index.html', pri: '1.0', bodyClass: 'home',
-  title: '용평렌탈샵 뽀드득 | 용평리조트·용평스키장 렌탈샵, 알펜시아렌탈샵',
+  title: '용평렌탈샵 뽀드득 | 용평스키장·알펜시아 렌탈샵',
   description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 용평 리프트권 1일 전 예약 33% 특별할인(4시간권 대인 ${won(53000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
   keywords: [...MAIN_KW, '모나 용평 렌탈', '용평 스키복 렌탈'], faq: faqOf('home'),
   body: u => P.home(u, POSTS) });
@@ -63,7 +63,7 @@ for (const p of POSTS) {
   const rel = POSTS.filter(x => x !== p && x.category === p.category).slice(0, 3);
   const url = SITE.url + `blog/${p.slug}/`, img = SITE.url + 'assets/img/og-logo.jpg';
   emit({ out: `blog/${p.slug}/index.html`, section: 'blog', pri: '0.6', type: 'WebPage', crumbs: [['홈', ''], ['블로그', 'blog/'], [p.title, `blog/${p.slug}/`]], faq: p.faq,
-    title: `${p.title} | 뽀드득`, description: p.description, keywords: [p.keyword, ...(p.tags || [])].filter(Boolean), lastmod: p.date,
+    title: (p.title + ' | 뽀드득').length <= 30 ? `${p.title} | 뽀드득` : p.title, description: p.description, keywords: [p.keyword, ...(p.tags || [])].filter(Boolean), lastmod: p.date,
     extra: [{ '@type': 'BlogPosting', '@id': url + '#post', headline: p.title, description: p.description, datePublished: `${p.date}T${p.time || '09:00'}:00+09:00`, dateModified: `${p.updated || p.date}T${p.time || '09:00'}:00+09:00`,
       author: { '@type': 'Organization', name: p.author || D.BLOG.author, url: SITE.url }, publisher: { '@id': SITE.url + '#business' }, mainEntityOfPage: url, image: img, keywords: [p.keyword, ...(p.tags || [])].filter(Boolean).join(', '), articleSection: p.category, inLanguage: 'ko-KR', wordCount: p.chars }],
     body: u => P.blogPost(u, p, rel.length ? rel : POSTS.filter(x => x !== p).slice(0, 3)) });
@@ -78,14 +78,14 @@ emit({ out: 'about/index.html', section: 'about', type: 'AboutPage', crumbs: [['
   title: '뽀드득 소개 — 용평렌탈샵·스키 강습 (구 겨울바라기)', description: `뽀드득은 프리미엄 스키·보드 렌탈과 전문 강습을 함께 운영합니다. ${SITE.near}. ${SCALE.gear}·${SCALE.wear}·${SCALE.staff}.`,
   body: u => P.about(u) });
 emit({ out: 'location/index.html', section: 'location', crumbs: [['홈', ''], ['오시는 길', 'location/']], faq: faqOf('location'),
-  title: '용평렌탈샵 뽀드득 오시는 길 — 평창 대관령면 올림픽로 238 (용평·알펜시아 5분)', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
+  title: '용평렌탈샵 뽀드득 오시는 길 | 올림픽로 238', description: `${SITE.address.full}(지번 ${SITE.address.old}). ${SITE.near}. 대표전화 ${SITE.phone}. 카카오맵·네이버 지도 바로가기.`,
   body: u => P.location(u) });
 emit({ out: 'notice/index.html', section: 'notice', pri: '0.4', crumbs: [['홈', ''], ['공지사항', 'notice/']],
   title: '공지사항 | 뽀드득', description: '뽀드득 스키 렌탈·강습 공지사항입니다.',
   extra: NOTICES.map(n => ({ '@type': 'NewsArticle', headline: n.title, datePublished: n.date, articleBody: n.body.join(' '), url: SITE.url + 'notice/#' + n.id, publisher: { '@id': SITE.url + '#business' } })),
   body: u => P.notice(u) });
 emit({ out: 'faq/index.html', section: 'faq', pri: '0.8', crumbs: [['홈', ''], ['자주 묻는 질문', 'faq/']], faq: FAQ,
-  title: '용평 스키 렌탈·리프트권·강습 자주 묻는 질문 | 뽀드득', description: '용평·알펜시아 리프트권 할인율, 1·2·3타임과 정설시간, 장비·스키복 렌탈 요금, 강습 인원·시간, 예약 방법을 뽀드득 기준으로 답합니다.',
+  title: '용평 렌탈·리프트권·강습 자주 묻는 질문 | 뽀드득', description: '용평·알펜시아 리프트권 할인율, 1·2·3타임과 정설시간, 장비·스키복 렌탈 요금, 강습 인원·시간, 예약 방법을 뽀드득 기준으로 답합니다.',
   body: u => P.faqPage(u) });
 
 // ── 갤러리·중고장터 ──
@@ -99,11 +99,11 @@ emit({ out: 'secondhand/index.html', section: 'secondhand', pri: '0.4', crumbs: 
 
 // ── 요금 ──
 emit({ out: 'rates/lift/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['리프트 요금', 'rates/lift/']], faq: faqOf('lift'),
-  title: `용평 리프트권 33% 특별할인 ${SITE.season} 요금표 | 뽀드득`, description: `용평리조트 리프트권 이용 1일 전까지 예약 시 33% 특별할인가. 4시간권 대인 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}.`,
+  title: `용평 리프트권 33% 할인 ${SITE.season} | 뽀드득`, description: `용평리조트 리프트권 이용 1일 전까지 예약 시 33% 특별할인가. 4시간권 대인 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}.`,
   keywords: ['용평 리프트권 할인', '알펜시아 리프트권 할인', '용평 리프트권 가격', '모나 용평 리프트권'],
   body: u => P.lift(u) });
 emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']], faq: faqOf('rental'),
-  title: `용평·알펜시아 렌탈 요금 ${SITE.season} — 장비·스키복·보호장비 | 용평렌탈샵 뽀드득`, description: `100% 새제품 장비·의류. 용평 4시간권 예약할인가 초급자 스키·보드 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드·버튼 스텝온 ${won(40000)}~. 의류 ${won(20000)}~, 헬멧·고글·보호대 ${won(5000)}~. 알펜시아 요금표 포함.`,
+  title: `용평·알펜시아 렌탈 요금 ${SITE.season} | 뽀드득`, description: `100% 새제품 장비·의류. 용평 4시간권 예약할인가 초급자 스키·보드 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드·버튼 스텝온 ${won(40000)}~. 의류 ${won(20000)}~, 헬멧·고글·보호대 ${won(5000)}~. 알펜시아 요금표 포함.`,
   keywords: ['용평스키장 렌탈 가격', '용평리조트 렌탈 요금', '알펜시아 렌탈 요금', '용평 스키복 렌탈', '어반그레이 렌탈', '용평 보드 렌탈'],
   body: u => P.rental(u) });
 
@@ -111,18 +111,18 @@ emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['
 for (const s of STAY) {
   const rooms = s.types.flatMap(t => t.rooms.map(r => r[1]));
   emit({ out: `stay/${s.slug}/index.html`, section: 'stay', pri: '0.5', crumbs: [['홈', ''], ['숙박안내', 'stay/tower/'], [s.name, `stay/${s.slug}/`]],
-    title: `용평리조트 ${s.name} 객실 안내 — ${s.types.map(t => t.label).join('·')} | 뽀드득`, description: `${s.lead} 객실 타입 ${rooms.join(', ')}. 객실 사진·구성·투숙인원·비품 안내. 숙박 문의 ${SITE.phone}.`,
+    title: `용평리조트 ${s.name} 객실 안내 | 뽀드득`, description: `${s.lead} 객실 타입 ${rooms.join(', ')}. 객실 사진·구성·투숙인원·비품 안내. 숙박 문의 ${SITE.phone}.`,
     body: u => P.stay(u, s) });
 }
 
 // ── 강습 ──
 emit({ out: 'lesson/index.html', section: 'lesson', pri: '0.9', crumbs: [['홈', ''], ['강습안내', 'lesson/'], ['강습 요금', 'lesson/']], faq: faqOf('lesson'),
-  title: '용평 스키·보드 강습 요금 — 1:1 20만원부터 | 뽀드득', description: `1:1 강습 2시간 20만원·3시간 25만원·4시간 30만원, 2:1 강습 25·30·35만원. 스키와 보드 동일, 1:1·2:1만 운영(3명 이상·1시간 강습 없음).`,
+  title: '용평 스키·보드 강습 요금 | 뽀드득', description: `1:1 강습 2시간 20만원·3시간 25만원·4시간 30만원, 2:1 강습 25·30·35만원. 스키와 보드 동일, 1:1·2:1만 운영(3명 이상·1시간 강습 없음).`,
   keywords: ['용평 스키 강습', '알펜시아 스키 강습', '스키 개인 강습 가격', '보드 강습 가격'],
   extra: [{ '@type': 'Service', name: '뽀드득 스키·보드 강습', provider: { '@id': SITE.url + '#business' }, areaServed: '평창 용평·알펜시아', offers: LESSON_FEE.rows.flatMap(r => LESSON_FEE.hours.map((h, i) => ({ '@type': 'Offer', name: `${r.name} ${h}시간`, price: r.p[i], priceCurrency: 'KRW' }))) }],
   body: u => P.lessonFee(u) });
 emit({ out: 'lesson/program/index.html', section: 'lesson', pri: '0.7', crumbs: [['홈', ''], ['강습안내', 'lesson/'], ['강습 프로그램', 'lesson/program/']], faq: faqOf('lesson'),
-  title: '스키 강습 프로그램 — 처음·초급·중급·상급 단계별 내용 | 뽀드득', description: '처음단계(안전수칙·장비·푸르그 화렌)부터 초급(프루그 보겐·턴), 중급(슈템턴·패러럴), 상급(카빙 롱턴·숏턴)까지 단계별 실기능력과 강습내용·학습목표.',
+  title: '스키 강습 프로그램 단계별 안내 | 뽀드득', description: '처음단계(안전수칙·장비·푸르그 화렌)부터 초급(프루그 보겐·턴), 중급(슈템턴·패러럴), 상급(카빙 롱턴·숏턴)까지 단계별 실기능력과 강습내용·학습목표.',
   extra: [{ '@type': 'Course', name: '뽀드득 스키 강습 프로그램', description: PROGRAM.map(p => `${p.name}: ${p.lead}`).join(' '), provider: { '@id': SITE.url + '#business' }, hasCourseInstance: PROGRAM.map(p => ({ '@type': 'CourseInstance', name: p.name, courseMode: 'onsite', description: p.lead })) }],
   body: u => P.program(u) });
 emit({ out: 'lesson/instructors/index.html', section: 'lesson', pri: '0.4', crumbs: [['홈', ''], ['강습안내', 'lesson/'], ['강사진 소개', 'lesson/instructors/']],
@@ -131,10 +131,10 @@ emit({ out: 'lesson/instructors/index.html', section: 'lesson', pri: '0.4', crum
 
 // ── 견적·예약 ──
 emit({ out: 'reserve/index.html', section: 'reserve', pri: '0.8', crumbs: [['홈', ''], ['예약하기', 'reserve/']], faq: faqOf('reserve'),
-  title: '예약하기 — 용평·알펜시아 렌탈·리프트권·강습 | 뽀드득', description: '이용날짜·스키장·이용타임을 고르고 스키·보드 장비, 의류, 강습을 함께 예약하세요. 리프트권 할인은 이용 1일 전까지 예약.',
+  title: '예약하기 — 용평·알펜시아 렌탈·강습 | 뽀드득', description: '이용날짜·스키장·이용타임을 고르고 스키·보드 장비, 의류, 강습을 함께 예약하세요. 리프트권 할인은 이용 1일 전까지 예약.',
   body: u => P.book(u, 'reserve') });
 emit({ out: 'quote/index.html', section: 'quote', pri: '0.7', crumbs: [['홈', ''], ['견적문의', 'quote/']], faq: faqOf('reserve'),
-  title: '견적문의 — 스키 렌탈·강습·리프트권 한 번에 | 뽀드득', description: '가족·단체 렌탈, 리프트권, 강습 견적을 한 번에 받아 보세요. 날짜·스키장·필요한 장비만 알려 주시면 안내드립니다.',
+  title: '견적문의 — 렌탈·강습·리프트권 | 뽀드득', description: '가족·단체 렌탈, 리프트권, 강습 견적을 한 번에 받아 보세요. 날짜·스키장·필요한 장비만 알려 주시면 안내드립니다.',
   body: u => P.book(u, 'quote') });
 emit({ out: 'privacy/index.html', pri: '0.1', crumbs: [['홈', ''], ['개인정보처리방침', 'privacy/']],
   title: '개인정보처리방침 | 뽀드득', description: '뽀드득 홈페이지 견적·예약 접수의 개인정보 수집·이용 안내입니다.', body: u => P.privacy(u) });
