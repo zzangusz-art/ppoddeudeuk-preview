@@ -52,8 +52,13 @@ function decodeImage(dataUrl) {
   return { base64: m[2], ext: m[1] === 'jpeg' ? 'jpg' : m[1] };
 }
 const okImg = p => typeof p === 'string' && /^[\w\-/]+\.(webp|jpe?g|png)$/i.test(p) && !p.includes('..');
+const smPath = p => p.replace(/\.(webp|jpe?g|png)$/i, '-sm.$1');
 function imageField(v, key, files, i, required = true) {
-  if (v && typeof v === 'object' && v.data) { const img = decodeImage(v.data), p = `up/${key}-${stamp()}-${i}-${Math.random().toString(36).slice(2, 6)}.${img.ext}`; files.push({ path: `assets/img/${p}`, base64: img.base64 }); return p; }
+  if (v && typeof v === 'object' && v.data) {
+    const img = decodeImage(v.data), p = `up/${key}-${stamp()}-${i}-${Math.random().toString(36).slice(2, 6)}.${img.ext}`; files.push({ path: `assets/img/${p}`, base64: img.base64 });
+    if (v.sm) { const s = decodeImage(v.sm); if (s.ext === img.ext) files.push({ path: `assets/img/${smPath(p)}`, base64: s.base64 }); } // 휴대폰용 작은 사본
+    return p;
+  }
   if (okImg(v)) return v;
   need(!required, 400, '사진이 없는 항목이 있습니다');
   return '';
@@ -219,7 +224,7 @@ route('POST', '/api/admin/content/:key', 'client', async ({ params, data, user }
   else site[params.key] = s.clean(data.value ?? {}, files);
   // 더는 쓰지 않는 업로드 사진 정리
   const after = usedUploads(site);
-  for (const p of before) if (!after.has(p)) files.push({ path: `assets/img/${p}`, delete: true });
+  for (const p of before) if (!after.has(p)) { files.push({ path: `assets/img/${p}`, delete: true }); if (store.kind === 'volume') files.push({ path: `assets/img/${smPath(p)}`, delete: true }); }
   files.push({ path: 'content/site.json', text: JSON.stringify(site, null, 1) + '\n' });
   const c = await store.commit(files, commitMsg(user, `${s.name} ${data.reset ? '기본값으로 되돌림' : '수정'}`), user.name);
   DB.audit(user.name, `${s.name} ${data.reset ? '되돌림' : '저장'}`);

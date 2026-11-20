@@ -1,6 +1,6 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
 import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, VISIT_TIMES, LIFT, RENTALS, RENTAL_ITEMS, HOME_PHOTOS, RATE_CARDS, LESSON_VIDEOS, HERO, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
-import { esc, won, img, phImg, kdate } from './lib.mjs';
+import { esc, won, img, phImg, kdate, smOf } from './lib.mjs';
 import { ICON } from './layout.mjs';
 
 const man = n => (n % 10000 === 0 ? `${n / 10000}만원` : won(n));
@@ -103,7 +103,7 @@ export function home(u, posts = []) {
   const steps = [['날짜·스키장 선택', '이용 날짜와 용평·알펜시아 중 스키장, 이용타임(1·2·3타임)을 고릅니다.'], ['렌탈·강습 선택', '스키·보드 장비, 의류, 강습 종목·인원·시간을 함께 고릅니다.'], ['확인 연락', '접수 내용을 확인해 전화나 문자로 안내드립니다. 리프트권은 이용 1일 전까지 예약해야 할인됩니다.']];
   return popupHtml(u) + `
 <section class="hero${HERO.mode === 'photo' && HERO.img ? ' is-photo' : ''}" data-hero>
-  ${HERO.mode === 'photo' && HERO.img ? `<picture class="hero-pic">${HERO.imgM ? `<source media="(max-width: 760px)" srcset="${u('assets/img/' + HERO.imgM)}">` : ''}<img src="${u('assets/img/' + HERO.img)}" alt="${esc(HERO.alt || '뽀드득 용평 스키 렌탈샵')}" fetchpriority="high" decoding="async"></picture>` : `<video class="hero-v" muted playsinline loop autoplay preload="auto" poster="${u('assets/video/hero-poster.jpg')}" data-src-slow="${u('assets/video/hero-1280.mp4')}" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"><source media="(max-width: 760px)" src="${u('assets/video/hero-m.mp4')}" type="video/mp4"><source src="${u('assets/video/hero-1920.mp4')}" type="video/mp4"></video>`}
+  ${HERO.mode === 'photo' && HERO.img ? `<picture class="hero-pic">${HERO.imgM ? `<source media="(max-width: 760px)" srcset="${u('assets/img/' + HERO.imgM)}">` : ''}<img src="${u('assets/img/' + HERO.img)}" alt="${esc(HERO.alt || '뽀드득 용평 스키 렌탈샵')}" fetchpriority="high" decoding="async"></picture>` : `<picture class="hero-pic hero-poster"><source media="(max-width: 760px)" srcset="${u('assets/video/hero-poster-m.webp')}" type="image/webp"><source srcset="${u('assets/video/hero-poster.webp')}" type="image/webp"><img src="${u('assets/video/hero-poster.jpg')}" alt="" fetchpriority="high" decoding="async"></picture><video class="hero-v" muted playsinline loop autoplay preload="auto" data-src-slow="${u('assets/video/hero-1280.mp4')}?v=1120" aria-label="뽀드득 스키 영상: 슬로프를 내려오는 스키어들, 마지막에 뽀드득 로고"><source media="(max-width: 760px)" src="${u('assets/video/hero-m.mp4')}?v=1120" type="video/mp4"><source src="${u('assets/video/hero-1920.mp4')}" type="video/mp4"></video>`}
   <h1 class="sr">용평렌탈샵 뽀드득 — 용평리조트·용평스키장·알펜시아 스키 렌탈샵</h1>
   ${HERO.mode === 'photo' && HERO.img ? '' : `<div class="hero-ctl"><button type="button" class="icon-btn glass" data-hero-sound aria-pressed="false" aria-label="소리 켜기">${ICON.mute}</button><button type="button" class="icon-btn glass" data-hero-replay aria-label="처음부터 다시 보기">${ICON.replay}</button></div>`}
 </section>
@@ -128,7 +128,8 @@ export function home(u, posts = []) {
 
 <section class="sec main-rates" id="rates">
   <div class="wrap m-tit reveal"><h2>뽀드득 요금표</h2><p>뽀드득에서만 만나볼 수 있는 <span class="t-red">전용 할인가</span>로 더욱 부담 없이 스키를 즐겨보세요.</p></div>
-  <div class="rate-cards reveal">${RATE_CARDS.slice(0, 5).map((c, i) => `<div class="item"><a href="${u(rateLinks[i])}" style="background-image:url('${u(`assets/img/${c.img}`)}')"><p>${esc(c.title)}</p></a></div>`).join('')}</div>
+  <style>${RATE_CARDS.slice(0, 5).map((c, i) => `.rate-cards .item:nth-child(${i + 1}) a{background-image:url('${u(`assets/img/${c.img}`)}')}`).join('')}@media (max-width:760px){${RATE_CARDS.slice(0, 5).map((c, i) => `.rate-cards .item:nth-child(${i + 1}) a{background-image:url('${u(`assets/img/${smOf(c.img)}`)}')}`).join('')}}</style>
+  <div class="rate-cards reveal">${RATE_CARDS.slice(0, 5).map((c, i) => `<div class="item"><a href="${u(rateLinks[i])}"><p>${esc(c.title)}</p></a></div>`).join('')}</div>
 </section>
 
 <section class="sec sec-gallery"><div class="wrap">

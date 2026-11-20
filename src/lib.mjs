@@ -52,9 +52,11 @@ export function webpSize(rel) {
 }
 // u: 상대 경로 함수, rel: assets/ 부터의 경로(WebP)
 // sizes 를 주고 옆에 작은 사본(<이름>-sm.webp)이 있으면 srcset 을 붙여 휴대폰은 작은 사본을 받는다
+export const smName = rel => rel.replace(/\.(webp|jpe?g|png)$/i, '-sm.$1');
+export const smOf = rel => { const sm = smName(rel); return sm !== rel && fs.existsSync(path.join(ROOT, 'assets/img', sm)) ? sm : rel; };
 export function img(u, rel, alt, { cls = '', lazy = true, priority = false, sizes = '' } = {}) {
   const [w, h] = webpSize(rel);
-  const sm = rel.replace(/\.webp$/, '-sm.webp');
+  const sm = smName(rel);
   const srcset = sizes && sm !== rel && fs.existsSync(path.join(ROOT, sm)) ? ` srcset="${u(sm)} ${webpSize(sm)[0]}w, ${u(rel)} ${w}w"` : '';
   return `<img src="${u(rel)}"${srcset} alt="${esc(alt)}" width="${w}" height="${h}"${cls ? ` class="${cls}"` : ''}${lazy && !priority ? ' loading="lazy"' : ''} decoding="async"${priority ? ' fetchpriority="high"' : ''}${sizes ? ` sizes="${sizes}"` : ''}>`;
 }

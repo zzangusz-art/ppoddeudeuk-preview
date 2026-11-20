@@ -771,3 +771,14 @@ br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
 .rate-cards .item a p{position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.35)}
 /* 휴대폰: 서브 탭 바로 아래 첫 섹션 위 여백 줄이기(예약·요금·안내 페이지 첫 화면에 내용이 더 보이게) */
 @media (max-width:760px){.sub-tabs + .sec,.sub-tabs + section{padding-top:32px}}
+
+/* ── 모바일 속도(2026-11-20) ── */
+.hero-poster img{z-index:-3}
+@media (max-width:760px){
+  /* 고정 머리·하단 바의 흐림 효과는 스크롤할 때마다 다시 그려 저사양 폰에서 끊김 — 바탕이 거의 불투명이라 빼도 모양은 같다 */
+  .hd.is-solid,.mbar,.btn-glass,.icon-btn.glass{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .hd.is-solid{background:#fff}
+  /* 나타나는 효과를 짧게: 내용이 늦게 뜨는 느낌 줄이기 */
+  .reveal{transform:translateY(12px);transition-duration:.4s}
+  body{animation:none}
+}

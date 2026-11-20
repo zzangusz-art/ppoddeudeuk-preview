@@ -56,7 +56,14 @@
     const c = document.createElement('canvas'); c.width = w; c.height = ht;
     const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, ht); x.drawImage(img, 0, 0, w, ht);
     let data = c.toDataURL('image/webp', 0.84); if (!data.startsWith('data:image/webp')) data = c.toDataURL('image/jpeg', 0.86);
-    return { data };
+    // 휴대폰용 작은 사본(가로 800) — 목록·갤러리에서 휴대폰은 이것을 받는다(원본은 크게 보기용)
+    const SM = 800; let sm;
+    if (w > SM * 1.2) {
+      const k = SM / w, c2 = document.createElement('canvas'); c2.width = SM; c2.height = Math.round(ht * k);
+      const x2 = c2.getContext('2d'); x2.imageSmoothingQuality = 'high'; x2.drawImage(c, 0, 0, c2.width, c2.height);
+      sm = c2.toDataURL(data.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg', 0.8);
+    }
+    return sm ? { data, sm } : { data };
   }
   const pickFile = () => new Promise(ok => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => ok(i.files[0]); i.click(); });
   // 올린 사진(up/)은 주소 뒤에 버전을 붙인다 — 예전에 브라우저가 기억한 '없음(404)'을 건너뛰고 새로 받게(2026-11-18)

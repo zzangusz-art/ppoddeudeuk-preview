@@ -85,10 +85,10 @@ ${keywords.length ? `<meta name="keywords" content="${esc(keywords.join(', '))}"
 <meta name="format-detection" content="telephone=no">
 ${analytics()}
 <link rel="icon" href="${u('favicon.ico')}" sizes="48x48">
-<link rel="icon" type="image/png" href="${u('assets/img/brand/icon-512.png')}">
+<link rel="icon" type="image/png" sizes="192x192" href="${u('assets/img/brand/icon-192.png')}">
 <link rel="apple-touch-icon" href="${u('assets/img/brand/apple-touch-icon.png')}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"></noscript>
 <link rel="stylesheet" href="${u('assets/css/style.css')}?v=${v}">
 ${schema ? jsonld(schema) : ''}
 ${tracking(track)}
@@ -97,7 +97,7 @@ ${tracking(track)}
 <a class="skip" href="#main">본문 바로가기</a>
 <header class="hd" id="hd">
   <div class="hd-in">
-    <a class="logo" href="${u('')}" aria-label="${SITE.name} 홈"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="480" height="128"></a>
+    <a class="logo" href="${u('')}" aria-label="${SITE.name} 홈"><img src="${u('assets/img/brand/logo.webp')}" alt="${SITE.name}" width="480" height="128" fetchpriority="high"></a>
     <nav class="gnb" aria-label="주메뉴"><ul>${navHtml}</ul></nav>
     <div class="mega-bg" aria-hidden="true"></div>
     <div class="hd-act">
@@ -110,7 +110,7 @@ ${tracking(track)}
 <div class="drawer" id="drawer-menu" role="dialog" aria-modal="true" aria-label="전체 메뉴" hidden>
   <div class="drawer-dim" data-drawer-close></div>
   <div class="drawer-panel">
-    <div class="drawer-hd"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="160" height="43"><button type="button" class="icon-btn" data-drawer-close aria-label="메뉴 닫기">${ICON.close}</button></div>
+    <div class="drawer-hd"><img src="${u('assets/img/brand/logo.webp')}" alt="${SITE.name}" width="160" height="43" loading="lazy"><button type="button" class="icon-btn" data-drawer-close aria-label="메뉴 닫기">${ICON.close}</button></div>
     <nav class="drawer-nav" aria-label="전체 메뉴">${drawer}</nav>
     <div class="drawer-ft"><a class="btn btn-line" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a><a class="btn btn-red" href="${u('reserve/')}">${ICON.cal}예약하기</a></div>
   </div>
@@ -121,7 +121,7 @@ ${body}
 <footer class="ft">
   <div class="ft-bg">${'<img src="' + u('assets/img/common/footer-bg.webp') + '" alt="" width="1920" height="380" loading="lazy">'}</div>
   <div class="wrap ft-in">
-    <a class="ft-logo" href="${u('')}"><img src="${u('assets/img/brand/logo.png')}" alt="${SITE.name}" width="240" height="64" loading="lazy"></a>
+    <a class="ft-logo" href="${u('')}"><img src="${u('assets/img/brand/logo.webp')}" alt="${SITE.name}" width="240" height="64" loading="lazy"></a>
     <address class="ft-info"><span>대표 : ${SITE.ceo}</span><span>사업자등록번호 : ${SITE.bizNo}</span><br><span>주소 : ${SITE.address.full}</span><span>고객센터 : <a href="${SITE.phoneHref}">${SITE.phone}</a></span></address>
     <ul class="ft-links"><li><a href="${u('privacy/')}">개인정보처리방침</a></li><li><a href="${u('privacy/#email')}">이메일무단수집거부</a></li></ul>
     <p class="ft-copy">Copyright by ${SITE.name}. All Right Reserved.</p>
