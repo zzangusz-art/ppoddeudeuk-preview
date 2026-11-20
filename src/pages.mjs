@@ -20,6 +20,8 @@ export function subHead(u, { eyebrow, title, lead, bg = 'scene/carve.webp', crum
 </section>`;
 }
 const subTabs = (u, items, cur) => `<nav class="sub-tabs" aria-label="하위 메뉴"><div class="wrap">${items.map(([t, h]) => `<a href="${u(h)}"${h === cur ? ' aria-current="page" class="is-on"' : ''}>${esc(t)}</a>`).join('')}</div></nav>`;
+// 「뽀드득은 어떤 곳인가요?」 특징 목록(줄맞춤) — 업체 제공 문구
+const aboutPoints = () => `<ul class="about-points">${ABOUT.points.map(([t, sub]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span>${esc(t)}${sub ? `<small>${esc(sub)}</small>` : ''}</span></li>`).join('')}</ul>`;
 const answer = (q, a) => `<div class="answer reveal"><h2 class="answer-q">${esc(q)}</h2><p>${a}</p></div>`;
 export const faqList = (faqs, openFirst = true, hl = 'h3') => `<div class="faq">${faqs.map((f, i) => `<details class="acc"${openFirst && i === 0 ? ' open' : ''}><summary><span class="q">Q</span><${hl}>${esc(f.q)}</${hl}>${ICON.chev}</summary><div class="acc-body"><p>${esc(f.a)}</p></div></details>`).join('')}</div>`;
 const ctaBand = u => `<section class="cta-band"><div class="wrap cta-in reveal">
@@ -114,7 +116,8 @@ export function home(u, posts = []) {
   <div class="reveal">
     <p class="eyebrow">ABOUT PPODDEUDEUK</p>
     <h2 class="h2">뽀드득은 어떤 곳인가요?</h2>
-    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고,<br class="br-pc"> 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중<br class="br-pc"> 최대 규모의 초대형 프리미엄 렌탈샵입니다.</p>
+    <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong></p>
+    ${aboutPoints()}
     <ul class="facts">
       <li><b>리프트권</b>용평 4시간권 대인 ${won(79000)} → <em>${won(53000)}</em> <span class="tag33">1일 전 예약 33%</span></li>
       <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(15000)}</em>부터</li>
@@ -189,7 +192,8 @@ export function about(u) {
   return subHead(u, { eyebrow: 'ABOUT', title: '소개', lead: ABOUT.lead, bg: 'scene/lineup.webp', crumbs: [['뽀드득 안내', 'about/'], ['소개']] })
     + subTabs(u, [['소개', 'about/'], ['오시는 길', 'location/'], ['공지사항', 'notice/'], ['자주 묻는 질문', 'faq/']], 'about/')
     + `<section class="sec"><div class="wrap narrow">
-  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong><br>스키와 스노보드 약 900대, 하이엔드 의류 약 1,200벌을 보유하고,<br class="br-pc"> 전문 자격증을 갖춘 강사 30여 명이 함께하는 인근 렌탈샵 중<br class="br-pc"> 최대 규모의 초대형 프리미엄 렌탈샵입니다. 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
+  ${answer('뽀드득은 어떤 곳인가요?', `<strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong> 25/26 시즌 겨울바라기에서 뽀드득으로 새롭게 단장했습니다.`)}
+  <div class="reveal">${aboutPoints()}</div>
   <div class="prose reveal">${ABOUT.paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
 </div></section>` + ctaBand(u);
 }
@@ -274,30 +278,38 @@ export function rental(u) {
     <div class="only-pc">${rentalTable(R)}</div>
     <div class="only-m">${R.data.groups.map(gr => `<h3 class="h4" data-anchor="${R.id}-${gr.key}">${esc(gr.group)}</h3>${rentalCards(R, gr.key)}`).join('')}</div></div>`; }).join('')}
   <p class="note">‘문의’는 요금이 정해지지 않은 항목입니다. 전화로 안내드립니다. 보유 브랜드와 모델은 시즌마다 바뀔 수 있습니다.</p>
-  <figure class="wide-photo reveal">${img(u, 'assets/img/gallery/gear-volkl.webp', '매장에 진열된 뵐클 중급자 스키', { sizes: '(max-width: 760px) 100vw, 1100px' })}<figcaption>새로 입고된 뵐클 중급자 스키</figcaption></figure>
+  <h2 class="h3">장비·의류·튜닝·안전장비 바로가기</h2>
+  <nav class="jump-cards reveal" aria-label="장비·의류·튜닝·안전장비 바로가기">${[
+    ['장비', 'gallery/#장비', 'gallery/gear-volkl.webp', '매장 장비 사진'],
+    ['의류', 'gallery/#의류', 'gallery/wear-urbangray.webp', '하이엔드 의류 사진'],
+    ['장비 튜닝', 'gallery/#장비관리', 'gallery/stock-care-wax-iron.webp', '왁싱·튜닝 사진'],
+    ['안전장비', '#yongpyong-safety', 'store/interior-3.webp', '헬멧·고글·보호대 요금'],
+  ].map(([t, h, p, d]) => `<a class="jc" href="${h.startsWith('#') ? h : u(h)}">${phImg(u, 'assets/img/' + p, '', { sizes: '(max-width: 760px) 50vw, 270px' })}<span class="jc-t">${t} <small>${d}</small></span></a>`).join('')}</nav>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('rental')), true)}</div></section>` + ctaBand(u);
 }
 
 // ── 숙박안내 ──
 export function stay(u, s) {
-  const tabs = [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/']];
+  const tabs = [['타워 콘도', 'stay/tower/'], ['빌라 콘도', 'stay/villa/'], ['그린피아 콘도', 'stay/greenpia/'], ['알펜시아 콘도', 'stay/alpensia/']];
+  const cols = s.cols || ['구분', '객실타입', '객실수', '객실구성', '투숙인원'];
   const typeTabs = s.types.length > 1 ? tabsBar('type', s.types.map(t => [t.key, t.label])) : '';
   const panes = s.types.map((t, i) => `<div class="tab-pane"${s.types.length > 1 ? ` role="tabpanel" id="pane-type-${i}" aria-labelledby="tab-type-${i}"` : ''}${i ? ' hidden' : ''}>
     <div class="slider" data-slider><div class="slides">${Array.from({ length: t.photos }, (_, k) => `<button type="button" class="slide" data-lb="${u(`assets/img/stay/${t.key}-${k + 1}.webp`)}" data-lb-group="${t.key}" data-lb-cap="${esc(t.caption)}">${phImg(u, `assets/img/stay/${t.key}-${k + 1}.webp`, `${t.caption} 객실 사진 ${k + 1}`, { sizes: '(max-width: 760px) 90vw, 760px', lazy: k > 0 })}</button>`).join('')}</div>
       <button type="button" class="sl-nav sl-prev" aria-label="이전 사진">‹</button><button type="button" class="sl-nav sl-next" aria-label="다음 사진">›</button><p class="sl-count"><span>1</span> / ${t.photos}</p></div>
     <h3 class="h4">객실 정보</h3>
-    <div class="tbl-wrap"><table class="tbl"><caption>${esc(t.caption)} 객실 정보</caption><thead><tr><th scope="col">구분</th><th scope="col">객실타입</th><th scope="col">객실수</th><th scope="col">객실구성</th><th scope="col">투숙인원</th></tr></thead><tbody>${t.rooms.map(r => `<tr>${r.map((c, ci) => ci === 4 && c === '문의' ? `<td>${price(0)}</td>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <h3 class="h4">객실 내 인터넷 이용</h3><p>전 객실에 무선 인터넷(Wi-Fi) 환경을 갖추고 있어, 객실 어디에서든 편리하게 연결하여 사용하실 수 있습니다.</p>
+    <div class="tbl-wrap"><table class="tbl"><caption>${esc(t.caption)} 객실 정보</caption><thead><tr>${cols.map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${t.rooms.map(r => `<tr>${r.map((c, ci) => ci === 4 && c === '문의' ? `<td>${price(0)}</td>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    ${s.wifi ? '<h3 class="h4">객실 내 인터넷 이용</h3><p>전 객실에 무선 인터넷(Wi-Fi) 환경을 갖추고 있어, 객실 어디에서든 편리하게 연결하여 사용하실 수 있습니다.</p>' : ''}
     <h3 class="h4">비품 정보</h3>
     <table class="tbl tbl-kv"><caption class="sr">${esc(t.caption)} 비품 정보</caption><tbody><tr><th scope="row">가전류</th><td>${s.amenity.appliance}</td></tr><tr><th scope="row">식기류</th><td>${s.amenity.kitchen}</td></tr><tr><th scope="row">침구류</th><td>${esc(t.bedding)}</td></tr><tr><th scope="row">세면류</th><td>${s.amenity.bath}</td></tr>${t.pet ? `<tr><th scope="row">펫 비품</th><td>${esc(t.pet)}</td></tr>` : ''}</tbody></table>
   </div>`).join('');
   return subHead(u, { eyebrow: 'STAY', title: `${s.name} 소개`, lead: s.lead, bg: 'scene/group.webp', crumbs: [['숙박안내', 'stay/tower/'], [s.name]] })
     + subTabs(u, tabs, `stay/${s.slug}/`)
     + `<section class="sec"><div class="wrap narrow">
-  ${answer(`용평리조트 ${s.name}는 어떤 객실이 있나요?`, `<strong>${s.types.map(t => `${t.caption}: ${t.rooms.map(r => `${r[1]} ${r[2]}(${r[4] === '문의' ? '투숙인원 문의' : r[4]})`).join(', ')}`).join(' / ')}</strong>입니다. 숙박 문의는 ${SITE.phone}로 연락 주세요.`)}
+  ${answer(`${s.full || s.resort + ' ' + s.name}는 어떤 객실이 있나요?`, `<strong>${s.types.map(t => `${t.caption}: ${t.rooms.map(r => `${r[1]} ${r[2]}(${r[4] === '문의' ? '투숙인원 문의' : r[4]})`).join(', ')}`).join(' / ')}</strong>입니다. 숙박 문의는 ${SITE.phone}로 연락 주세요.`)}
+  ${s.info ? `<table class="tbl tbl-kv reveal"><caption class="sr">${esc(s.name)} 기본 안내</caption><tbody>${s.info.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>` : ''}
   ${typeTabs}${panes}
-  <p class="note">알펜시아 콘도 안내는 준비 중입니다. 객실 사진과 정보는 기존 홈페이지 안내를 그대로 옮겼습니다.</p>
+  <p class="note">${esc(s.note)}</p>
 </div></section>` + ctaBand(u);
 }
 

@@ -782,3 +782,20 @@ br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
   .reveal{transform:translateY(12px);transition-duration:.4s}
   body{animation:none}
 }
+
+/* 소개 특징 목록(2026-11-20): 체크 표시 옆으로 글줄을 맞춤 */
+.about-points{display:grid;gap:10px;margin-top:18px}
+.about-points li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:16px;line-height:1.6;color:var(--ink2)}
+.about-points li svg{width:20px;height:20px;margin-top:3px;color:var(--red);fill:currentColor}
+.about-points li::before{content:'';display:none}
+.about-points li:not(:has(svg))::before{display:block;width:8px;height:8px;margin:9px 0 0 6px;border-radius:50%;background:var(--red)}
+.about-points small{display:block;margin-top:2px;font-size:14px;color:var(--muted)}
+/* 렌탈 요금 바로가기 카드 */
+.jump-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0 8px}
+.jump-cards .jc{display:block;border-radius:var(--r);overflow:hidden;background:var(--snow);color:var(--ink);text-decoration:none;transition:transform .2s,box-shadow .2s}
+.jump-cards .jc:hover,.jump-cards .jc:focus-visible{transform:translateY(-3px);box-shadow:0 8px 20px rgba(14,26,43,.12)}
+.jump-cards .ph{aspect-ratio:4/3;border-radius:0}
+.jump-cards img{width:100%;height:100%;object-fit:cover}
+.jump-cards .jc-t{display:block;padding:12px 14px;font-weight:800;font-size:16px}
+.jump-cards .jc-t small{display:block;font-weight:500;font-size:13px;color:var(--muted);margin-top:2px}
+@media (max-width:760px){.jump-cards{grid-template-columns:1fr 1fr;gap:10px}.jump-cards .jc-t{padding:10px 12px;font-size:15px}}

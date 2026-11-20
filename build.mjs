@@ -111,7 +111,7 @@ emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['
 for (const s of STAY) {
   const rooms = s.types.flatMap(t => t.rooms.map(r => r[1]));
   emit({ out: `stay/${s.slug}/index.html`, section: 'stay', pri: '0.5', crumbs: [['홈', ''], ['숙박안내', 'stay/tower/'], [s.name, `stay/${s.slug}/`]],
-    title: `용평리조트 ${s.name} 객실 안내 | 뽀드득`, description: `${s.lead} 객실 타입 ${rooms.join(', ')}. 객실 사진·구성·투숙인원·비품 안내. 숙박 문의 ${SITE.phone}.`,
+    title: `${s.resort === '알펜시아' ? '' : s.resort + ' '}${s.name} 객실 안내 | 뽀드득`, description: `${s.lead} 객실 타입 ${rooms.join(', ')}. 객실 사진·구성·투숙인원·비품 안내. 숙박 문의 ${SITE.phone}.`,
     body: u => P.stay(u, s) });
 }
 
@@ -164,6 +164,7 @@ const llms = `# ${SITE.name} (${SITE.nameEn}) — 용평·알펜시아 스키 �
 - 대표전화: ${SITE.phone}
 - 영업시간: ${SITE.hours}
 - 매장 규모: ${SCALE.gear}, ${SCALE.wear}, ${SCALE.staff}
+${ABOUT.points.map(([t, sub]) => `- ${t}${sub ? ' ' + sub : ''}`).join('\n')}
 - 리프트권 할인은 이용 1일 전까지 전화 예약 필수
 - 강습: 1:1·2:1만 운영(3명 이상 불가), 2·3·4시간(1시간 없음), 스키와 보드 요금 같음
 - 공식 홈페이지: ${SITE.url}

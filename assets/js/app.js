@@ -74,13 +74,23 @@
     if (!mobile && slow && v.dataset.srcSlow) { v.src = v.dataset.srcSlow; v.load(); }  // 느린 회선만 1280
     const soundBtn = $('[data-hero-sound]', hero), replayBtn = $('[data-hero-replay]', hero);
     const icons = { on: soundBtn.innerHTML, off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4M14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6"/></svg>' };
-    const start = () => { const p = v.play(); p && p.catch(() => {}); };
-    if (reduce) v.pause(); else if (v.paused) start();
+    // 소리 켠 채 시작(업체 요청 2026-11-20). 브라우저가 소리 있는 자동재생을 막으면 소리 없이 재생하고,
+    // 방문자가 화면을 처음 누르거나 키를 누를 때 소리를 켠다. 음소거 버튼을 누른 뒤에는 다시 켜지 않는다.
+    let userMuted = false;
+    const syncBtn = () => { soundBtn.setAttribute('aria-pressed', String(!v.muted)); soundBtn.setAttribute('aria-label', v.muted ? '소리 켜기' : '소리 끄기'); soundBtn.innerHTML = v.muted ? icons.on : icons.off; };
+    const unmuteOnGesture = e => { if (e && soundBtn.contains(e.target)) return; off(); if (userMuted || reduce) return; v.muted = false; const p = v.play(); p && p.catch(() => { v.muted = true; }); syncBtn(); };
+    const off = () => ['pointerdown', 'keydown', 'touchend'].forEach(t => removeEventListener(t, unmuteOnGesture, true));
+    const start = () => {
+      v.muted = false;
+      const p = v.play();
+      if (!p) { syncBtn(); return; }
+      p.then(syncBtn).catch(() => { v.muted = true; syncBtn(); const q = v.play(); q && q.catch(() => {}); ['pointerdown', 'keydown', 'touchend'].forEach(t => addEventListener(t, unmuteOnGesture, { capture: true, passive: true })); });
+    };
+    if (reduce) v.pause(); else start();
     // 끝 4.4초(흰 화면 + 로고): 흰 바탕 위에서 메뉴 글자가 보이게 헤더를 어두운 글자로
     v.addEventListener('timeupdate', () => { if (!v.duration) return; const end = v.currentTime > v.duration - 4.4; hero.classList.toggle('is-end', end); hd && hd.classList.toggle('on-light', end); });
     soundBtn.addEventListener('click', () => {
-      v.muted = !v.muted; soundBtn.setAttribute('aria-pressed', String(!v.muted)); soundBtn.setAttribute('aria-label', v.muted ? '소리 켜기' : '소리 끄기');
-      soundBtn.innerHTML = v.muted ? icons.on : icons.off; if (!v.muted) v.play(); toast(v.muted ? '소리를 껐습니다' : '소리를 켰습니다');
+      off(); v.muted = !v.muted; userMuted = v.muted; syncBtn(); if (!v.muted) v.play(); toast(v.muted ? '소리를 껐습니다' : '소리를 켰습니다');
     });
     replayBtn.addEventListener('click', () => { v.currentTime = 0; v.play(); hero.classList.remove('is-end'); });
     // 무한 반복: loop 속성 + 끝나면 처음으로(일부 브라우저 대비) + 탭으로 돌아오면 다시 재생
