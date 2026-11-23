@@ -125,6 +125,7 @@ ${body}
     <address class="ft-info"><span>대표 : ${SITE.ceo}</span><span>사업자등록번호 : ${SITE.bizNo}</span><br><span>주소 : ${SITE.address.full}</span><span>고객센터 : <a href="${SITE.phoneHref}">${SITE.phone}</a></span></address>
     <ul class="ft-links"><li><a href="${u('privacy/')}">개인정보처리방침</a></li><li><a href="${u('privacy/#email')}">이메일무단수집거부</a></li></ul>
     <p class="ft-copy">Copyright by ${SITE.name}. All Right Reserved.</p>
+    ${bodyClass.split(' ').includes('home') ? '<p class="ft-credit">요금표 카드 사진: 용평 돔 — Korea.net / Korean Culture and Information Service, 알펜시아 스키점프대 — Republic of Korea (Wikimedia Commons, <a href="https://creativecommons.org/licenses/by-sa/2.0/" rel="license noopener" target="_blank">CC BY-SA 2.0</a>)</p>' : ''}
   </div>
 </footer>
 <nav class="mbar" aria-label="빠른 연락">

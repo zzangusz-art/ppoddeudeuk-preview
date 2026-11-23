@@ -809,3 +809,39 @@ br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
 .facts li > span{min-width:0}
 .lift-promo + .rate-block{margin-top:0}
 .rate-block + .lift-promo{margin-top:clamp(28px,3vw,44px)}
+
+/* 균일가 묶음(알펜시아 리프트, 2026-11-23) */
+.tbl-lift td.flat{vertical-align:middle;text-align:center}
+.tbl-lift td.flat strong{display:block;font-size:2em;line-height:1.15;letter-spacing:-.02em;color:var(--red)}
+.tbl-lift td.flat small{display:inline-block;margin-top:6px;font-size:13px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:3px 10px}
+.pcard-flat .flat-price{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:10px 0 6px}
+.pcard-flat .flat-price small{font-size:12.5px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:2px 9px}
+.pcard-flat .flat-price b{font-size:30px;line-height:1.1;color:var(--red);letter-spacing:-.02em}
+.pcard-flat .flat-was{margin:0;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.pcard-flat .flat-was s{color:var(--muted)}
+
+/* 요금표 글자 키우기(2026-11-23 재현 요청) */
+.tbl caption{font-size:18px;padding:18px 18px 12px;color:var(--ink)}
+.tbl th,.tbl td{font-size:17px}
+.tbl thead th{font-size:16px}
+.tbl thead th small,.tbl-lift th.hl small{font-size:13.5px}
+.tbl td.hl strong{font-size:19px}
+.tbl .det{font-size:15.5px}
+.tbl td.nm small{font-size:14.5px}
+.tbl-lift td.save{font-size:16px}
+.tbl-lift th.t small{font-size:14px}
+.tbl-lift td .off{font-size:13.5px}
+.tbl-lift td.flat strong{font-size:2.1em}
+.tbl-lift td.flat small{font-size:14px}
+.pcard-row{font-size:16.5px}
+.pcard-row .who{font-size:15.5px}
+.pcard-hd strong{font-size:19.5px}
+.pcard-hd span{font-size:14.5px}
+.season-key{font-size:14.5px}
+.pcard-flat .flat-was{font-size:14.5px}
+@media (max-width:760px){.tbl th,.tbl td{font-size:16px}}
+
+/* 사진 출처(라이선스 표시) — 메인 바닥글 한 줄 */
+.ft-credit{opacity:.45;font-size:11px;margin-top:4px}
+.ft-credit a{text-decoration:underline;color:inherit}
+.tbl td.was{text-decoration:none;font-size:16px;color:var(--ink2)}

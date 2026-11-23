@@ -35,8 +35,11 @@ export function liftTable(l) {
   const multi = l.seasons.length > 1;
   const sh = (s, i) => `<th scope="col" class="hl">${esc(s)} 특별할인가${l.periods?.[i] ? `<small>${esc(l.periods[i])}</small>` : ''}</th>`;
   const head = `<thead><tr><th scope="col">이용권</th><th scope="col">구분</th><th scope="col">${esc(l.resort)} 정상가</th>${l.seasons.map(sh).join('')}${multi ? '' : '<th scope="col">할인 금액</th>'}</tr></thead>`;
-  const body = l.rows.map(r => ['adult', 'child'].map((w, k) => { const a = r[w][0][0];
-    const cells = r[w].map(([, b]) => `<td class="hl big"><strong>${price(b)}</strong>${multi && a && b && b < a ? ` <small class="off">-${pct(a, b)}%</small>` : ''}</td>`).join('');
+  // 균일가: 위아래로 이어지는 같은 할인가를 한 칸으로(대인·소인 공통 균일가)
+  const flat = l.flat && !multi, seq = l.rows.flatMap(r => [r.adult[0][1], r.child[0][1]]), span = seq.map((v, i) => { if (i && seq[i - 1] === v) return 0; let n = 1; while (seq[i + n] === v) n++; return n; });
+  const body = l.rows.map((r, ri) => ['adult', 'child'].map((w, k) => { const a = r[w][0][0], si = ri * 2 + k;
+    const cells = flat ? (span[si] ? `<td class="hl big flat"${span[si] > 1 ? ` rowspan="${span[si]}"` : ''}><strong>${price(seq[si])}</strong>${span[si] > 1 ? '<small>대인·소인 공통 균일가</small>' : ''}</td>` : '')
+      : r[w].map(([, b]) => `<td class="hl big"><strong>${price(b)}</strong>${multi && a && b && b < a ? ` <small class="off">-${pct(a, b)}%</small>` : ''}</td>`).join('');
     const save = multi ? '' : (() => { const b = r[w][0][1]; return `<td class="save">${a && b && b < a ? `<b>${won(a - b)}</b> 할인` : ''}</td>`; })();
     return `<tr>${k === 0 ? `<th scope="rowgroup" rowspan="2" class="t">${esc(r.time)}${r.detail.length ? `<small>${r.detail.map(esc).join('<br>')}</small>` : ''}</th>` : ''}<th scope="row" class="who">${w === 'adult' ? '대인' : '소인'}</th><td class="was">${r[w].some(([, b]) => b && b < a) ? `<s>${price(a)}</s>` : price(a)}</td>${cells}${save}</tr>`; }).join('')).join('');
   return `<div class="tbl-wrap"><table class="tbl tbl-lift"><caption>${esc(l.title)} 요금표</caption>${head}<tbody>${body}</tbody></table></div>`;
@@ -44,6 +47,12 @@ export function liftTable(l) {
 // 휴대폰용 카드형 리프트 요금(시즌이 둘이면 시즌별 줄)
 export function liftCards(l) {
   const multi = l.seasons.length > 1;
+  if (l.flat && !multi && l.rows.every(r => r.adult[0][1] === r.child[0][1])) {
+    const groups = []; for (const r of l.rows) { const g = groups[groups.length - 1]; if (g && g.p === r.adult[0][1]) g.rows.push(r); else groups.push({ p: r.adult[0][1], rows: [r] }); }
+    return `<div class="pcards">${groups.map(g => `<div class="pcard pcard-flat"><div class="pcard-hd"><strong>${g.rows.map(r => esc(r.time)).join(' · ')}</strong><span>${g.rows.map(r => `${esc(r.time)} ${r.detail.map(esc).join(' · ')}`).join(' / ')}</span></div>
+      <p class="flat-price"><small>대인·소인 공통 균일가</small><b>${price(g.p)}</b></p>
+      <p class="flat-was">정상가 ${g.rows.map(r => `${esc(r.time)} 대인 <s>${won(r.adult[0][0])}</s> · 소인 ${r.child[0][0] > g.p ? `<s>${won(r.child[0][0])}</s>` : won(r.child[0][0])}`).join('<br>')}</p></div>`).join('')}</div>`;
+  }
   return `${multi ? `<p class="season-key">${l.seasons.map((s, i) => `<span><b>${esc(s)}</b> ${esc(l.periods?.[i] || '')}</span>`).join('')}</p>` : ''}<div class="pcards">${l.rows.map(r => `<div class="pcard"><div class="pcard-hd"><strong>${esc(r.time)}</strong>${r.detail.length ? `<span>${r.detail.map(esc).join(' · ')}</span>` : ''}</div>
   ${['adult', 'child'].map(w => { const a = r[w][0][0]; return r[w].map(([, b], i) => `<div class="pcard-row"><span class="who">${w === 'adult' ? '대인' : '소인'}${multi ? ` <em class="sn">${esc(l.seasons[i])}</em>` : ''}</span><span class="was">${b && b < a ? won(a) : ''}</span><span class="now">${price(b)}</span>${a && b && b < a ? `<span class="off">-${pct(a, b)}%</span>` : '<span class="off"></span>'}</div>`).join(''); }).join('')}</div>`).join('')}</div>`;
 }
@@ -272,7 +281,6 @@ export function lift(u) {
   <h2 class="h3">스키장별 이용권과 정설시간</h2>
   ${timeTable()}
   <p class="note">요금은 ${SITE.season} 기준이며 리조트 사정에 따라 바뀔 수 있습니다. 예약 시 최종 금액을 안내드립니다.</p>
-  <p class="credit">메인 요금표 카드 사진: 용평 돔 — Korea.net / Korean Culture and Information Service, 알펜시아 스키점프대 — Republic of Korea (Wikimedia Commons, <a href="https://creativecommons.org/licenses/by-sa/2.0/" rel="license noopener" target="_blank">CC BY-SA 2.0</a>)</p>
 </div></section>
 <section class="sec sec-tint"><div class="wrap narrow">${faqList(FAQ.filter(f => f.pages.includes('lift')), true)}</div></section>` + ctaBand(u);
 }
