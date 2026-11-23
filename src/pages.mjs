@@ -1,4 +1,5 @@
 // 페이지 본문. 기존 홈페이지 메뉴·내용을 그대로 옮기고(미러링), 질문형 제목과 첫 문단 직답을 더했다.
+import { LIFT_Y, LIFT_A, liftSeasonPct, liftPctText, rp, RENTAL_FROM } from './data.mjs';
 import { BLOG, POPUP, INSTRUCTORS, INSTRUCTOR_LEAD, SITE, ABOUT, RESORTS, VISIT_TIMES, LIFT, RENTALS, RENTAL_ITEMS, HOME_PHOTOS, RATE_CARDS, LESSON_VIDEOS, HERO, LESSON_FEE, PROGRAM, STAY, GALLERY, GALLERY_CATS, USED, NOTICES, PRIVACY, FAQ } from './data.mjs';
 import { esc, won, img, phImg, kdate, smOf } from './lib.mjs';
 import { ICON } from './layout.mjs';
@@ -31,22 +32,35 @@ const ctaBand = u => `<section class="cta-band"><div class="wrap cta-in reveal">
 
 // ── 요금표 ──
 export function liftTable(l) {
-  const head = `<thead><tr><th scope="col">이용권</th><th scope="col">구분</th><th scope="col">${esc(l.resort)} 정상가</th><th scope="col" class="hl">${esc(l.seasons[0])}</th><th scope="col">할인 금액</th></tr></thead>`;
-  const body = l.rows.map(r => ['adult', 'child'].map((w, k) => { const [a, b] = r[w][0];
-    return `<tr>${k === 0 ? `<th scope="rowgroup" rowspan="2" class="t">${esc(r.time)}${r.detail.length ? `<small>${r.detail.map(esc).join('<br>')}</small>` : ''}</th>` : ''}<th scope="row" class="who">${w === 'adult' ? '대인' : '소인'}</th><td class="was"><s>${price(a)}</s></td><td class="hl big"><strong>${price(b)}</strong></td><td class="save">${a && b ? `<b>${won(a - b)}</b> 할인` : ''}</td></tr>`; }).join('')).join('');
+  const multi = l.seasons.length > 1;
+  const sh = (s, i) => `<th scope="col" class="hl">${esc(s)} 특별할인가${l.periods?.[i] ? `<small>${esc(l.periods[i])}</small>` : ''}</th>`;
+  const head = `<thead><tr><th scope="col">이용권</th><th scope="col">구분</th><th scope="col">${esc(l.resort)} 정상가</th>${l.seasons.map(sh).join('')}${multi ? '' : '<th scope="col">할인 금액</th>'}</tr></thead>`;
+  const body = l.rows.map(r => ['adult', 'child'].map((w, k) => { const a = r[w][0][0];
+    const cells = r[w].map(([, b]) => `<td class="hl big"><strong>${price(b)}</strong>${multi && a && b && b < a ? ` <small class="off">-${pct(a, b)}%</small>` : ''}</td>`).join('');
+    const save = multi ? '' : (() => { const b = r[w][0][1]; return `<td class="save">${a && b && b < a ? `<b>${won(a - b)}</b> 할인` : ''}</td>`; })();
+    return `<tr>${k === 0 ? `<th scope="rowgroup" rowspan="2" class="t">${esc(r.time)}${r.detail.length ? `<small>${r.detail.map(esc).join('<br>')}</small>` : ''}</th>` : ''}<th scope="row" class="who">${w === 'adult' ? '대인' : '소인'}</th><td class="was">${r[w].some(([, b]) => b && b < a) ? `<s>${price(a)}</s>` : price(a)}</td>${cells}${save}</tr>`; }).join('')).join('');
   return `<div class="tbl-wrap"><table class="tbl tbl-lift"><caption>${esc(l.title)} 요금표</caption>${head}<tbody>${body}</tbody></table></div>`;
 }
-// 휴대폰용 카드형 리프트 요금
+// 휴대폰용 카드형 리프트 요금(시즌이 둘이면 시즌별 줄)
 export function liftCards(l) {
-  return `<div class="pcards">${l.rows.map(r => `<div class="pcard"><div class="pcard-hd"><strong>${esc(r.time)}</strong>${r.detail.length ? `<span>${r.detail.map(esc).join(' · ')}</span>` : ''}</div>
-  ${['adult', 'child'].map(w => { const [a, b] = r[w][0]; return `<div class="pcard-row"><span class="who">${w === 'adult' ? '대인' : '소인'}</span><span class="was">${won(a)}</span><span class="now">${won(b)}</span>${a && b ? `<span class="off">-${pct(a, b)}%</span>` : ''}</div>`; }).join('')}</div>`).join('')}</div>`;
+  const multi = l.seasons.length > 1;
+  return `${multi ? `<p class="season-key">${l.seasons.map((s, i) => `<span><b>${esc(s)}</b> ${esc(l.periods?.[i] || '')}</span>`).join('')}</p>` : ''}<div class="pcards">${l.rows.map(r => `<div class="pcard"><div class="pcard-hd"><strong>${esc(r.time)}</strong>${r.detail.length ? `<span>${r.detail.map(esc).join(' · ')}</span>` : ''}</div>
+  ${['adult', 'child'].map(w => { const a = r[w][0][0]; return r[w].map(([, b], i) => `<div class="pcard-row"><span class="who">${w === 'adult' ? '대인' : '소인'}${multi ? ` <em class="sn">${esc(l.seasons[i])}</em>` : ''}</span><span class="was">${b && b < a ? won(a) : ''}</span><span class="now">${price(b)}</span>${a && b && b < a ? `<span class="off">-${pct(a, b)}%</span>` : '<span class="off"></span>'}</div>`).join(''); }).join('')}</div>`).join('')}</div>`;
 }
-// 리프트 특별할인 강조 배너(이용 1일 전까지 예약 + 33%)
+// 리프트 특별할인 강조 배너(이용 1일 전까지 예약 + 할인율) — 용평: 비수기·성수기 / 알펜시아: 대인·소인 균일가
 export function liftPromo(l, u) {
-  return `<div class="lift-promo reveal"><div class="lp-badge" aria-hidden="true"><b>${esc(l.badge)}</b><span>특별할인</span></div>
-  <div class="lp-body"><p class="lp-k">뽀드득 예약 특별할인가 · ${esc(l.resort)}</p><p class="lp-h"><em>이용 1일 전까지</em> 예약하시면<br>리프트권 <em class="pct">${esc(l.badge)}</em> 특별할인</p>
-  <p class="lp-s">${esc(l.note)} 대인 4시간권 기준 <s>${won(l.rows[0].adult[0][0])}</s> → <strong>${won(l.rows[0].adult[0][1])}</strong></p></div>
-  <div class="lp-cta"><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}전화로 예약</a>${u ? `<a class="btn btn-line" href="${u('reserve/')}">${ICON.cal}온라인 예약</a>` : ''}<small>당일 예약은 특별할인가가 적용되지 않을 수 있습니다</small></div></div>`;
+  const multi = l.seasons.length > 1, sp = liftSeasonPct(l), r0 = l.rows[0];
+  const head = multi
+    ? `<em>이용 1일 전까지</em> 예약하시면<br>리프트권 ${l.seasons.map((s, i) => `${esc(s)} <em class="pct">약 ${sp[i]}%</em>`).join(' · ')} 특별할인`
+    : l.flat ? `<em>이용 1일 전까지</em> 예약하시면<br><em>대인·소인 구분 없이</em> 균일 특별할인가` : `<em>이용 1일 전까지</em> 예약하시면<br>리프트권 <em class="pct">${esc(l.badge)}</em> 특별할인`;
+  const ex = multi
+    ? `대인 4시간권 기준 정상가 <s>${won(r0.adult[0][0])}</s> → ${l.seasons.map((s, i) => `${esc(s)} <strong>${won(r0.adult[i][1])}</strong>`).join(' · ')}`
+    : l.flat ? `${l.rows.filter((r, i, a) => a.findIndex(x => x.adult[0][1] === r.adult[0][1]) === i).map(r => { const same = l.rows.filter(x => x.adult[0][1] === r.adult[0][1]).map(x => x.time).join('·'); return `${esc(same)} <strong>${won(r.adult[0][1])}</strong>`; }).join(' · ')} (대인 기준)`
+    : `대인 ${esc(r0.time)} 기준 <s>${won(r0.adult[0][0])}</s> → <strong>${won(r0.adult[0][1])}</strong>`;
+  return `<div class="lift-promo reveal"><div class="lp-badge" aria-hidden="true"><b>${esc(l.badge)}</b><span>${multi ? '최대 할인' : '특별할인'}</span></div>
+  <div class="lp-body"><p class="lp-k">뽀드득 예약 특별할인가 · ${esc(l.resort)}</p><p class="lp-h">${head}</p>
+  <p class="lp-s">${esc(l.note)}<br>${ex}</p></div>
+  <div class="lp-cta"><a class="btn btn-red" href="${SITE.phoneHref}">${ICON.phone}전화로 예약</a>${u ? `<a class="btn btn-line" href="${u('reserve/')}">${ICON.cal}온라인 예약</a>` : ''}<small>당일 예약은 특별할인가가 적용되지 않습니다</small></div></div>`;
 }
 const rentalCell = ([a, b]) => `<td class="was">${a ? `<s>${won(a)}</s>` : ''}</td><td class="hl">${b ? `<strong>${won(b)}</strong>` : price(0)}</td>`;
 export function rentalTable(R) {
@@ -119,8 +133,8 @@ export function home(u, posts = []) {
     <p class="answer-p"><strong>뽀드득은 강원 평창군 대관령면 올림픽로 238, 모나용평리조트와 알펜시아리조트 스키장 인근에 있는 스키·스노보드 렌탈샵입니다.</strong></p>
     ${aboutPoints()}
     <ul class="facts">
-      <li><b>리프트권</b>용평 4시간권 대인 ${won(79000)} → <em>${won(53000)}</em> <span class="tag33">1일 전 예약 33%</span></li>
-      <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(15000)}</em>부터</li>
+      <li><b>리프트권</b><span>용평 4시간권 대인 ${won(LIFT_Y.rows[0].adult[0][0])} → ${LIFT_Y.seasons.map((s, i) => `${esc(s)} <em>${won(LIFT_Y.rows[0].adult[i][1])}</em>`).join(' · ')} <span class="tag33">1일 전 예약 ${esc(liftPctText(LIFT_Y))}</span>${LIFT_A && !LIFT_A.pending ? `<br>알펜시아 ${LIFT_A.flat ? '대인·소인 균일 ' : ''}<em>${won(Math.min(...LIFT_A.rows.map(r => r.adult[0][1]).filter(Boolean)))}</em>부터 <span class="tag33">1일 전 예약 ${esc(liftPctText(LIFT_A))}</span>` : ''}</span></li>
+      <li><b>장비 렌탈</b>초급자 스키·보드 4시간권 <em>${won(RENTAL_FROM)}</em>부터</li>
       <li><b>강습</b>1:1 2시간 <em>${man(200000)}</em>, 스키·보드 동일</li>
       <li><b>위치</b>${esc(SITE.near)}</li>
     </ul>
@@ -248,14 +262,13 @@ export function secondhand(u) {
 const rateTabs = [['리프트 요금', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']];
 export function lift(u) {
   const Y = LIFT.find(l => l.id === 'yongpyong') || LIFT[0];
-  return subHead(u, { eyebrow: 'LIFT', title: '리프트 요금', lead: `${SITE.season} 용평리조트 리프트권 — 이용 1일 전까지 예약 시 ${Y.badge || ''} 특별할인가`, bg: 'scene/lineup.webp', crumbs: [['요금안내', 'rates/lift/'], ['리프트 요금']] })
+  return subHead(u, { eyebrow: 'LIFT', title: '리프트 요금', lead: `${SITE.season} 용평·알펜시아 리프트권 — 이용 1일 전까지 예약 시 특별할인가`, bg: 'scene/lineup.webp', crumbs: [['요금안내', 'rates/lift/'], ['리프트 요금']] })
     + subTabs(u, rateTabs, 'rates/lift/')
     + `<section class="sec"><div class="wrap">
-  ${answer('용평 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>이용 1일 전까지 뽀드득에 예약하시면 용평리조트 리프트권을 정상가 대비 약 33% 특별할인가로 이용하실 수 있습니다.</strong><br>대인 4시간권 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}입니다.<br>알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.`)}
-  ${Y.badge ? liftPromo(Y, u) : ''}
+  ${answer('용평·알펜시아 리프트권, 뽀드득에서 예약하면 얼마인가요?', `<strong>이용 1일 전까지 뽀드득에 예약하시면 용평리조트 리프트권은 ${esc(liftPctText(Y))}${LIFT_A && !LIFT_A.pending ? `, 알펜시아리조트 리프트권은 대인·소인 구분 없는 균일가로 ${esc(liftPctText(LIFT_A))}` : ''} 특별할인됩니다.</strong><br>용평 대인 ${Y.rows.map(r => `${esc(r.time)} ${won(r.adult[0][0])} → ${Y.seasons.map((s, i) => `${esc(s)} ${won(r.adult[i][1])}`).join(' · ')}`).join(', ')}입니다.${LIFT_A && !LIFT_A.pending ? `<br>알펜시아 ${LIFT_A.rows.map(r => `${esc(r.time)} ${won(r.adult[0][1])}`).join(', ')}(대인 기준)입니다.` : '<br>알펜시아리조트 요금은 리조트 공지 후 안내해 드립니다.'}`)}
   ${LIFT.map(l => l.pending
     ? `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}</h2><div class="pending-box"><b>요금 공지 전</b><p>${esc(l.note)}</p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></div></div>`
-    : `<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}${l.cond ? ` <span class="cond">${esc(l.cond)} ${esc(l.badge || '')} 특별할인</span>` : ''}</h2><div class="only-pc">${liftTable(l)}</div><div class="only-m">${liftCards(l)}</div></div>`).join('')}
+    : `${l.badge ? liftPromo(l, u) : ''}<div class="rate-block reveal" id="${l.id}"><h2 class="h3">${esc(l.title)}${l.cond ? ` <span class="cond">${esc(l.cond)} ${esc(liftPctText(l))} 특별할인</span>` : ''}</h2><div class="only-pc">${liftTable(l)}</div><div class="only-m">${liftCards(l)}</div></div>`).join('')}
   <h2 class="h3">스키장별 이용권과 정설시간</h2>
   ${timeTable()}
   <p class="note">요금은 ${SITE.season} 기준이며 리조트 사정에 따라 바뀔 수 있습니다. 예약 시 최종 금액을 안내드립니다.</p>
@@ -272,7 +285,7 @@ export function rental(u) {
   return subHead(u, { eyebrow: 'RENTAL', title: '렌탈 요금', lead: `${SITE.season} 용평·알펜시아 렌탈 요금표 · 100% 새제품 장비 · 의류 · 안전장비`, bg: 'scene/spray.webp', crumbs: [['요금안내', 'rates/lift/'], ['렌탈 요금']] })
     + subTabs(u, rateTabs, 'rates/rental/')
     + `<section class="sec"><div class="wrap">
-  ${answer('용평 스키 장비·스키복 렌탈은 얼마인가요?', `<strong>용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 ${won(15000)}, 6시간권 ${won(20000)}, 8시간권 ${won(25000)}입니다.</strong> 중급자·숏스키·블레이드는 4시간권 ${won(25000)}, 하이엔드 상급자·버튼 스텝온 ${won(40000)}, 최상급자 ${won(60000)}부터입니다. 의류는 프리미엄 ${won(20000)}, 하이엔드 ${won(30000)}, 헬멧·고글·보호대는 단품 ${won(5000)}부터입니다. 모든 장비·의류는 100% 새제품입니다.`)}
+  ${answer('용평 스키 장비·스키복 렌탈은 얼마인가요?', `<strong>용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 ${won(rp(RENTALS[0].data, 'gear', /초급/, 0)?.[1] || 0)}, 6시간권 ${won(rp(RENTALS[0].data, 'gear', /초급/, 1)?.[1] || 0)}, 8시간권 ${won(rp(RENTALS[0].data, 'gear', /초급/, 2)?.[1] || 0)}입니다.</strong> 중급자·숏스키·블레이드는 4시간권 ${won(25000)}, 하이엔드 상급자·버튼 스텝온 ${won(40000)}, 최상급자 ${won(60000)}부터입니다. 의류는 프리미엄 ${won(20000)}, 하이엔드 ${won(30000)}, 헬멧·고글·보호대는 단품 ${won(5000)}부터입니다. 모든 장비·의류는 100% 새제품입니다.`)}
   <nav class="rental-jump" aria-label="스키장별 렌탈 요금">${RENTALS.map(R => `<a href="#${R.id}">${esc(R.resort)} <small>정설 ${esc((RESORTS.find(r => r.id === R.id) || {}).grooming || '')}</small></a>`).join('')}</nav>
   ${RENTALS.map(R => { const g = RESORTS.find(r => r.id === R.id) || {}; return `<div class="rate-block reveal" id="${R.id}"><h2 class="h3">${esc(R.title)} <span class="cond grey">정설시간 ${esc(g.grooming || '')}</span></h2>
     <div class="only-pc">${rentalTable(R)}</div>
@@ -417,7 +430,7 @@ export function book(u, type) {
   <div>${bookForm(u, type)}</div>
   <aside class="book-aside">
     <div class="aside-card" id="check"><h2 class="h4">${isQ ? '견적확인' : '예약확인'}</h2><p>접수하신 ${isQ ? '견적' : '예약'}은 남겨 주신 연락처로 <b>문자 또는 전화</b>로 확인해 드립니다.</p>${SITE.api != null ? `<form class="check-form" data-check novalidate><label><span>이름</span><input name="name" autocomplete="name" required maxlength="20"></label><label><span>연락처</span><input name="phone" inputmode="tel" autocomplete="tel" required maxlength="13" placeholder="010-0000-0000"></label><button class="btn btn-red btn-sm" type="submit">접수 내역 확인</button><div class="check-out" aria-live="polite"></div></form>` : ''}<p><a class="btn btn-line btn-sm" href="${SITE.phoneHref}">${ICON.phone}${SITE.phone}</a></p></div>
-    <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>용평 리프트권 <b>33% 특별할인가</b>는 <b>이용 1일 전까지 예약</b> 시 적용됩니다.</p></div>
+    <div class="aside-card"><h2 class="h4">전화로 바로 예약</h2><p class="big-tel"><a href="${SITE.phoneHref}">${SITE.phone}</a></p><p>리프트권 특별할인가(용평 <b>${esc(liftPctText(LIFT_Y))}</b>${LIFT_A && !LIFT_A.pending ? `, 알펜시아 대인·소인 균일 <b>${esc(liftPctText(LIFT_A))}</b>` : ''})는 <b>이용 1일 전까지 예약</b> 시 적용됩니다.</p></div>
     <div class="aside-card"><h2 class="h4">스키장별 정설시간</h2><ul>${RESORTS.map(r => `<li><b>${r.short}</b> ${r.grooming} (${r.groomingNote})</li>`).join('')}</ul></div>
     <div class="aside-card"><h2 class="h4">개인정보 안내</h2><p>${esc(PRIVACY.short)}</p></div>
   </aside>

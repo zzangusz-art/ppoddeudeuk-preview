@@ -6,10 +6,11 @@ const krw = (price, name, extra = {}) => ({ '@type': 'Offer', name, price, price
 
 export function business() {
   const offers = [];
-  for (const l of LIFT.filter(l => !l.pending)) for (const r of l.rows) {
-    offers.push(krw(r.adult[0][1], `${l.resort} 리프트권 ${r.time} 대인(뽀드득 예약 특별할인가)`, { priceSpecification: { '@type': 'UnitPriceSpecification', price: r.adult[0][1], priceCurrency: 'KRW', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: r.time } } }));
-    offers.push(krw(r.child[0][1], `${l.resort} 리프트권 ${r.time} 소인(뽀드득 예약 특별할인가)`));
-  }
+  for (const l of LIFT.filter(l => !l.pending)) for (const r of l.rows) l.seasons.forEach((s, i) => {
+    const sn = l.seasons.length > 1 ? ` ${s}${l.periods?.[i] ? '(' + l.periods[i] + ')' : ''}` : '';
+    if (r.adult[i]?.[1]) offers.push(krw(r.adult[i][1], `${l.resort} 리프트권 ${r.time} 대인${sn}(뽀드득 예약 특별할인가)`, { priceSpecification: { '@type': 'UnitPriceSpecification', price: r.adult[i][1], priceCurrency: 'KRW', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitText: r.time } } }));
+    if (r.child[i]?.[1]) offers.push(krw(r.child[i][1], `${l.resort} 리프트권 ${r.time} 소인${sn}(뽀드득 예약 특별할인가)`));
+  });
   for (const R of RENTALS) for (const g of R.data.groups) for (const it of g.items) {
     const p = it.p[0][1];
     if (p) offers.push(krw(p, `${R.resort} ${it.name} 렌탈 (${R.data.cols[0]}, 예약 할인가)`));

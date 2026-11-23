@@ -5,7 +5,12 @@
 import fs from 'node:fs';
 export const OVERRIDES = (() => { try { return JSON.parse(fs.readFileSync(new URL('../content/site.json', import.meta.url), 'utf8')); } catch { return {}; } })();
 const D = {};   // 기본값(어드민 '기본값으로 되돌리기')
-const ov = (k, def) => { D[k] = def; return OVERRIDES[k] ?? def; };
+// 요금(리프트·렌탈)은 판(rev)이 있다. 업체가 새 요금표를 보내 기본값을 바꾸면 판을 올리고, 그 전에 어드민에 저장된 값(예전 판)은 쓰지 않는다.
+// 판을 올린 뒤 어드민에서 저장한 값에는 새 판이 함께 저장된다(서버 clean 이 기본값의 rev 를 이어받음).
+export const PRICE_REV = '2026-11-23';
+const REV_KEYS = ['lift', 'rental', 'rentalAlp'];
+export const isFresh = (k, v) => !REV_KEYS.includes(k) || (Array.isArray(v) ? v[0]?.rev : v?.rev) === PRICE_REV;
+const ov = (k, def) => { D[k] = def; const o = OVERRIDES[k]; return o != null && isFresh(k, o) ? o : def; };
 
 export const SITE = {
   name: '뽀드득',
@@ -87,33 +92,46 @@ export const RESORTS = [
     ] },
 ];
 
-// ── 리프트권(26/27시즌) ── 용평: 업체 엑셀(2026-11-16) 4·6·8시간권, 뽀드득 예약 33% 특별할인가(이용 1일 전까지 예약 시)
-//   알펜시아: 리조트 공지 전(pending) — 공지되면 어드민 「요금 관리 → 리프트 요금」에서 금액 입력 후 '공지 전' 체크 해제
+// ── 리프트권(26/27시즌) ── 업체 엑셀 「뽀드득 용평&알펜시아권 예약특별 할인가」(2026-11-23)
+//   용평: 비수기(개장일~12/4, 3/2~폐장일) 약 45% · 성수기(12/5~3/1) 약 33% — 이용 1일 전까지 예약 시. seasons[i] 와 adult/child[i] 가 짝
+//   알펜시아: 대인·소인 구분 없는 균일 특별할인가(약 40%) — 이용 1일 전까지 예약 시
+//   ※ 알펜시아 야간 소인은 정상가(35,000원)가 균일가(35,500원)보다 낮아 정상가로 적음(업체 확인 필요)
 export const LIFT = ov('lift', [
-  { id: 'yongpyong', title: '26/27시즌 용평리조트 리프트권', resort: '용평리조트', badge: '33%', cond: '이용 1일 전까지 예약 시',
-    note: '뽀드득 예약 특별할인가는 이용 1일 전까지 예약하신 분께 적용됩니다. 정상가 대비 약 33% 할인된 금액입니다.',
-    seasons: ['뽀드득 예약 33% 특별할인가'],
+  { id: 'yongpyong', rev: PRICE_REV, title: '26/27시즌 용평리조트 리프트권', resort: '용평리조트', badge: '45%', cond: '이용 1일 전까지 예약 시',
+    note: '뽀드득 예약 특별할인가는 이용 1일 전까지 예약하신 분께 적용됩니다. 비수기는 정상가 대비 약 45%, 성수기는 약 33% 할인된 금액입니다.',
+    seasons: ['비수기', '성수기'], periods: ['개장일~12월 4일 · 3월 2일~폐장일', '12월 5일~3월 1일'],
     rows: [
-      { time: '4시간권', detail: [], adult: [[79000, 53000]], child: [[69000, 46000]] },
-      { time: '6시간권', detail: [], adult: [[89000, 60000]], child: [[79000, 53000]] },
-      { time: '8시간권', detail: [], adult: [[99000, 66000]], child: [[89000, 60000]] },
+      { time: '4시간권', detail: [], adult: [[79000, 44000], [79000, 53000]], child: [[69000, 38000], [69000, 46000]] },
+      { time: '6시간권', detail: [], adult: [[89000, 49000], [89000, 60000]], child: [[79000, 44000], [79000, 53000]] },
+      { time: '8시간권', detail: [], adult: [[99000, 55000], [99000, 66000]], child: [[89000, 49000], [89000, 60000]] },
     ] },
-  { id: 'alpensia', title: '26/27시즌 알펜시아리조트 리프트권', resort: '알펜시아리조트', pending: true,
-    note: '알펜시아리조트 26/27시즌 리프트권 요금은 리조트 공지 후 안내해 드립니다. 전화로 문의해 주세요.',
-    seasons: ['뽀드득 할인가'],
+  { id: 'alpensia', rev: PRICE_REV, title: '26/27시즌 알펜시아리조트 리프트권', resort: '알펜시아리조트', badge: '40%', cond: '이용 1일 전까지 예약 시', flat: true,
+    note: '뽀드득 예약 특별할인가는 이용 1일 전까지 예약하신 분께 적용되며, 대인·소인 구분 없이 같은 균일가입니다.',
+    seasons: ['대인·소인 균일'], periods: [''],
     rows: [
-      { time: '1타임', detail: ['오전 09:00~13:00', '오후 13:00~17:00', '야간 18:30~21:30'], adult: [[0, 0]], child: [[0, 0]] },
-      { time: '2타임', detail: ['주간 09:00~17:00', '후야 13:00~21:30'], adult: [[0, 0]], child: [[0, 0]] },
+      { time: '오전', detail: ['09:00~13:00'], adult: [[59000, 35500]], child: [[48000, 35500]] },
+      { time: '오후', detail: ['13:00~17:00'], adult: [[59000, 35500]], child: [[48000, 35500]] },
+      { time: '야간', detail: ['18:30~21:30'], adult: [[46000, 35500]], child: [[35000, 35000]] },
+      { time: '주간', detail: ['09:00~17:00'], adult: [[76000, 46000]], child: [[57000, 46000]] },
+      { time: '후야', detail: ['13:00~21:30'], adult: [[76000, 46000]], child: [[57000, 46000]] },
     ] },
 ]);
+// 할인율(시즌별, 대인·소인 평균 반올림) — 배너·FAQ·제목 문구에 쓴다
+const offPct = ([a, b]) => a && b ? (1 - b / a) * 100 : null;
+export const liftSeasonPct = l => l.seasons.map((_, i) => { const v = l.rows.flatMap(r => [r.adult[i], r.child[i]]).map(offPct).filter(x => x != null && x > 0); return v.length ? Math.round(v.reduce((x, y) => x + y, 0) / v.length) : 0; });
+export const LIFT_Y = LIFT.find(l => l.id === 'yongpyong') || LIFT[0];
+export const LIFT_A = LIFT.find(l => l.id === 'alpensia');
+// "비수기 약 45% · 성수기 약 33%" / "약 40%"
+export const liftPctText = l => l.seasons.length > 1 ? l.seasons.map((s, i) => `${s} 약 ${liftSeasonPct(l)[i]}%`).join(' · ') : `약 ${(l.badge || liftSeasonPct(l)[0] + '%').replace(/^약\s*/, '')}`;
 
 // ── 렌탈(26/27시즌, 업체 엑셀 '렌탈요금표' 2026-11-16) ── 스키장마다 이용권 구간이 달라 표가 따로 — [정상가, 예약할인가]
 export const RENTAL_COLS = ['4시간권', '6시간권', '8시간권'];   // 용평(첫 번째 표) — 예전 코드 호환용
 export const RENTAL = ov('rental', {
+  rev: PRICE_REV,   // 업체 엑셀 '렌탈요금표' 2026-11-23: 초급자 스키 & 보드 25,000/20,000 · 30,000/25,000 · 35,000/30,000
   cols: ['4시간권', '6시간권', '8시간권'],
   groups: [
     { group: '프리미엄 장비', key: 'gear', items: [
-      { name: '프리미엄 초급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[20000, 15000], [25000, 20000], [30000, 25000]] },
+      { name: '프리미엄 초급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[25000, 20000], [30000, 25000], [35000, 30000]] },
       { name: '프리미엄 중급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[30000, 25000], [35000, 30000], [40000, 35000]] },
       { name: '프리미엄 숏스키 & 블레이드 & 인라인스키', sub: '100% 새제품 · 26/27시즌', p: [[30000, 25000], [35000, 30000], [40000, 35000]] },
     ] },
@@ -135,11 +153,12 @@ export const RENTAL = ov('rental', {
   ],
 });
 export const RENTAL_ALP = ov('rentalAlp', {
+  rev: PRICE_REV,
   cols: ['오전 · 오후 · 야간 중 택1', '주간 · 후야 중 택1'],
   colNotes: ['오전 09~13시 · 오후 13~17시 · 야간 18:30~21:30', '주간 09~17시 · 후야 13~21:30'],
   groups: [
     { group: '프리미엄 장비', key: 'gear', items: [
-      { name: '프리미엄 초급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[20000, 15000], [30000, 25000]] },
+      { name: '프리미엄 초급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[25000, 20000], [35000, 30000]] },
       { name: '프리미엄 중급자 스키 & 보드', sub: '100% 새제품 · 26/27시즌', p: [[30000, 25000], [40000, 35000]] },
       { name: '프리미엄 숏스키 & 블레이드 & 인라인스키', sub: '100% 새제품 · 26/27시즌', p: [[30000, 25000], [40000, 35000]] },
     ] },
@@ -160,6 +179,9 @@ export const RENTAL_ALP = ov('rentalAlp', {
     ] },
   ],
 });
+// rp(표, 묶음 key, 이름 정규식, 칸) → [정상가, 예약할인가] | null
+export const rp = (R, key, re, col = 0) => { const it = (R.groups.find(g => g.key === key) || { items: [] }).items.find(x => re.test(x.name)); return it && it.p[col] && it.p[col][1] ? it.p[col] : null; };
+export const RENTAL_FROM = Math.min(...RENTAL.groups.flatMap(g => g.key === 'gear' || g.key === 'high' ? g.items.map(it => it.p[0][1]) : []).filter(Boolean));
 export const RENTALS = [
   { id: 'yongpyong', title: '26/27시즌 용평리조트 렌탈 요금', resort: '용평스키장', data: RENTAL },
   { id: 'alpensia', title: '26/27시즌 알펜시아리조트 렌탈 요금', resort: '알펜시아스키장', data: RENTAL_ALP },
@@ -307,20 +329,38 @@ export const PRIVACY = {
 
 // ── 자주 묻는 질문(기존 사이트에 있는 사실로만 작성) ──
 const won = n => n.toLocaleString('ko-KR') + '원';
+// 금액이 든 답은 요금 데이터에서 만든다(어드민에서 요금을 고치면 같이 바뀜)
+const FAQ_A = (() => {
+  const Y = LIFT_Y, A = LIFT_A, yp = liftSeasonPct(Y);
+  const y4 = Y.rows[0];
+  const ys = Y.seasons.length > 1
+    ? `비수기(${Y.periods?.[0] || ''}) 약 ${yp[0]}%, 성수기(${Y.periods?.[1] || ''}) 약 ${yp[1]}% 특별할인가가 적용됩니다. 대인 4시간권 기준 정상가 ${won(y4.adult[0][0])} → 비수기 ${won(y4.adult[0][1])}, 성수기 ${won(y4.adult[1][1])}입니다.`
+    : `정상가 대비 약 ${yp[0]}% 특별할인가가 적용됩니다. 대인 4시간권 기준 ${won(y4.adult[0][0])} → ${won(y4.adult[0][1])}입니다.`;
+  const a1 = A && !A.pending && A.rows[0], a2 = A && !A.pending && A.rows.find(r => /주간/.test(r.time));
+  const as = !A || A.pending ? `알펜시아리조트 리프트권 요금은 리조트 공지 후 안내해 드립니다.`
+    : `알펜시아리조트 리프트권은 ${A.flat ? '대인·소인 구분 없이 ' : ''}오전·오후 ${won(a1.adult[0][1])}${a2 ? `, 주간·후야 ${won(a2.adult[0][1])}` : ''} 특별할인가입니다(이용 1일 전까지 예약).`;
+  const b = rp(RENTAL, 'gear', /초급/), m = rp(RENTAL, 'gear', /중급/), h = rp(RENTAL, 'high', /스텝온|상급자/), t = rp(RENTAL, 'high', /최상급/), ab = rp(RENTAL_ALP, 'gear', /초급/);
+  const b6 = rp(RENTAL, 'gear', /초급/, 1), b8 = rp(RENTAL, 'gear', /초급/, 2);
+  const rental = [b && `용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 ${won(b[1])}(정상가 ${won(b[0])})${b6 ? `, 6시간권 ${won(b6[1])}` : ''}${b8 ? `, 8시간권 ${won(b8[1])}` : ''}입니다.`,
+    [m && `중급자 ${won(m[1])}~`, h && `하이엔드 상급자·버튼 스텝온 ${won(h[1])}~`, t && `최상급자 ${won(t[1])}~`].filter(Boolean).join(', ') + '입니다(4시간권 예약할인가).',
+    ab && `알펜시아는 오전·오후·야간 중 택1 기준 초급자 ${won(ab[1])}부터입니다.`].filter(Boolean).join(' ');
+  return { lift: `용평리조트 리프트권은 이용 1일 전까지 뽀드득에 예약하시면 ${ys} ${as}`, rental };
+})();
+const FAQ_OLD = {"lift":"용평리조트 리프트권은 이용 1일 전까지 뽀드득에 예약하시면 정상가 대비 약 33% 특별할인가가 적용됩니다. 대인 기준 4시간권 79,000원 → 53,000원, 6시간권 89,000원 → 60,000원, 8시간권 99,000원 → 66,000원입니다. 알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.","rental":"용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 15,000원(정상가 20,000원), 6시간권 20,000원, 8시간권 25,000원입니다. 중급자 25,000원~, 하이엔드 상급자·버튼 스텝온 40,000원~, 최상급자 60,000원~입니다(4시간권 예약할인가). 알펜시아는 오전·오후·야간 중 택1 기준 같은 금액부터입니다."};
 export const FAQ = ov('faq', [
   { q: '뽀드득은 어디에 있나요?', a: `${SITE.address.full}(지번 ${SITE.address.old})에 있습니다. ${SITE.near} 거리입니다. 대표전화는 ${SITE.phone}입니다.`, pages: ['home', 'location'] },
   { q: '겨울바라기와 같은 곳인가요?', a: '네. 뽀드득은 겨울바라기 AC가 운영하는 스키 렌탈·강습 브랜드로, 25/26 시즌부터 새 이름으로 운영하고 있습니다.', pages: ['home', 'about'] },
-  { q: '리프트권은 얼마나 할인되나요?', a: `용평리조트 리프트권은 이용 1일 전까지 뽀드득에 예약하시면 정상가 대비 약 33% 특별할인가가 적용됩니다. 대인 기준 4시간권 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}입니다. 알펜시아리조트 26/27시즌 요금은 리조트 공지 후 안내해 드립니다.`, pages: ['home', 'lift'] },
+  { q: '리프트권은 얼마나 할인되나요?', a: FAQ_A.lift, pages: ['home', 'lift'] },
   { q: '이용권(타임)은 어떻게 나뉘나요?', a: '용평스키장은 26/27시즌부터 4시간권·6시간권·8시간권으로 이용합니다. 알펜시아스키장은 1타임(오전 09:00~13:00·오후 13:00~17:00·야간 18:30~21:30 중 택1)과 2타임(주간 09:00~17:00·후야 13:00~21:30 중 택1)으로 나뉩니다.', pages: ['lift', 'reserve'] },
   { q: '정설시간에는 스키를 탈 수 없나요?', a: '네. 정설시간에는 슬로프를 사용할 수 없습니다. 용평스키장은 16:30~18:00, 알펜시아스키장은 17:00~18:30입니다(각 1시간 30분).', pages: ['home', 'lift', 'reserve'] },
   { q: '스키 강습 요금은 얼마인가요?', a: `1:1 강습은 2시간 ${won(200000)}, 3시간 ${won(250000)}, 4시간 ${won(300000)}입니다. 2:1 강습은 2시간 ${won(250000)}, 3시간 ${won(300000)}, 4시간 ${won(350000)}입니다. 스키와 보드 강습 비용은 같습니다.`, pages: ['home', 'lesson'] },
   { q: '강습은 몇 명까지, 몇 시간부터 받을 수 있나요?', a: '1:1 개인 강습과 2:1 소수 강습만 운영합니다. 3명 이상은 강습 효율이 떨어져 진행하지 않습니다. 강습 시간은 2·3·4시간이며 1시간 강습은 진행하지 않습니다.', pages: ['lesson', 'reserve'] },
   { q: '스키 처음인데 어떤 강습을 받나요?', a: '처음단계에서 스키장 안전수칙, 장비 탈부착과 보행, 안전하게 넘어지고 일어나는 법, 방향전환과 정지, 푸르그 화렌(A자 정지)까지 배웁니다. 이후 초급·중급·상급 단계로 이어집니다.', pages: ['lesson'] },
-  { q: '장비 렌탈 요금은 얼마인가요?', a: `용평리조트 기준 프리미엄 초급자 스키·보드는 4시간권 예약할인가 ${won(15000)}(정상가 ${won(20000)}), 6시간권 ${won(20000)}, 8시간권 ${won(25000)}입니다. 중급자 ${won(25000)}~, 하이엔드 상급자·버튼 스텝온 ${won(40000)}~, 최상급자 ${won(60000)}~입니다(4시간권 예약할인가). 알펜시아는 오전·오후·야간 중 택1 기준 같은 금액부터입니다.`, pages: ['home', 'rental'] },
+  { q: '장비 렌탈 요금은 얼마인가요?', a: FAQ_A.rental, pages: ['home', 'rental'] },
   { q: '스키복도 빌릴 수 있나요?', a: `네. 100% 새 옷으로 준비합니다. 프리미엄 의류는 4시간권 예약할인가 ${won(20000)}, 하이엔드 의류는 ${won(30000)}입니다. 헬멧·고글·보호대는 단품 ${won(5000)}, 바이저헬멧(헬멧·고글 일체형)은 ${won(15000)}입니다(용평 4시간권 기준).`, pages: ['rental'] },
   { q: '예약은 어떻게 하나요?', a: `홈페이지 예약하기·견적문의에서 날짜, 스키장, 이용타임, 렌탈 품목, 강습을 고른 뒤 접수하거나 ${SITE.phone}로 전화해 주세요. 리프트권 할인은 이용 1일 전까지 전화 예약이 필요합니다.`, pages: ['home', 'reserve'] },
   { q: '매장 규모는 어느 정도인가요?', a: `${SCALE.gear}, ${SCALE.wear}를 보유하고 있고 ${SCALE.staff}이 강습을 맡습니다.`, pages: ['about'] },
-]);
+]).map(f => f.a === FAQ_OLD.lift ? { ...f, a: FAQ_A.lift } : f.a === FAQ_OLD.rental ? { ...f, a: FAQ_A.rental } : f);
 
 // 검색어 → 답하는 페이지(llms.txt)
 export const KEYWORDS = [

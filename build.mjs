@@ -16,6 +16,7 @@ const OUT = path.resolve(ROOT, opt('--out') || 'dist');
 
 const D = await import('./src/data.mjs');
 const { loadPosts } = await import('./tools/blog/lib.mjs');
+const { LIFT_Y, LIFT_A, liftPctText, RENTAL_FROM, rp } = D;
 const { SITE, FAQ, STAY, LIFT, RENTALS, LESSON_FEE, PROGRAM, RESORTS, ABOUT, SCALE, KEYWORDS, NOTICES, USED } = D;
 const { makeUrl, pageUrl, won } = await import('./src/lib.mjs');
 const S = await import('./src/schema.mjs');
@@ -54,7 +55,7 @@ function emit({ out, title, description, body, section = '', pri = '0.7', type, 
 // ── 홈 ──
 emit({ out: 'index.html', pri: '1.0', bodyClass: 'home',
   title: '용평렌탈샵 뽀드득 | 용평스키장·알펜시아 렌탈샵',
-  description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(15000)}부터, 스키복 렌탈, 용평 리프트권 1일 전 예약 33% 특별할인(4시간권 대인 ${won(53000)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
+  description: `용평리조트·알펜시아 5분, 용평스키장 렌탈샵 뽀드득. 스키·보드 장비 렌탈 ${won(RENTAL_FROM)}부터, 스키복 렌탈, 리프트권 1일 전 예약 특별할인(용평 ${liftPctText(LIFT_Y)}), 1:1·2:1 스키 강습까지 한 곳에서. ☎ ${SITE.phone}`,
   keywords: [...MAIN_KW, '모나 용평 렌탈', '용평 스키복 렌탈'], faq: faqOf('home'),
   body: u => P.home(u, POSTS) });
 
@@ -99,11 +100,11 @@ emit({ out: 'secondhand/index.html', section: 'secondhand', pri: '0.4', crumbs: 
 
 // ── 요금 ──
 emit({ out: 'rates/lift/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['리프트 요금', 'rates/lift/']], faq: faqOf('lift'),
-  title: `용평 리프트권 33% 할인 ${SITE.season} | 뽀드득`, description: `용평리조트 리프트권 이용 1일 전까지 예약 시 33% 특별할인가. 4시간권 대인 ${won(79000)} → ${won(53000)}, 6시간권 ${won(89000)} → ${won(60000)}, 8시간권 ${won(99000)} → ${won(66000)}.`,
+  title: `용평·알펜시아 리프트권 최대 ${LIFT_Y.badge} 할인 | 뽀드득`, description: `이용 1일 전까지 예약 시 용평 리프트권 ${liftPctText(LIFT_Y)} 특별할인가. 4시간권 대인 ${won(LIFT_Y.rows[0].adult[0][0])} → ${LIFT_Y.seasons.map((s, i) => `${s} ${won(LIFT_Y.rows[0].adult[i][1])}`).join(', ')}.${LIFT_A && !LIFT_A.pending ? ` 알펜시아 대인·소인 균일 ${LIFT_A.rows.map(r => r.adult[0][1]).filter((v, i, a) => a.indexOf(v) === i).map(won).join('·')}.` : ''}`,
   keywords: ['용평 리프트권 할인', '알펜시아 리프트권 할인', '용평 리프트권 가격', '모나 용평 리프트권'],
   body: u => P.lift(u) });
 emit({ out: 'rates/rental/index.html', section: 'rates', pri: '0.9', crumbs: [['홈', ''], ['요금안내', 'rates/lift/'], ['렌탈 요금', 'rates/rental/']], faq: faqOf('rental'),
-  title: `용평·알펜시아 렌탈 요금 ${SITE.season} | 뽀드득`, description: `100% 새제품 장비·의류. 용평 4시간권 예약할인가 초급자 스키·보드 ${won(15000)}, 중급자 ${won(25000)}, 하이엔드·버튼 스텝온 ${won(40000)}~. 의류 ${won(20000)}~, 헬멧·고글·보호대 ${won(5000)}~. 알펜시아 요금표 포함.`,
+  title: `용평·알펜시아 렌탈 요금 ${SITE.season} | 뽀드득`, description: `100% 새제품 장비·의류. 용평 4시간권 예약할인가 초급자 스키·보드 ${won(rp(RENTALS[0].data, 'gear', /초급/)?.[1] || 0)}, 중급자 ${won(25000)}, 하이엔드·버튼 스텝온 ${won(40000)}~. 의류 ${won(20000)}~, 헬멧·고글·보호대 ${won(5000)}~. 알펜시아 요금표 포함.`,
   keywords: ['용평스키장 렌탈 가격', '용평리조트 렌탈 요금', '알펜시아 렌탈 요금', '용평 스키복 렌탈', '어반그레이 렌탈', '용평 보드 렌탈'],
   body: u => P.rental(u) });
 
@@ -152,7 +153,7 @@ write('robots.txt', PREVIEW ? 'User-agent: *\nDisallow: /\n'
     ...['Googlebot', 'Bingbot', 'Yeti', 'Daumoa', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot', 'Applebot-Extended'].flatMap(b => [`User-agent: ${b}`, 'Allow: /', '']),
     `Sitemap: ${SITE.url}sitemap.xml`, ''].join('\n'));
 
-const liftLines = LIFT.map(l => `### ${l.title}\n- ${l.note}${l.pending ? '' : '\n' + l.rows.map(r => `- ${r.time}${r.detail.length ? `(${r.detail.join(', ')})` : ''}: 대인 정상가 ${won(r.adult[0][0])} → 뽀드득 ${won(r.adult[0][1])}, 소인 ${won(r.child[0][0])} → ${won(r.child[0][1])}`).join('\n')}`).join('\n\n');
+const liftLines = LIFT.map(l => `### ${l.title}\n- ${l.note}${l.pending ? '' : '\n' + l.rows.map(r => `- ${r.time}${r.detail.length ? `(${r.detail.join(', ')})` : ''}: ${l.seasons.map((s, i) => `[${s}${l.periods?.[i] ? ' ' + l.periods[i] : ''}] 대인 정상가 ${won(r.adult[i][0])} → 뽀드득 ${won(r.adult[i][1])}, 소인 ${won(r.child[i][0])} → ${won(r.child[i][1])}`).join(' / ')}`).join('\n')}`).join('\n\n');
 const rentalLines = RENTALS.map(R => `### ${R.title}\n${R.data.groups.map(g => g.items.map(it => `- [${g.group}] ${it.name}${it.sub ? `(${it.sub})` : ''}: ${R.data.cols.map((c, i) => { const v = it.p[i]; return `${c} ${v[1] ? `${won(v[1])}(정상가 ${won(v[0])})` : '문의'}`; }).join(' / ')}`).join('\n')).join('\n')}`).join('\n\n');
 const llms = `# ${SITE.name} (${SITE.nameEn}) — 용평·알펜시아 스키 렌탈·강습
 

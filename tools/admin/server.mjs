@@ -10,7 +10,7 @@ import { ROLES, canWriteUsers, cookieHeader, hashPassword, loadUsers, login, new
 import { makeStore } from './store.mjs';
 import { summary as statsSummary, countEvent, countLead, clientIp, BOT_RE } from './stats.mjs';
 import * as DB from './db.mjs';
-import { DEFAULTS, GALLERY_CATS, FAQ_PAGES } from '../../src/data.mjs';
+import { DEFAULTS, GALLERY_CATS, FAQ_PAGES, isFresh } from '../../src/data.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
@@ -147,7 +147,8 @@ const SECTIONS = {
       const rows = b.rows.map((r, k) => { const y = (x.rows || [])[k] || {}; const o = { ...r, detail: (Array.isArray(y.detail) ? y.detail : r.detail).map(s => oneLine(s, 40)).filter(Boolean), adult: pair(y.adult, r.adult), child: pair(y.child, r.child) };
         if (!pending) for (const [n, arr] of [['대인', o.adult], ['소인', o.child]]) for (const [a, d] of arr) { need(a && d, 400, `${b.resort} ${r.time} ${n}: 정상가와 할인가를 입력해 주세요(공지 전이면 '공지 전' 체크)`); need(d <= a, 400, `${b.resort} ${r.time} ${n}: 할인가가 정상가보다 큽니다`); }
         return o; });
-      const o = { ...b, title: oneLine(x.title, 60) || b.title, note: text(x.note, 300) || b.note, seasons: (Array.isArray(x.seasons) ? x.seasons : b.seasons).map(s => oneLine(s, 30)).slice(0, b.seasons.length), rows };
+      const o = { ...b, title: oneLine(x.title, 60) || b.title, note: text(x.note, 300) || b.note, seasons: b.seasons.map((s, k) => oneLine((Array.isArray(x.seasons) ? x.seasons : [])[k], 30) || s), rows };
+      if (b.periods) o.periods = b.periods.map((p, k) => oneLine((Array.isArray(x.periods) ? x.periods : [])[k] ?? p, 40));
       if (pending) o.pending = true; else delete o.pending;
       if (b.badge != null) { o.badge = oneLine(x.badge ?? b.badge, 8); o.cond = oneLine(x.cond ?? b.cond, 30); }
       return o;
@@ -215,7 +216,9 @@ route('DELETE', '/api/admin/leads/:id', 'client', async ({ params, user }) => { 
 route('GET', '/api/admin/content/:key', 'client', async ({ params, user }) => {
   const s = SECTIONS[params.key]; need(s, 404, '없는 항목'); need(!s.owner || user.role === 'owner', 403, '관리자만 쓸 수 있는 메뉴입니다');
   const site = await readSiteJson();
-  return { value: site[params.key] ?? DEFAULTS[params.key], default: DEFAULTS[params.key], changed: params.key in site };
+  // 요금은 판(rev)이 지난 저장값이면 새 기본값을 보여 준다(업체가 새 요금표를 보내 기본값을 바꾼 경우)
+  const cur = site[params.key], fresh = cur != null && isFresh(params.key, cur);
+  return { value: fresh ? cur : DEFAULTS[params.key], default: DEFAULTS[params.key], changed: fresh };
 });
 route('POST', '/api/admin/content/:key', 'client', async ({ params, data, user }) => {
   const s = SECTIONS[params.key]; need(s, 404, '없는 항목'); need(!s.owner || user.role === 'owner', 403, '관리자만 쓸 수 있는 메뉴입니다');

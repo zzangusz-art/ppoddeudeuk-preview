@@ -522,7 +522,7 @@
       if (tab === 'lift') body = val.map((r, ri) => `<section class="card"><div class="card-h"><h2>${h(r.resort)}</h2><label class="chk" style="margin:0"><input type="checkbox" data-pending="${ri}" ${r.pending ? 'checked' : ''}> 요금 공지 전(표 대신 안내 문구만)</label></div>
           <div class="form-stack" style="margin-bottom:14px"><label class="fld"><span>표 제목</span><input class="in" data-top="${ri}" data-k="title" value="${h(r.title)}"></label><label class="fld"><span>안내 문구</span><textarea class="in" data-top="${ri}" data-k="note">${h(r.note)}</textarea></label>
           ${r.badge != null ? `<div class="row2"><label class="fld"><span>강조 할인율 <small>배너의 큰 숫자</small></span><input class="in" data-top="${ri}" data-k="badge" value="${h(r.badge)}" placeholder="33%"></label><label class="fld"><span>적용 조건 <small>배너·표 제목 옆</small></span><input class="in" data-top="${ri}" data-k="cond" value="${h(r.cond || '')}" placeholder="이용 1일 전까지 예약 시"></label></div>` : ''}</div>
-          <div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>구분</th><th>시간 안내(줄마다)</th>${r.seasons.map((s, si) => `<th colspan="2"><input class="in" data-season="${ri}:${si}" value="${h(s)}" style="height:32px;font-size:12.5px;text-align:center"><small>대인 정상 / 할인</small></th><th colspan="2"><small>소인 정상 / 할인</small></th>`).join('')}</tr></thead><tbody>
+          <div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>구분</th><th>시간 안내(줄마다)</th>${r.seasons.map((s, si) => `<th colspan="4" class="season-th"><input class="in" data-season="${ri}:${si}" value="${h(s)}" title="시즌 이름" placeholder="시즌 이름"${r.seasons.length > 1 && r.periods ? `><input class="in" data-period="${ri}:${si}" value="${h(r.periods[si] || '')}" placeholder="기간(예: 12월 5일~3월 1일)" title="기간"` : ''}><small>대인 정상 · 할인 &nbsp;|&nbsp; 소인 정상 · 할인</small></th>`).join('')}</tr></thead><tbody>
           ${r.rows.map((row, k) => `<tr data-lr="${ri}:${k}"><td class="rowname" style="white-space:nowrap"><b>${h(row.time)}</b></td><td class="full" data-l="시간 안내(줄마다)" style="min-width:180px"><textarea class="in" data-detail style="min-height:80px;font-size:13px">${h(row.detail.join('\n'))}</textarea></td>
             ${row.adult.map((a, si) => { const sn = r.seasons.length > 1 ? h(r.seasons[si]) + ' ' : ''; return `<td data-l="${sn}대인 정상가">${nin(a[0], `data-age="adult" data-s="${si}" data-q="0"`)}</td><td data-l="${sn}대인 할인가">${nin(a[1], `data-age="adult" data-s="${si}" data-q="1"`)}</td><td data-l="${sn}소인 정상가">${nin(row.child[si][0], `data-age="child" data-s="${si}" data-q="0"`)}</td><td data-l="${sn}소인 할인가">${nin(row.child[si][1], `data-age="child" data-s="${si}" data-q="1"`)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></section>`).join('');
       if (tab === 'lesson') body = `<section class="card"><div class="card-h"><h2>강습 요금</h2><button class="btn sm" data-addles>${ico('plus')}줄 추가</button></div>
@@ -531,7 +531,7 @@
           ${val.rows.map((r, i) => `<tr data-les="${i}"><td data-l="강습 이름"><input class="in" data-k="name" value="${h(r.name)}"></td>${r.p.map((x, j) => `<td data-l="${val.hours[j]}시간">${nin(x, `data-p="${j}"`)}</td>`).join('')}<td class="del"><button class="btn xs ghost" data-rmles title="삭제">${ico('trash')}</button></td></tr>`).join('')}</tbody></table></div>
           <label class="fld" style="margin-top:14px"><span>강습 규칙 <small>줄마다 하나씩</small></span><textarea class="in" data-lk="rules">${h(val.rules.join('\n'))}</textarea></label></section>`;
       v.innerHTML = body + `<div class="savebar"><button class="btn pri" data-save>저장하고 홈페이지에 반영</button>${d.changed ? '<button class="btn ghost sm" data-reset>처음 값으로 되돌리기</button>' : ''}<span class="dirty" ${dirty ? '' : 'hidden'}>저장하지 않은 변경이 있습니다</span></div>
-        <p class="help">FAQ 의 금액 문장(예: 「리프트권은 얼마나 할인되나요?」)은 자동으로 바뀌지 않습니다. 요금을 바꾸면 「자주 묻는 질문」의 답도 함께 고쳐 주세요.</p>`;
+        <p class="help">리프트·렌탈 요금을 바꾸면 요금표, 메인 요약, 리프트·렌탈 질문 답(「리프트권은 얼마나 할인되나요?」「장비 렌탈 요금은 얼마인가요?」)이 함께 바뀝니다. 단, 「자주 묻는 질문」 메뉴에서 그 답을 직접 고친 적이 있으면 고친 문장이 그대로 남으니 함께 고쳐 주세요. 블로그 글의 금액은 자동으로 바뀌지 않습니다.</p>`;
     };
     draw();
     const markDirty = () => { dirty = true; const x = $('.dirty', v); if (x) x.hidden = false; };
@@ -544,6 +544,7 @@
         if (t.dataset.pending != null) val[+t.dataset.pending].pending = t.checked;
         else if (t.dataset.top != null) val[+t.dataset.top][t.dataset.k] = t.value;
         else if (t.dataset.season) { const [a, b] = t.dataset.season.split(':'); val[+a].seasons[+b] = t.value; }
+        else if (t.dataset.period) { const [a, b] = t.dataset.period.split(':'); (val[+a].periods ||= [])[+b] = t.value; }
         else { const tr = t.closest('[data-lr]'); if (!tr) return; const [a, k] = tr.dataset.lr.split(':').map(Number), row = val[a].rows[k];
           if (t.dataset.detail != null) row.detail = t.value.split('\n'); else row[t.dataset.age][+t.dataset.s][+t.dataset.q] = n(t); }
       }

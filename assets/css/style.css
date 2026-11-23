@@ -799,3 +799,13 @@ br.br-pc{display:none}@media (min-width:761px){br.br-pc{display:inline}}
 .jump-cards .jc-t{display:block;padding:12px 14px;font-weight:800;font-size:16px}
 .jump-cards .jc-t small{display:block;font-weight:500;font-size:13px;color:var(--muted);margin-top:2px}
 @media (max-width:760px){.jump-cards{grid-template-columns:1fr 1fr;gap:10px}.jump-cards .jc-t{padding:10px 12px;font-size:15px}}
+
+/* 리프트 요금 시즌 2개(2026-11-23) */
+.tbl-lift th.hl small{display:block;font-weight:500;font-size:12px;color:var(--muted);margin-top:3px}
+.tbl-lift td .off{font-size:12.5px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:1px 7px;vertical-align:middle}
+.season-key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;font-size:13.5px;color:var(--ink2)}
+.season-key b{color:var(--red)}
+.pcard-row .who .sn{font-style:normal;font-weight:800;font-size:12.5px;color:var(--red);margin-left:4px}
+.facts li > span{min-width:0}
+.lift-promo + .rate-block{margin-top:0}
+.rate-block + .lift-promo{margin-top:clamp(28px,3vw,44px)}
