@@ -16,6 +16,27 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
 const PUB = path.join(HERE, 'public');
 const store = makeStore(ROOT);
+// 예약 글 정시 공개(2026-11-27): 운영 서버는 push 때만 빌드되므로, 블로그 글의 date·time 이 지나면 서버가 직접 다시 빌드한다.
+//   5분마다 '지난 확인 ~ 지금' 사이에 공개 시각이 든 글이 있는지 본다. 첫 기준은 지금 빌드본(dist/index.html)이 만들어진 시각.
+//   GitHub 예약 실행(09·13·18시)은 미리보기(GitHub Pages)만 다시 만들어서, 11-24~27 예약 글 12편이 운영에 안 올라간 일이 있었다.
+if (store.rebuildNow) {
+  const BLOG = path.join(ROOT, 'content', 'blog');
+  const kstAt = ms => new Date(ms + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
+  let mark = (() => { try { return kstAt(fs.statSync(path.join(ROOT, 'dist', 'index.html')).mtimeMs); } catch { return kstAt(Date.now()); } })();
+  const tick = () => {
+    try {
+      const now = kstAt(Date.now());
+      const due = fs.readdirSync(BLOG).filter(f => f.endsWith('.md') && !f.startsWith('_')).filter(f => {
+        const t = fs.readFileSync(path.join(BLOG, f), 'utf8').slice(0, 800);
+        const d = (t.match(/^date:\s*(\S+)/m) || [])[1], tm = (t.match(/^time:\s*(\S+)/m) || [])[1] || '00:00';
+        return d && `${d} ${tm}` > mark && `${d} ${tm}` <= now;
+      });
+      mark = now;
+      if (due.length) { console.log(`예약 글 공개 시각 — 다시 빌드(${due.join(', ')})`); store.rebuildNow().catch(e => console.error('예약 글 빌드 실패', e.message)); }
+    } catch (e) { console.error('예약 글 확인 실패', e.message); }
+  };
+  setTimeout(tick, 30e3).unref(); setInterval(tick, 5 * 60e3).unref();
+}
 const MAX_BODY = 30 * 1024 * 1024, MAX_FILE = 6 * 1024 * 1024;
 const kst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
